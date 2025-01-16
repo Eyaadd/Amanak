@@ -6,7 +6,10 @@ buildscript {
 
     dependencies {
         // Add the Android Gradle Plugin classpath here
-        classpath 'com.android.tools.build:gradle:7.0.4'  // Adjust this version if necessary
+        dependencies {
+            classpath 'com.android.tools.build:gradle:8.0.0'
+        }
+        // Adjust this version if necessary
     }
 }
 
