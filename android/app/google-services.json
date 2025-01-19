@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "16114501520",
+    "project_id": "live-tracking-1bfec",
+    "storage_bucket": "live-tracking-1bfec.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:16114501520:android:a64ba6cf3fa4e6d70c5515",
+        "android_client_info": {
+          "package_name": "com.example.amanak"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtPvYgEr-gpBs4FoN2ucSbzrqzsCg4nMs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
