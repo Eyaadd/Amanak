@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../provider/my_provider.dart';
 
 class HomeTab extends StatelessWidget {
-  const HomeTab({super.key});
+   HomeTab({super.key});
+   static int selectedHomeIndex = 0;
 
   @override
   Widget build(BuildContext context) {
+    var provider = Provider.of<ChangeTab>(context);
     return SafeArea(
       child: Scaffold(
         body: SingleChildScrollView(
@@ -52,8 +57,14 @@ class HomeTab extends StatelessWidget {
                                 Stack(
                                   alignment: Alignment.bottomCenter,
                                   children: [
-                                    Image.asset(
-                                        "assets/images/overlay_orange.png"),
+                                    InkWell(
+                                      child: Image.asset(
+                                          "assets/images/overlay_orange.png"),
+                                      onTap: () {
+                                        provider.changeIndex();
+                                        print(provider.selectedIndexHome);
+                                      },
+                                    ),
                                     Padding(
                                       padding: const EdgeInsets.only(
                                           bottom: 20, right: 40),

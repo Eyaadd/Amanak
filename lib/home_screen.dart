@@ -2,7 +2,10 @@ import 'dart:convert';
 import 'package:amanak/home/calendar_tab.dart';
 import 'package:amanak/home/live_tracking.dart';
 import 'package:amanak/home/nearest_hospitals.dart';
+import 'package:amanak/provider/my_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:simple_alert_dialog/simple_alert_dialog.dart';
 import 'home/home_tab.dart';
 import 'package:http/http.dart' as http;
 
@@ -15,16 +18,16 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int selectedIndex = 0;
+   int selectedIndex = 0;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     sendData(context);
   }
   @override
   Widget build(BuildContext context) {
+    var provider = Provider.of<ChangeTab>(context);
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(items: [
         BottomNavigationBarItem(icon: Icon(Icons.home_outlined) , label: ""),
@@ -32,13 +35,16 @@ class _HomeScreenState extends State<HomeScreen> {
         BottomNavigationBarItem(icon: Icon(Icons.pin_drop_outlined) , label: ""),
         BottomNavigationBarItem(icon: Icon(Icons.local_hospital_outlined) , label: ""),
       ],
-        currentIndex: selectedIndex,
+        currentIndex:provider.selectedIndexHome == 2? provider.selectedIndexHome :selectedIndex,
         onTap: (value) {
           setState(() {
             selectedIndex = value;
+            if (provider.selectedIndexHome == 2){
+              provider.selectedIndexHome = 0;
+            }
           });
         },),
-      body: currentTabs[selectedIndex],
+      body:provider.selectedIndexHome == 2? currentTabs[provider.selectedIndexHome] : currentTabs[selectedIndex],
     );
   }
 }
@@ -48,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
 List<Widget>currentTabs = [
   HomeTab(),
   CalendarTab(),
-  HomePage(),
+  LiveTracking(),
   NearestHospitals()
 ];
 
@@ -168,7 +174,7 @@ Future<void> sendData(BuildContext context) async {
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(data),
-    );
+    ); // Set timeout to 10 seconds;
 
     if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
@@ -183,24 +189,17 @@ Future<void> sendData(BuildContext context) async {
     print('Error: $e');
   }
 }
-
-
-void _showAlertDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Center(child: Text('Fall Detected')),
-        content: Text('Are You OK ?".'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text('Yes'),
-          ),
-        ],
-      );
+void _showAlertDialog(BuildContext context){
+  SimpleAlertDialog.show(
+    context,
+    assetImagepath: AnimatedImage.error,
+    buttonsColor: Colors.red,
+    title: AlertTitleText('Fall Detected !',style: Theme.of(context).textTheme.titleLarge),
+    content: AlertContentText(
+      'Are You Okay ?',style: Theme.of(context).textTheme.titleSmall
+    ),
+    onConfirmButtonPressed: (ctx) {
+      Navigator.pop(ctx);
     },
   );
 }
