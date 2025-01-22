@@ -2,8 +2,15 @@ import 'package:amanak/theme/base_theme.dart';
 import 'package:amanak/home_screen.dart';
 import 'package:amanak/theme/light_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async{
+
+//
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp( MyApp());
 }
 
