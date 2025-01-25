@@ -1,4 +1,5 @@
 import 'package:amanak/home_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -69,7 +70,7 @@ class LoginScreen extends StatelessWidget {
                 child: Container(
                   color: Color(0x1A00664F),
                   child: TabBarView(
-                    
+
                     children: [
                       // Login Tab
                       SingleChildScrollView(
@@ -139,8 +140,19 @@ class LoginScreen extends StatelessWidget {
                             ),
                             SizedBox(height: 16),
                             ElevatedButton(
-                              onPressed: () {
-                                Navigator.popAndPushNamed(context, HomeScreen.routeName);
+                              onPressed: () async {
+                                try {
+                                  UserCredential userCredential = await FirebaseAuth.instance
+                                      .signInWithEmailAndPassword(
+                                    email: _emailController.text,
+                                    password: _passwordController.text,
+                                  );
+                                  Navigator.popAndPushNamed(context, HomeScreen.routeName);
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(e.toString())),
+                                  );
+                                }
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.teal,
@@ -222,12 +234,25 @@ class LoginScreen extends StatelessWidget {
                             SizedBox(height: 8),
                             Align(
                               alignment: Alignment.centerRight,
-                  
+
                             ),
                             SizedBox(height: 16),
                             ElevatedButton(
-                              onPressed: () {
-                                Navigator.popAndPushNamed(context, HomeScreen.routeName);
+                              onPressed: () async {
+                                try {
+                                  final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                                    email: _emailController.text,
+                                    password: _passwordController.text,
+                                  );
+                                } on FirebaseAuthException catch (e) {
+                                  if (e.code == 'weak-password') {
+                                    print('The password provided is too weak.');
+                                  } else if (e.code == 'email-already-in-use') {
+                                    print('The account already exists for that email.');
+                                  }
+                                } catch (e) {
+                                  print(e);
+                                }
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.teal,
