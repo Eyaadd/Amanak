@@ -1,28 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../provider/my_provider.dart';
 
 class HomeTab extends StatelessWidget {
-  const HomeTab({super.key});
+   HomeTab({super.key});
+   static int selectedHomeIndex = 0;
 
   @override
   Widget build(BuildContext context) {
+    var provider = Provider.of<ChangeTab>(context);
     return SafeArea(
       child: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.only(top: 100),
-          child: Column(
-            children: [
-              Center(
-                child: Text(
-                  "Welcome Mrs Noha.",
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge!
-                      .copyWith(color: Colors.white),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 100),
+            child: Column(
+              children: [
+                Center(
+                  child: Text(
+                    "Welcome Mrs Noha.",
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge!
+                        .copyWith(color: Colors.white),
+                  ),
                 ),
-              ),
-              SizedBox(height: 24),
-              Expanded(
-                child: Container(
+                SizedBox(height: 24),
+                Container(
                   decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.only(
@@ -52,8 +57,14 @@ class HomeTab extends StatelessWidget {
                                 Stack(
                                   alignment: Alignment.bottomCenter,
                                   children: [
-                                    Image.asset(
-                                        "assets/images/overlay_orange.png"),
+                                    InkWell(
+                                      child: Image.asset(
+                                          "assets/images/overlay_orange.png"),
+                                      onTap: () {
+                                        provider.changeIndex();
+                                        print(provider.selectedIndexHome);
+                                      },
+                                    ),
                                     Padding(
                                       padding: const EdgeInsets.only(
                                           bottom: 20, right: 40),
@@ -192,9 +203,9 @@ class HomeTab extends StatelessWidget {
                       ],
                     ),
                   ),
-                ),
-              )
-            ],
+                )
+              ],
+            ),
           ),
         ),
       ),
