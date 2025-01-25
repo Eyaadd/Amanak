@@ -2,11 +2,23 @@ import 'package:amanak/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   static const String routeName = "LoginScreen";
 
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _loginEmailController = TextEditingController();
+
+  final _loginPasswordController = TextEditingController();
+
+  final _signupEmailController = TextEditingController();
+
+  final _signupPasswordController = TextEditingController();
+
+  bool _isPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +27,6 @@ class LoginScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
-
           child: Column(
             children: [
               // Header Section
@@ -102,7 +113,7 @@ class LoginScreen extends StatelessWidget {
                               ),
                             ),
                             TextField(
-                              controller: _emailController,
+                              controller: _loginEmailController,
                               decoration: InputDecoration(
                                 fillColor: Colors.white,
                                 labelText: "Email Address",
@@ -114,15 +125,24 @@ class LoginScreen extends StatelessWidget {
                             ),
                             SizedBox(height: 16),
                             TextField(
-                              controller: _passwordController,
-                              obscureText: true,
+                              controller: _loginPasswordController,
+                              obscureText: _isPasswordVisible,
                               decoration: InputDecoration(
                                 labelText: "Password",
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 prefixIcon: Icon(Icons.lock_outline),
-                                suffixIcon: Icon(Icons.visibility_outlined),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isPasswordVisible = !_isPasswordVisible;
+                                    });
+                                  },
+                                ),
                               ),
                             ),
                             SizedBox(height: 8),
@@ -139,35 +159,42 @@ class LoginScreen extends StatelessWidget {
                               ),
                             ),
                             SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () async {
-                                try {
-                                  UserCredential userCredential = await FirebaseAuth.instance
-                                      .signInWithEmailAndPassword(
-                                    email: _emailController.text,
-                                    password: _passwordController.text,
-                                  );
-                                  Navigator.popAndPushNamed(context, HomeScreen.routeName);
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(e.toString())),
-                                  );
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.teal,
-                                foregroundColor: Colors.white,
-                                minimumSize: Size(double.infinity, 50),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: Text(
-                                "Login",
-                                style: TextStyle(fontSize: 16),
+                          ElevatedButton(
+                            onPressed: () async {
+                              final email = _loginEmailController.text.trim();
+                              final password = _loginPasswordController.text.trim();
+
+                              if (_validateEmail(email) != null || _validatePassword(password) != null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Please enter valid email and password')),
+                                );
+                                return;
+                              }
+
+                              try {
+                                UserCredential userCredential = await FirebaseAuth.instance
+                                    .signInWithEmailAndPassword(email: email, password: password);
+                                Navigator.popAndPushNamed(context, HomeScreen.routeName);
+                              } on FirebaseAuthException catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(e.message ?? 'Login failed')),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.teal,
+                              foregroundColor: Colors.white,
+                              minimumSize: Size(double.infinity, 50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            SizedBox(height: 16),
+                            child: Text(
+                              "Login",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ),
+                          SizedBox(height: 16),
                             Text(
                               "By signing in with an account, you agree to SO's Terms of Service and Privacy Policy.",
                               textAlign: TextAlign.center,
@@ -179,7 +206,6 @@ class LoginScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      // Sign Up Tab
                       SingleChildScrollView(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -208,7 +234,7 @@ class LoginScreen extends StatelessWidget {
                               ),
                             ),
                             TextField(
-                              controller: _emailController,
+                              controller: _signupEmailController,
                               decoration: InputDecoration(
                                 fillColor: Colors.white,
                                 labelText: "Email Address",
@@ -220,35 +246,62 @@ class LoginScreen extends StatelessWidget {
                             ),
                             SizedBox(height: 16),
                             TextField(
-                              controller: _passwordController,
-                              obscureText: true,
+                              controller: _signupPasswordController,
+                              obscureText: !_isPasswordVisible,
                               decoration: InputDecoration(
                                 labelText: "Password",
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 prefixIcon: Icon(Icons.lock_outline),
-                                suffixIcon: Icon(Icons.visibility_outlined),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isPasswordVisible = !_isPasswordVisible;
+                                    });
+                                  },
+                                ),
                               ),
                             ),
                             SizedBox(height: 8),
                             Align(
                               alignment: Alignment.centerRight,
-
                             ),
                             SizedBox(height: 16),
                             ElevatedButton(
                               onPressed: () async {
+                                final email = _signupEmailController.text.trim();
+                                final password = _signupPasswordController.text.trim();
+
+                                // Validate the email and password before proceeding
+                                String? emailValidationResult = _validateEmail(email);
+                                String? passwordValidationResult = _validatePassword(password);
+
+                                if (emailValidationResult != null || passwordValidationResult != null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Please enter a valid email and password')),
+                                  );
+                                  return;
+                                }
+
                                 try {
                                   final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                                    email: _emailController.text,
-                                    password: _passwordController.text,
+                                    email: email,
+                                    password: password,
                                   );
+                                  Navigator.popAndPushNamed(context, HomeScreen.routeName);
                                 } on FirebaseAuthException catch (e) {
                                   if (e.code == 'weak-password') {
-                                    print('The password provided is too weak.');
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('The password provided is too weak.')),
+                                    );
                                   } else if (e.code == 'email-already-in-use') {
-                                    print('The account already exists for that email.');
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('The account already exists for that email.')),
+                                    );
                                   }
                                 } catch (e) {
                                   print(e);
@@ -269,7 +322,7 @@ class LoginScreen extends StatelessWidget {
                             ),
                             SizedBox(height: 16),
                             Text(
-                              "By signing in with an account, you agree to SO's Terms of Service and Privacy Policy.",
+                              "By signing up with an account, you agree to SO's Terms of Service and Privacy Policy.",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 12,
@@ -279,6 +332,7 @@ class LoginScreen extends StatelessWidget {
                           ],
                         ),
                       ),
+
                     ],
                   ),
                 ),
@@ -325,4 +379,18 @@ class SocialLoginButton extends StatelessWidget {
       ),
     );
   }
+}
+
+
+String? _validateEmail(String email) {
+  final regex = RegExp(r'^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$');
+  if (!regex.hasMatch(email)) return 'Enter a valid email address';
+  return null;
+}
+
+
+
+String? _validatePassword(String password) {
+  if (password.length < 6) return 'Password must be at least 6 characters';
+  return null;
 }
