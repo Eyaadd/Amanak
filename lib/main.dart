@@ -5,7 +5,6 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 import 'onboarding_screen.dart';
-import 'onboarding_screen2.dart';
 import 'theme/base_theme.dart';
 import 'theme/light_theme.dart';
 
@@ -30,7 +29,6 @@ class MyApp extends StatelessWidget {
           initialRoute: OnBoardingScreen.routeName,
           routes: {
             OnBoardingScreen.routeName: (context)=> OnBoardingScreen(),
-            OnBoardingScreen2.routeName: (context)=> OnBoardingScreen2(),
             LoginScreen.routeName: (context) => LoginScreen(),
             HomeScreen.routeName: (context) => HomeScreen(),
           },

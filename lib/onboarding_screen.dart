@@ -1,8 +1,8 @@
+import 'package:amanak/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:lottie/lottie.dart';
-import 'onboarding_screen2.dart';
 
 class OnBoardingScreen extends StatelessWidget {
   static const String routeName = "OnBoardingScreen";
@@ -42,7 +42,7 @@ class OnBoardingScreen extends StatelessWidget {
       globalBackgroundColor: const Color(0xFFF4EEEE),
       showDoneButton: true,
       onDone: () {
-        Navigator.pushReplacementNamed(context, OnBoardingScreen2.routeName);
+        Navigator.pushReplacementNamed(context, LoginScreen.routeName);
       },
       done: Text(
         "Finish",
