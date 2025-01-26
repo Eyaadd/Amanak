@@ -4,8 +4,13 @@ class ChangeTab extends ChangeNotifier{
 
   int selectedIndexHome = 0;
 
-  changeIndex(){
+  changeLiveTrackingIndex(){
     selectedIndexHome = 2;
+    notifyListeners();
+  }
+
+  changeCalendarIndex(){
+    selectedIndexHome = 1;
     notifyListeners();
   }
 

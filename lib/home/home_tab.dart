@@ -52,88 +52,93 @@ class HomeTab extends StatelessWidget {
                         SizedBox(height: 24),
                         Row(
                           children: [
-                            Stack(
-                              children: [
-                                Stack(
-                                  alignment: Alignment.bottomCenter,
-                                  children: [
-                                    InkWell(
-                                      child: Image.asset(
-                                          "assets/images/overlay_orange.png"),
-                                      onTap: () {
-                                        provider.changeIndex();
-                                        print(provider.selectedIndexHome);
-                                      },
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          bottom: 20, right: 40),
-                                      child: Text(
-                                        "Live Location",
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleSmall!
-                                            .copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                    )
-                                  ],
-                                ),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.only(top: 16, left: 16),
-                                  child: Stack(
+                            InkWell(
+                              onTap: () {
+                                provider.changeLiveTrackingIndex();
+                                print(provider.selectedIndexHome);
+                              },
+                              child: Stack(
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.bottomCenter,
                                     children: [
-                                      Icon(
-                                        Icons.pin_drop_outlined,
-                                        color: Colors.white,
-                                        size: 40,
+                                      Image.asset(
+                                          "assets/images/overlay_orange.png"),
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            bottom: 20, right: 40),
+                                        child: Text(
+                                          "Live Location",
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall!
+                                              .copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
                                       )
                                     ],
                                   ),
-                                ),
-                              ],
+                                  Padding(
+                                    padding:
+                                        const EdgeInsets.only(top: 16, left: 16),
+                                    child: Stack(
+                                      children: [
+                                        Icon(
+                                          Icons.pin_drop_outlined,
+                                          color: Colors.white,
+                                          size: 40,
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                             SizedBox(width: 8),
-                            Stack(
-                              children: [
-                                Stack(
-                                  alignment: Alignment.bottomCenter,
-                                  children: [
-                                    Image.asset(
-                                        "assets/images/overlay_purple.png"),
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          bottom: 20, right: 60),
-                                      child: Text(
-                                        "Calendar",
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleSmall!
-                                            .copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                    )
-                                  ],
-                                ),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.only(top: 16, left: 16),
-                                  child: Stack(
+                            InkWell(
+                              onTap: () {
+                                provider.changeCalendarIndex();
+                              },
+                              child: Stack(
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.bottomCenter,
                                     children: [
-                                      Icon(
-                                        Icons.calendar_today_outlined,
-                                        color: Colors.white,
-                                        size: 40,
+                                      Image.asset(
+                                          "assets/images/overlay_purple.png"),
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            bottom: 20, right: 60),
+                                        child: Text(
+                                          "Calendar",
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall!
+                                              .copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
                                       )
                                     ],
                                   ),
-                                ),
-                              ],
+                                  Padding(
+                                    padding:
+                                        const EdgeInsets.only(top: 16, left: 16),
+                                    child: Stack(
+                                      children: [
+                                        Icon(
+                                          Icons.calendar_today_outlined,
+                                          color: Colors.white,
+                                          size: 40,
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
