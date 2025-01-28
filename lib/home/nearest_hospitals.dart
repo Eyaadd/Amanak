@@ -10,6 +10,12 @@ class NearestHospitals extends StatelessWidget {
         centerTitle: true,
         title: Text("Nearest Hospitals"),
       ),
+      body: Expanded(
+          child: Image.asset(
+        "assets/images/nearesthospitals.jpg",
+        width: double.infinity,
+            fit: BoxFit.cover,
+      )),
     );
   }
 }
