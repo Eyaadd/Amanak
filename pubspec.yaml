@@ -31,6 +31,7 @@ dependencies:
   simple_alert_dialog: ^0.0.2
   provider: ^6.1.2
   introduction_screen: ^3.1.14
+
   lottie: ^3.2.0
   table_calendar: ^3.2.0
 

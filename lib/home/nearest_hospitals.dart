@@ -6,6 +6,7 @@ class NearestHospitals extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         centerTitle: true,
         title: Text("Nearest Hospitals"),

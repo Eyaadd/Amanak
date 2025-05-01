@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:simple_alert_dialog/simple_alert_dialog.dart';
 
+import 'home/gaurdian_location.dart';
 import 'home/home_tab.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -69,11 +70,12 @@ List<Widget> currentTabs = [
   HomeTab(),
   CalendarTab(),
   LiveTracking(),
-  NearestHospitals()
+  GuardianLiveTracking()
+
 ];
 
 Future<void> sendData(BuildContext context) async {
-  final url = 'http://192.168.56.1:8000/predict/'; // Your API URL
+  final url = 'https://b9ba-35-201-232-178.ngrok-free.app/predict/'; // Your API URL
 
   final Map<String, dynamic> data = {
     "features": [
