@@ -1,4 +1,5 @@
 import 'package:amanak/login_screen.dart';
+import 'package:amanak/signup/signup_screen.dart';
 import 'package:amanak/theme/base_theme.dart';
 import 'package:amanak/home_screen.dart';
 import 'package:amanak/theme/light_theme.dart';
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
           routes: {
             OnBoardingScreen.routeName: (context)=> OnBoardingScreen(),
             LoginScreen.routeName: (context) => LoginScreen(),
+            SignupScreen.routeName: (context) => SignupScreen(),
             HomeScreen.routeName: (context) => HomeScreen(),
           },
         );
