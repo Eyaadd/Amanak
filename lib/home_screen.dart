@@ -70,7 +70,7 @@ List<Widget> currentTabs = [
   HomeTab(),
   CalendarTab(),
   LiveTracking(),
-  GuardianLiveTracking()
+  NearestHospitals()
 
 ];
 

@@ -67,7 +67,7 @@ class _GuardianLiveTrackingState extends State<GuardianLiveTracking> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Elderly Live Tracking'),
+        title: const Text('Elderly Live Trackingggg'),
       ),
       body: Stack(
         children: <Widget>[
