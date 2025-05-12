@@ -4,18 +4,13 @@ import 'package:amanak/signup/signup_screen.dart';
 import 'package:amanak/theme/base_theme.dart';
 import 'package:amanak/home_screen.dart';
 import 'package:amanak/theme/light_theme.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:amanak/provider/my_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase/firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
-import 'home_screen.dart';
-import 'login_screen.dart';
 import 'onboarding_screen.dart';
-import 'theme/base_theme.dart';
-import 'theme/light_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,7 +41,6 @@ class MyApp extends StatelessWidget {
             SignupScreen.routeName: (context) => SignupScreen(),
             ChooseRoleScreen.routeName : (context) => ChooseRoleScreen(),
             HomeScreen.routeName: (context) => HomeScreen(),
-
           },
         );
       },

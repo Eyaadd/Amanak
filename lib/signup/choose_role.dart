@@ -2,13 +2,15 @@ import 'package:amanak/firebase/firebase_manager.dart';
 import 'package:amanak/home_screen.dart';
 import 'package:amanak/models/user_model.dart';
 import 'package:amanak/provider/my_provider.dart';
+import 'package:amanak/widgets/success_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class ChooseRoleScreen extends StatelessWidget {
   static const routeName = "ChooseRole";
-   ChooseRoleScreen({super.key});
+
+  ChooseRoleScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +33,19 @@ class ChooseRoleScreen extends StatelessWidget {
         child: Center(
           child: Column(
             children: [
-              SizedBox(height: 20,),
-              Text("Choose Your Role",style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.black),),
-              SizedBox(height: 140,),
+              SizedBox(
+                height: 20,
+              ),
+              Text(
+                "Choose Your Role",
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium!
+                    .copyWith(color: Colors.black),
+              ),
+              SizedBox(
+                height: 140,
+              ),
               ElevatedButton(
                 onPressed: () {
                   provider.setRole("user");
@@ -50,7 +62,9 @@ class ChooseRoleScreen extends StatelessWidget {
                 child: Row(
                   children: [
                     Image.asset("assets/images/user.png"),
-                    SizedBox(width: 120,),
+                    SizedBox(
+                      width: 120,
+                    ),
                     Text(
                       "User",
                       style: TextStyle(fontSize: 16),
@@ -58,7 +72,9 @@ class ChooseRoleScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: 22,),
+              SizedBox(
+                height: 22,
+              ),
               ElevatedButton(
                 onPressed: () {
                   provider.setRole("Guardian");
@@ -74,24 +90,36 @@ class ChooseRoleScreen extends StatelessWidget {
                 child: Row(
                   children: [
                     Image.asset("assets/images/guardian.png"),
-                    SizedBox(width: 120,),
+                    SizedBox(
+                      width: 120,
+                    ),
                     Text(
                       "Guardian",
-                      style: TextStyle(fontSize: 16,color: Color(0xFF525F7F)),
+                      style: TextStyle(fontSize: 16, color: Color(0xFF525F7F)),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 260,),
+              SizedBox(
+                height: 260,
+              ),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pushReplacementNamed(context, HomeScreen.routeName);
-                  UserModel user = UserModel(name:provider.userName,
-                      email: provider.userEmail ,
+                  UserModel user = UserModel(
+                      name: provider.userName,
+                      email: provider.userEmail,
                       id: provider.userID,
                       role: provider.chosedRole);
-                  FirebaseManager.updateEvent(user);
-                } ,
+                  FirebaseManager.updateEvent(user).onError(
+                    (error, stackTrace) {
+                      SnackBar(content: Text("$error"));
+                    },
+                  ).then(
+                    (value) {
+                      showSuccessDialog(context);
+                    },
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,

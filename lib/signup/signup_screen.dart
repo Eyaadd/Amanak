@@ -232,7 +232,9 @@ class _SignupScreenState extends State<SignupScreen> {
                       );
                       UserModel user = UserModel(name: name,
                           email: email);
-                      FirebaseManager.setUser(user);
+                      FirebaseManager.setUser(user).onError((error, stackTrace) {
+                        SnackBar(content: Text("$error"),);
+                      },);
                       provider.setUserModel(user.id, user.name, user.email);
                       Navigator.pushNamed(context, ChooseRoleScreen.routeName);
                     } on FirebaseAuthException catch (e) {
