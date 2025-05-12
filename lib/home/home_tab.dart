@@ -9,7 +9,7 @@ class HomeTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var provider = Provider.of<ChangeTab>(context);
+    var provider = Provider.of<MyProvider>(context);
     return SafeArea(
       child: Scaffold(
         body: SingleChildScrollView(

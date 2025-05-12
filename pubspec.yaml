@@ -24,16 +24,17 @@ dependencies:
   geolocator: ^13.0.1
   firebase_core: ^3.4.1  # Firebase Core SDK
   firebase_auth: ^5.4.1   # Firebase Authentication
-  cloud_firestore: ^5.0.0  # Update to match firebase_core ^3.4.1
+  cloud_firestore: ^5.6.7  # Update to match firebase_core ^3.4.1
   flutter_svg: ^2.0.14
   responsive_sizer: ^3.3.1
   http: ^1.2.2
   simple_alert_dialog: ^0.0.2
   provider: ^6.1.2
   introduction_screen: ^3.1.14
-
   lottie: ^3.2.0
   table_calendar: ^3.2.0
+  google_places_flutter: ^2.1.0
+
 
 
   # The following adds the Cupertino Icons font to your application.

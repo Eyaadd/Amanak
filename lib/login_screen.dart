@@ -206,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(height: 16),
                 SocialLoginButton(
                   icon: Icons.facebook,
-                  text: "Sign in with Apple",
+                  text: "Sign in with Facebook",
                 ),
               ],
             ),

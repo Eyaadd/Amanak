@@ -32,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var provider = Provider.of<ChangeTab>(context);
+    var provider = Provider.of<MyProvider>(context);
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(
         items: [

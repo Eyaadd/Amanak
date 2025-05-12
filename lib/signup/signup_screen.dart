@@ -1,6 +1,11 @@
+import 'package:amanak/firebase/firebase_manager.dart';
+import 'package:amanak/models/user_model.dart';
+import 'package:amanak/provider/my_provider.dart';
+import 'package:amanak/signup/choose_role.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../home_screen.dart';
 
@@ -18,9 +23,11 @@ class _SignupScreenState extends State<SignupScreen> {
   final _signupEmailController = TextEditingController();
   final _signupPasswordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isChecked = false;
 
   @override
   Widget build(BuildContext context) {
+    var provider = Provider.of<MyProvider>(context,listen: false);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -40,6 +47,8 @@ class _SignupScreenState extends State<SignupScreen> {
           child: SingleChildScrollView(
             child: Column(
               children: [
+                SizedBox(height: 20,),
+                // Sign Up Name
                 TextField(
                   controller: _nameController,
                   decoration: InputDecoration(
@@ -64,6 +73,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 SizedBox(
                   height: 16,
                 ),
+                //Sign up name
                 TextField(
                   controller: _signupEmailController,
                   decoration: InputDecoration(
@@ -88,6 +98,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 SizedBox(
                   height: 16,
                 ),
+                // Sign up password
                 TextField(
                   controller: _signupPasswordController,
                   obscureText: _isPasswordVisible,
@@ -128,9 +139,27 @@ class _SignupScreenState extends State<SignupScreen> {
                 SizedBox(
                   height: 16,
                 ),
+                // Terms of Service
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Checkbox(
+                        value: _isChecked,
+                        side: BorderSide(color: Color(0xFFD3D6DA)),
+                        checkColor:Theme.of(context).primaryColor ,
+                        activeColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6)),
+                        onChanged:
+                          (value) {
+                          setState(() {
+                            _isChecked = value!;
+                          });
+                      },
+
+                      ),
+                    ),
                     Expanded(
                       child: Text.rich(
                         TextSpan(
@@ -157,36 +186,29 @@ class _SignupScreenState extends State<SignupScreen> {
                 SizedBox(
                   height: 32,
                 ),
+                // Sign up with google
                 SocialLoginButton(
                   icon: Icons.g_mobiledata,
                   text: "Sign Up with Google",
                 ),
                 SizedBox(height: 16),
+                // Sign up with apple
                 SocialLoginButton(
                   icon: Icons.apple,
                   text: "Sign Up with Apple",
                 ),
                 SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Text(
-                    "or continue with email",
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
-                    ),
-                  ),
+                // Sign Up button
+                SocialLoginButton(
+                  icon: Icons.facebook,
+                  text: "Sign Up with Facebook",
                 ),
-                SizedBox(height: 16),
-                SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                ),
-                SizedBox(height: 16),
+                SizedBox(height: 16,),
                 ElevatedButton(
                   onPressed: () async {
                     final email = _signupEmailController.text.trim();
                     final password = _signupPasswordController.text.trim();
+                    final name = _nameController.text.trim();
 
                     String? emailValidationResult = _validateEmail(email);
                     String? passwordValidationResult =
@@ -208,7 +230,11 @@ class _SignupScreenState extends State<SignupScreen> {
                         email: email,
                         password: password,
                       );
-                      Navigator.popAndPushNamed(context, HomeScreen.routeName);
+                      UserModel user = UserModel(name: name,
+                          email: email);
+                      FirebaseManager.setUser(user);
+                      provider.setUserModel(user.id, user.name, user.email);
+                      Navigator.pushNamed(context, ChooseRoleScreen.routeName);
                     } on FirebaseAuthException catch (e) {
                       if (e.code == 'weak-password') {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -228,19 +254,18 @@ class _SignupScreenState extends State<SignupScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
+                    backgroundColor: Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
-                    minimumSize: Size(double.infinity, 50),
+                    minimumSize: Size(327, 56),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(32),
                     ),
                   ),
                   child: Text(
-                    "Sign Up",
+                    "Next",
                     style: TextStyle(fontSize: 16),
                   ),
                 ),
-                SizedBox(height: 16),
               ],
             ),
           ),
