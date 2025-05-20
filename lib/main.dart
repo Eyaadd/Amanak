@@ -5,6 +5,7 @@ import 'package:amanak/theme/base_theme.dart';
 import 'package:amanak/home_screen.dart';
 import 'package:amanak/theme/light_theme.dart';
 import 'package:amanak/provider/my_provider.dart';
+import 'package:amanak/widgets/overlay_button.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase/firebase_options.dart';
@@ -34,13 +35,14 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           theme: lightTheme.themeData,
           debugShowCheckedModeBanner: false,
-          initialRoute: OnBoardingScreen.routeName,
+          initialRoute: HomeScreen.routeName,
           routes: {
             OnBoardingScreen.routeName: (context)=> OnBoardingScreen(),
             LoginScreen.routeName: (context) => LoginScreen(),
             SignupScreen.routeName: (context) => SignupScreen(),
             ChooseRoleScreen.routeName : (context) => ChooseRoleScreen(),
             HomeScreen.routeName: (context) => HomeScreen(),
+
           },
         );
       },

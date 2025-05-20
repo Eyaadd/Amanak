@@ -4,12 +4,16 @@ class MyProvider extends ChangeNotifier {
   int selectedIndexHome = 0;
 
   changeLiveTrackingIndex() {
-    selectedIndexHome = 2;
+    selectedIndexHome = 3;
     notifyListeners();
   }
 
   changeCalendarIndex() {
     selectedIndexHome = 1;
+    notifyListeners();
+  }
+  changeNearestHospitalIndex() {
+    selectedIndexHome = 2;
     notifyListeners();
   }
 
