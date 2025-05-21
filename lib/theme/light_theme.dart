@@ -41,7 +41,5 @@ class LightTheme extends BaseTheme {
         showSelectedLabels: false,
         showUnselectedLabels: false,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Color(0xFFFF7648),
-        unselectedItemColor: Color(0xFF88889D),
       ));
 }

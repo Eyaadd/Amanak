@@ -1,3 +1,4 @@
+import 'package:amanak/chatbot.dart';
 import 'package:amanak/widgets/overlay_button.dart';
 import 'package:amanak/widgets/pillsearchfield.dart';
 import 'package:flutter/material.dart';
@@ -165,7 +166,7 @@ class HomeTab extends StatelessWidget {
                             children: [
                               OverlayButton(
                                 assetName: "chatbot",
-                                onTap: () => print("test"),
+                                onTap: () => Navigator.pushNamed(context, ChatBot.routeName),
                               ),
                               SizedBox(height:screenHeight * 0.025),
                               Text(

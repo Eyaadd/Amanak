@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:amanak/home/calendar_tab.dart';
 import 'package:amanak/home/live_tracking.dart';
 import 'package:amanak/home/nearest_hospitals.dart';
@@ -9,7 +8,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:simple_alert_dialog/simple_alert_dialog.dart';
-
 import 'home/gaurdian_location.dart';
 import 'home/home_tab.dart';
 
@@ -37,13 +35,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(
         items: [
-          BottomNavigationBarItem(icon: (provider.selectedIndexHome ==0)?SvgPicture.asset('assets/svg/HomeSelected.svg'):SvgPicture.asset('assets/svg/Home.svg'), label: ""),
+          BottomNavigationBarItem(icon: (provider.selectedIndexHome ==0 || selectedIndex == 0)?SvgPicture.asset('assets/svg/HomeSelected.svg'):SvgPicture.asset('assets/svg/Home.svg'), label: ""),
           BottomNavigationBarItem(
-              icon: (provider.selectedIndexHome == 1)?SvgPicture.asset('assets/svg/calendarSelected.svg'):SvgPicture.asset('assets/svg/Calendaric.svg'), label: ""),
+              icon: (provider.selectedIndexHome == 1 || selectedIndex == 1)?SvgPicture.asset('assets/svg/calendarSelected.svg'):SvgPicture.asset('assets/svg/Calendaric.svg'), label: ""),
           BottomNavigationBarItem(
-              icon: (provider.selectedIndexHome == 2)?SvgPicture.asset('assets/svg/MessageSelected.svg'):SvgPicture.asset('assets/svg/Message.svg'), label: ""),
+              icon: (provider.selectedIndexHome == 2 || selectedIndex == 2)?SvgPicture.asset('assets/svg/MessageSelected.svg'):SvgPicture.asset('assets/svg/Message.svg'), label: ""),
           BottomNavigationBarItem(
-              icon: (provider.selectedIndexHome ==3)?SvgPicture.asset('assets/svg/ProfileSelected.svg'):SvgPicture.asset('assets/svg/Profile.svg'), label: ""),
+              icon: (provider.selectedIndexHome ==3 || selectedIndex == 3)?SvgPicture.asset('assets/svg/ProfileSelected.svg'):SvgPicture.asset('assets/svg/Profile.svg'), label: ""),
         ],
         currentIndex:
             (provider.selectedIndexHome == 2 || provider.selectedIndexHome == 1 ||provider.selectedIndexHome == 3 )
@@ -54,9 +52,11 @@ class _HomeScreenState extends State<HomeScreen> {
             selectedIndex = value;
             if (provider.selectedIndexHome == 2 ||
                 provider.selectedIndexHome == 1 || provider.selectedIndexHome == 3) {
-              provider.selectedIndexHome = 0;
+              provider.selectedIndexHome = 5;
             }
           });
+          print(selectedIndex);
+          print(provider.selectedIndexHome);
         },
       ),
       // body:provider.selectedIndexHome == 2? currentTabs[provider.selectedIndexHome] : currentTabs[selectedIndex],

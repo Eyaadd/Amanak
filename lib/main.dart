@@ -1,3 +1,4 @@
+import 'package:amanak/chatbot.dart';
 import 'package:amanak/login_screen.dart';
 import 'package:amanak/signup/choose_role.dart';
 import 'package:amanak/signup/signup_screen.dart';
@@ -8,13 +9,17 @@ import 'package:amanak/provider/my_provider.dart';
 import 'package:amanak/widgets/overlay_button.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 import 'firebase/firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'onboarding_screen.dart';
 
+const apiKey = "AIzaSyDLePMB53Q1Nud4ZG8a2XA9UUYuSLCrY6c";
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Gemini.init(apiKey:  apiKey );
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -42,6 +47,7 @@ class MyApp extends StatelessWidget {
             SignupScreen.routeName: (context) => SignupScreen(),
             ChooseRoleScreen.routeName : (context) => ChooseRoleScreen(),
             HomeScreen.routeName: (context) => HomeScreen(),
+            ChatBot.routeName: (context) => ChatBot(),
 
           },
         );
