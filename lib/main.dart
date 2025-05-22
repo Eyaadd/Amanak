@@ -1,5 +1,7 @@
 import 'package:amanak/chatbot.dart';
+import 'package:amanak/gaurdian_location.dart';
 import 'package:amanak/login_screen.dart';
+import 'package:amanak/nearest_hospitals.dart';
 import 'package:amanak/signup/choose_role.dart';
 import 'package:amanak/signup/signup_screen.dart';
 import 'package:amanak/theme/base_theme.dart';
@@ -40,7 +42,7 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           theme: lightTheme.themeData,
           debugShowCheckedModeBanner: false,
-          initialRoute: HomeScreen.routeName,
+          initialRoute: OnBoardingScreen.routeName,
           routes: {
             OnBoardingScreen.routeName: (context)=> OnBoardingScreen(),
             LoginScreen.routeName: (context) => LoginScreen(),
@@ -48,6 +50,8 @@ class MyApp extends StatelessWidget {
             ChooseRoleScreen.routeName : (context) => ChooseRoleScreen(),
             HomeScreen.routeName: (context) => HomeScreen(),
             ChatBot.routeName: (context) => ChatBot(),
+            GuardianLiveTracking.routeName : (context) => GuardianLiveTracking(),
+            NearestHospitals.routeName : (context) => NearestHospitals()
 
           },
         );

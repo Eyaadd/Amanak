@@ -27,153 +27,151 @@ class _ChatBotState extends State<ChatBot> {
     final bubbleMaxWidth = screenWidth * 0.7;
     final baseFontSize = screenWidth * 0.045;
 
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          titleSpacing: screenWidth * 0.09,
-          title: Row(
-            children: [
-              SvgPicture.asset("assets/svg/gemini.svg",
-                  height: screenHeight * 0.06),
-              SizedBox(width: screenWidth * 0.02),
-              Text(
-                "Gemini AI",
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge!
-                    .copyWith(color: Colors.black),
-              )
-            ],
-          ),
-        ),
-        body: Column(
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        titleSpacing: screenWidth * 0.09,
+        title: Row(
           children: [
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.symmetric(
-                  vertical: screenHeight * 0.02,
-                  horizontal: screenWidth * 0.03,
-                ),
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final message = _messages[index];
-                  final isUser = message.role == 'user';
-                  final part = message.parts?.first;
-                  final content =
-                      part is TextPart ? part.text : part?.toString() ?? '';
+            SvgPicture.asset("assets/svg/gemini.svg",
+                height: screenHeight * 0.06),
+            SizedBox(width: screenWidth * 0.02),
+            Text(
+              "Gemini AI",
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge!
+                  .copyWith(color: Colors.black),
+            )
+          ],
+        ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.symmetric(
+                vertical: screenHeight * 0.02,
+                horizontal: screenWidth * 0.03,
+              ),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final message = _messages[index];
+                final isUser = message.role == 'user';
+                final part = message.parts?.first;
+                final content =
+                    part is TextPart ? part.text : part?.toString() ?? '';
 
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      bottom: screenHeight * 0.015,
-                      left: isUser ? screenWidth * 0.15 : 0,
-                      right: isUser ? 0 : screenWidth * 0.15,
-                    ),
-                    child: Align(
-                      alignment:
-                          isUser ? Alignment.centerRight : Alignment.centerLeft,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
-                        child: Container(
+                return Padding(
+                  padding: EdgeInsets.only(
+                    bottom: screenHeight * 0.015,
+                    left: isUser ? screenWidth * 0.15 : 0,
+                    right: isUser ? 0 : screenWidth * 0.15,
+                  ),
+                  child: Align(
+                    alignment:
+                        isUser ? Alignment.centerRight : Alignment.centerLeft,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: screenHeight * 0.015,
+                          horizontal: screenWidth * 0.04,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isUser
+                              ? Theme.of(context).primaryColor
+                              : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Padding(
                           padding: EdgeInsets.symmetric(
-                            vertical: screenHeight * 0.015,
-                            horizontal: screenWidth * 0.04,
+                            vertical: screenHeight * 0.001,
+                            horizontal: screenWidth * 0.01,
                           ),
-                          decoration: BoxDecoration(
-                            color: isUser
-                                ? Theme.of(context).primaryColor
-                                : Colors.grey[300],
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              vertical: screenHeight * 0.001,
-                              horizontal: screenWidth * 0.01,
-                            ),
-                            child: Text(
-                              content,
-                              style: GoogleFonts.albertSans(
-                                fontSize: baseFontSize,
-                                color: isUser ? Colors.white : Colors.black87,
-                                height: 1.3,
-                              ),
+                          child: Text(
+                            content,
+                            style: GoogleFonts.albertSans(
+                              fontSize: baseFontSize,
+                              color: isUser ? Colors.white : Colors.black87,
+                              height: 1.3,
                             ),
                           ),
                         ),
                       ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          if (_isLoading)
+            Padding(
+              padding: EdgeInsets.only(bottom: screenHeight * 0.02),
+              child: const CircularProgressIndicator(),
             ),
 
-            if (_isLoading)
-              Padding(
-                padding: EdgeInsets.only(bottom: screenHeight * 0.02),
-                child: const CircularProgressIndicator(),
-              ),
-
-            // Input area
-            Container(
-              padding: EdgeInsets.symmetric(
-                vertical: screenHeight * 0.01,
-                horizontal: screenWidth * 0.03,
-              ),
-              color: Theme.of(context).scaffoldBackgroundColor,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      cursorColor: Theme.of(context).primaryColor,
-                      controller: _controller,
-                      style: TextStyle(fontSize: baseFontSize),
-                      decoration: InputDecoration(
-                          enabled: true,
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                color: Theme.of(context).primaryColor,
-                                width: 1.5),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          contentPadding: EdgeInsets.symmetric(
-                            vertical: screenHeight * 0.015,
-                            horizontal: screenWidth * 0.04,
-                          ),
-                          hintText: "Type a message",
-                          hintStyle: GoogleFonts.albertSans(
-                            fontSize: 18,
-                            color: Color(0xFFA1A8B0),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                color: Theme.of(context).primaryColor,
-                                width: 1.5),
-                            borderRadius: BorderRadius.circular(12),
-                          )),
-                    ),
-                  ),
-                  SizedBox(width: screenWidth * 0.02),
-                  Container(
-                    height: screenHeight * 0.06,
-                    width: screenHeight * 0.06,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: Icon(Icons.send,
-                          size: baseFontSize * 1.2, color: Colors.white),
-                      onPressed: () {
-                        final text = _controller.text.trim();
-                        if (text.isNotEmpty) sendMessage(text);
-                      },
-                    ),
-                  ),
-                ],
-              ),
+          // Input area
+          Container(
+            padding: EdgeInsets.symmetric(
+              vertical: screenHeight * 0.01,
+              horizontal: screenWidth * 0.03,
             ),
-          ],
-        ),
+            color: Theme.of(context).scaffoldBackgroundColor,
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    cursorColor: Theme.of(context).primaryColor,
+                    controller: _controller,
+                    style: TextStyle(fontSize: baseFontSize),
+                    decoration: InputDecoration(
+                        enabled: true,
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Theme.of(context).primaryColor,
+                              width: 1.5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          vertical: screenHeight * 0.015,
+                          horizontal: screenWidth * 0.04,
+                        ),
+                        hintText: "Type a message",
+                        hintStyle: GoogleFonts.albertSans(
+                          fontSize: 18,
+                          color: Color(0xFFA1A8B0),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Theme.of(context).primaryColor,
+                              width: 1.5),
+                          borderRadius: BorderRadius.circular(12),
+                        )),
+                  ),
+                ),
+                SizedBox(width: screenWidth * 0.02),
+                Container(
+                  height: screenHeight * 0.06,
+                  width: screenHeight * 0.06,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.send,
+                        size: baseFontSize * 1.2, color: Colors.white),
+                    onPressed: () {
+                      final text = _controller.text.trim();
+                      if (text.isNotEmpty) sendMessage(text);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

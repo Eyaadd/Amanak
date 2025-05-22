@@ -1,0 +1,2 @@
+C:/Users/eyady/Projects/Amanak/android/app/.cxx/RelWithDebInfo/4fy73445/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/eyady/Projects/Amanak/android/app/.cxx/RelWithDebInfo/4fy73445/arm64-v8a/CMakeFiles/rebuild_cache.dir

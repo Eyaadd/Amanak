@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class NearestHospitals extends StatelessWidget {
+  static const routeName = "NearestHospitals";
   const NearestHospitals({super.key});
 
   @override

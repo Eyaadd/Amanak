@@ -1,4 +1,7 @@
 import 'package:amanak/chatbot.dart';
+import 'package:amanak/gaurdian_location.dart';
+import 'package:amanak/home/messaging_tab.dart';
+import 'package:amanak/nearest_hospitals.dart';
 import 'package:amanak/widgets/overlay_button.dart';
 import 'package:amanak/widgets/pillsearchfield.dart';
 import 'package:flutter/material.dart';
@@ -60,7 +63,7 @@ class HomeTab extends StatelessWidget {
                             children: [
                               OverlayButton(
                                 assetName: "location",
-                                onTap: () => provider.changeLiveTrackingIndex(),
+                                onTap: () => Navigator.pushNamed(context, GuardianLiveTracking.routeName),
                               ),
                               SizedBox(height:screenHeight * 0.025),
                               Text(
@@ -101,7 +104,7 @@ class HomeTab extends StatelessWidget {
                             children: [
                               OverlayButton(
                                 assetName: "hospital",
-                                onTap: () => provider.changeNearestHospitalIndex(),
+                                onTap: () => Navigator.pushNamed(context, NearestHospitals.routeName),
                               ),
                               SizedBox(height:screenHeight * 0.025),
                               Text(
@@ -125,7 +128,9 @@ class HomeTab extends StatelessWidget {
                             children: [
                               OverlayButton(
                                 assetName: "messages",
-                                onTap: () => provider.changeLiveTrackingIndex(),
+                                onTap: () {
+                                  provider.changeMessageIndex();
+                                }
                               ),
                               SizedBox(height:screenHeight * 0.025),
                               Text(

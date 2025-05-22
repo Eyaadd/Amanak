@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 class MyProvider extends ChangeNotifier {
   int selectedIndexHome = 0;
 
-  changeLiveTrackingIndex() {
+  changeProfileIndex() {
     selectedIndexHome = 3;
     notifyListeners();
   }
@@ -12,7 +12,7 @@ class MyProvider extends ChangeNotifier {
     selectedIndexHome = 1;
     notifyListeners();
   }
-  changeNearestHospitalIndex() {
+  changeMessageIndex() {
     selectedIndexHome = 2;
     notifyListeners();
   }

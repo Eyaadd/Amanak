@@ -1,0 +1,2 @@
+C:/Users/eyady/Projects/Amanak/android/app/.cxx/Debug/5y5k4g5d/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/eyady/Projects/Amanak/android/app/.cxx/Debug/5y5k4g5d/x86_64/CMakeFiles/rebuild_cache.dir
