@@ -4,15 +4,15 @@ import 'package:google_fonts/google_fonts.dart';
 
 class LightTheme extends BaseTheme {
   @override
-  Color get backgroundColor => Color(0xFF00664F);
+  Color get backgroundColor => Color(0xFFF5F5F5);
 
   @override
   // TODO: implement primaryColor
-  Color get primaryColor => Color(0xFF00664F);
+  Color get primaryColor => Color(0xFF015C92);
 
   @override
   // TODO: implement textColor
-  Color get textColor => Color(0xFF212523);
+  Color get textColor => Color(0xFF015C92);
 
   @override
   // TODO: implement themeData
@@ -20,9 +20,9 @@ class LightTheme extends BaseTheme {
       primaryColor: primaryColor,
       scaffoldBackgroundColor: backgroundColor,
       textTheme: TextTheme(
-        titleSmall: GoogleFonts.poppins(
-          color: Color(0xFFBCC1CD),
-          fontSize: 14,
+        titleSmall: GoogleFonts.inter(
+          color: textColor,
+          fontSize: 16,
           fontWeight: FontWeight.normal,
         ),
         titleMedium: GoogleFonts.poppins(
@@ -41,7 +41,5 @@ class LightTheme extends BaseTheme {
         showSelectedLabels: false,
         showUnselectedLabels: false,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Color(0xFFFF7648),
-        unselectedItemColor: Color(0xFF88889D),
       ));
 }
