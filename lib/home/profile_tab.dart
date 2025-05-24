@@ -1,5 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_svg/svg.dart';
+
+import '../login_screen.dart';
+import '../provider/my_provider.dart';
+import '../widgets/logout_dialog.dart';
+import '../firebase/firebase_manager.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
@@ -9,6 +18,32 @@ class ProfileTab extends StatefulWidget {
 }
 
 class _ProfileTabState extends State<ProfileTab> {
+  String userName = 'User Name';
+  String userEmail = 'user@email.com';
+  String userRole = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        Map<String, String> userData = await FirebaseManager.getNameAndRole(currentUser.uid);
+        setState(() {
+          userName = userData['name']!;
+          userEmail = userData['email']!;
+          userRole = userData['role']!;
+        });
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,21 +69,25 @@ class _ProfileTabState extends State<ProfileTab> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'User Name',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Text(
+                        userName,
+                        style: GoogleFonts.aBeeZee(fontSize: 20),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'user@email.com',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey,
-                        ),
+                      Text(
+                        userEmail,
+                        style: GoogleFonts.aBeeZee(),
                       ),
+                      if (userRole.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          userRole,
+                          style: GoogleFonts.aBeeZee(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -93,9 +132,7 @@ class _ProfileTabState extends State<ProfileTab> {
                 // Logout Button
                 Center(
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Handle logout
-                    },
+                    onPressed: () => showLogoutDialog(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       padding: const EdgeInsets.symmetric(
@@ -153,4 +190,4 @@ class _ProfileTabState extends State<ProfileTab> {
       ),
     );
   }
-}   
+}

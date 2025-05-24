@@ -49,7 +49,6 @@ class ChooseRoleScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {
                   provider.setRole("user");
-                  print(provider.chosedRole);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).primaryColor,

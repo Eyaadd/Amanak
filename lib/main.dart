@@ -16,6 +16,7 @@ import 'firebase/firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'onboarding_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 const apiKey = "AIzaSyDLePMB53Q1Nud4ZG8a2XA9UUYuSLCrY6c";
 
@@ -25,6 +26,20 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // Check if user is already logged in
+  User? currentUser = FirebaseAuth.instance.currentUser;
+  print('Current user on app start: ${currentUser?.email ?? 'No user logged in'}');
+  
+  // Sign out user in debug mode
+  assert(() {
+    if (currentUser != null) {
+      FirebaseAuth.instance.signOut();
+      print('User signed out in debug mode');
+    }
+    return true;
+  }());
+  
   runApp(ChangeNotifierProvider(
       create: (context) => MyProvider(),
       child: MyApp()));
