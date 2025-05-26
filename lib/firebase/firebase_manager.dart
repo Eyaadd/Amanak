@@ -6,7 +6,7 @@ class FirebaseManager {
   static CollectionReference<UserModel> getUsersCollection() {
     return FirebaseFirestore.instance.collection("users").withConverter(
       fromFirestore: (snapshot, _) {
-        return UserModel.fromJson(snapshot.data()!);
+        return UserModel.fromJson(snapshot.data()!, snapshot.id);
       },
       toFirestore: (value, _) {
         return value.toJson();
