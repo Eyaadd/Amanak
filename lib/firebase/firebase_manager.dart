@@ -14,12 +14,12 @@ class FirebaseManager {
     );
   }
 
- static Future<void> setUser(UserModel user){
+  static Future<void> setUser(UserModel user) {
     var collection = getUsersCollection();
-    var docRef = collection.doc();
-    user.id = docRef.id;
+    var currentUser = FirebaseAuth.instance.currentUser!;
+    var docRef = collection.doc(currentUser.uid); // ✅ use UID
     return docRef.set(user);
- }
+  }
 
   static Future<void> updateEvent(UserModel user) {
     var collection = getUsersCollection();
@@ -30,33 +30,37 @@ class FirebaseManager {
     try {
       var collection = getUsersCollection();
       DocumentSnapshot<UserModel> docSnapshot = await collection.doc(userId).get();
-      
+
       if (!docSnapshot.exists) {
-        // If not found, try to find the user by email
+        print("Didn't Find $userId");
         QuerySnapshot<UserModel> querySnapshot = await collection
             .where('email', isEqualTo: FirebaseAuth.instance.currentUser?.email)
             .get();
-            
+
         if (querySnapshot.docs.isNotEmpty) {
           docSnapshot = querySnapshot.docs.first;
         }
       }
-      
+
       if (docSnapshot.exists) {
+        print("Found $userId");
         UserModel user = docSnapshot.data()!;
-        print('Found user data: ${user.toJson()}'); // Debug print
         return {
           'name': user.name,
           'email': user.email,
           'role': user.role,
+          'id' : user.id,
+          'sharedUsers' : user.sharedUsers
         };
       }
-      
-      print('No user document found for ID: $userId'); // Debug print
+
       return {
         'name': 'User Name',
         'email': 'user@email.com',
         'role': '',
+        'id' : '',
+        'sharedUsers' : ''
+
       };
     } catch (e) {
       print('Error getting user data: $e');
@@ -64,7 +68,38 @@ class FirebaseManager {
         'name': 'User Name',
         'email': 'user@email.com',
         'role': '',
+        'id' : '',
+        'sharedUsers' : ''
       };
     }
   }
+
+  static Future<void> linkUser(String currentUserId, String sharedEmail, String currentUserEmail) async {
+    final firestore = FirebaseFirestore.instance;
+
+    // Check if the shared user exists
+    final query = await firestore
+        .collection('users')
+        .where('email', isEqualTo: sharedEmail)
+        .limit(1)
+        .get();
+
+    if (query.docs.isNotEmpty) {
+      final sharedUserDoc = query.docs.first;
+      final sharedUserId = sharedUserDoc.id;
+
+      // Update current user with sharedEmail
+      await firestore.collection('users').doc(currentUserId).update({
+        'sharedUsers': sharedEmail,
+      });
+
+      // Update shared user with currentUserEmail
+      await firestore.collection('users').doc(sharedUserId).update({
+        'sharedUsers': currentUserEmail,
+      });
+    } else {
+      throw Exception("User with this email doesn't exist.");
+    }
+  }
+
 }

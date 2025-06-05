@@ -1,8 +1,9 @@
+import 'package:amanak/widgets/shared_users_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import '../firebase/firebase_manager.dart';
 import '../widgets/logout_dialog.dart';
 
@@ -18,6 +19,7 @@ class _ProfileTabState extends State<ProfileTab> {
   String userEmail = 'user@email.com';
   String userRole = '';
   String sharedUsers = '';
+  String userID = '';
   int userAge = 0;
   double userHeight = 0;
   bool showEmergencyContacts = false;
@@ -43,6 +45,8 @@ class _ProfileTabState extends State<ProfileTab> {
           userName = userData['name']!;
           userEmail = userData['email']!;
           userRole = userData['role']!;
+          userID = userData['id']!;
+          sharedUsers = userData['sharedUsers']!;
         });
       }
     } catch (e) {
@@ -72,31 +76,6 @@ class _ProfileTabState extends State<ProfileTab> {
     }
   }
 
-  Future<void> _saveUserEdits() async {
-    try {
-      User? currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null) {
-        var collection = FirebaseManager.getUsersCollection();
-        var docSnapshot = await collection.doc(currentUser.uid).get();
-        if (docSnapshot.exists) {
-          var user = docSnapshot.data()!;
-          user.name = _nameController.text;
-          user.age = int.tryParse(_ageController.text) ?? 0;
-          user.height = double.tryParse(_heightController.text) ?? 0;
-          await FirebaseManager.updateEvent(user);
-          setState(() {
-            userName = user.name;
-            userAge = user.age;
-            userHeight = user.height;
-            showEditInformation = false;
-          });
-        }
-      }
-    } catch (e) {
-      print('Error saving user edits: $e');
-    }
-  }
-
   Future<void> _showEditDialog(String field, String currentValue) async {
     final controller = TextEditingController(text: currentValue);
     final result = await showDialog<String>(
@@ -105,7 +84,9 @@ class _ProfileTabState extends State<ProfileTab> {
         title: Text('Edit $field'),
         content: TextFormField(
           controller: controller,
-          keyboardType: field == 'Age' || field == 'Height' ? TextInputType.number : TextInputType.text,
+          keyboardType: field == 'Age' || field == 'Height'
+              ? TextInputType.number
+              : TextInputType.text,
           decoration: InputDecoration(hintText: 'Enter new $field'),
         ),
         actions: [
@@ -283,6 +264,7 @@ class _ProfileTabState extends State<ProfileTab> {
     required String title,
     required VoidCallback onTap,
     required String assetName,
+    bool idShow = false,
     Color? textColor,
     required double screenWidth,
   }) {
@@ -305,11 +287,40 @@ class _ProfileTabState extends State<ProfileTab> {
                   ),
                 )),
             SizedBox(width: screenWidth * 0.04),
-            Text(title,
-                style: GoogleFonts.albertSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: screenWidth * 0.042,
-                    color: textColor)),
+            idShow
+                ? Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: SelectableText(
+                            title,
+                            style: GoogleFonts.albertSans(
+                              fontWeight: FontWeight.w700,
+                              fontSize: screenWidth * 0.042,
+                              color: textColor ?? Colors.black,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.copy, size: screenWidth * 0.04),
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: title));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('ID Copied to clipboard')),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  )
+                : Text(
+                    title,
+                    style: GoogleFonts.albertSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: screenWidth * 0.042,
+                      color: textColor ?? Colors.black,
+                    ),
+                  ),
             const Spacer(),
             SvgPicture.asset("assets/svg/arrowright.svg",
                 width: screenWidth * 0.06)
@@ -452,80 +463,116 @@ class _ProfileTabState extends State<ProfileTab> {
     );
   }
 
-  Widget _buildEditInformationInterface(double screenWidth, double screenHeight) {
-    return Column(
-      children: [
-        SizedBox(height: screenHeight * 0.18),
-        Container(
-          width: double.infinity,
-          height: screenHeight * 0.72,
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(screenWidth * 0.08),
-                topRight: Radius.circular(screenWidth * 0.08),
-              ),
-              color: Colors.white),
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: screenHeight * 0.04, horizontal: screenWidth * 0.05),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildProfileOption(
-                  assetName: "emergencyic",
-                  title: '$userName',
-                  onTap: () => _showEditDialog('Name', userName),
-                  screenWidth: screenWidth,
+  Widget _buildEditInformationInterface(
+      double screenWidth, double screenHeight) {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          SizedBox(height: screenHeight * 0.18),
+          Container(
+            width: double.infinity,
+            height: screenHeight * 0.72,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(screenWidth * 0.08),
+                  topRight: Radius.circular(screenWidth * 0.08),
                 ),
-                Divider(color: Color(0xFFE8F3F1), thickness: 2, endIndent: screenWidth * 0.025, indent: screenWidth * 0.025),
-                _buildProfileOption(
-                  assetName: "editic",
-                  title: '$userAge',
-                  onTap: () => _showEditDialog('Age', userAge.toString()),
-                  screenWidth: screenWidth,
-                ),
-                Divider(color: Color(0xFFE8F3F1), thickness: 2, endIndent: screenWidth * 0.025, indent: screenWidth * 0.025),
-                _buildProfileOption(
-                  assetName: "dangercircle",
-                  title: 'Height: $userHeight',
-                  onTap: () => _showEditDialog('Height', userHeight.toString()),
-                  screenWidth: screenWidth,
-                ),
-                Divider(color: Color(0xFFE8F3F1), thickness: 2, endIndent: screenWidth * 0.025, indent: screenWidth * 0.025),
-                _buildProfileOption(
-                  assetName: "dangercircle",
-                  title: userRole,
-                  onTap: () {
-                  },
-                  screenWidth: screenWidth,
-                ),
-                Divider(color: Color(0xFFE8F3F1), thickness: 2, endIndent: screenWidth * 0.025, indent: screenWidth * 0.025),
-                _buildProfileOption(
-                  assetName: "dangercircle",
-                  title: "sharedUsers",
-                  onTap:() {
-                  },
-                  screenWidth: screenWidth,
-                ),
-                SizedBox(height: screenHeight * 0.03),
-                Center(
-                  child: TextButton(
-                    onPressed: () {
-                      setState(() {
-                        showEditInformation = false;
-                      });
-                    },
-                    child: Text("Go Back",
-                        style: GoogleFonts.albertSans(
-                            color: Theme.of(context).primaryColor,
-                            fontWeight: FontWeight.w700,
-                            fontSize: screenWidth * 0.045)),
+                color: Colors.white),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                  vertical: screenHeight * 0.04,
+                  horizontal: screenWidth * 0.05),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildProfileOption(
+                    assetName: "emergencyic",
+                    title: '$userName',
+                    onTap: () => _showEditDialog('Name', userName),
+                    screenWidth: screenWidth,
                   ),
-                ),
-              ],
+                  Divider(
+                      color: Color(0xFFE8F3F1),
+                      thickness: 2,
+                      endIndent: screenWidth * 0.025,
+                      indent: screenWidth * 0.025),
+                  _buildProfileOption(
+                    assetName: "editic",
+                    title: '$userAge',
+                    onTap: () => _showEditDialog('Age', userAge.toString()),
+                    screenWidth: screenWidth,
+                  ),
+                  Divider(
+                      color: Color(0xFFE8F3F1),
+                      thickness: 2,
+                      endIndent: screenWidth * 0.025,
+                      indent: screenWidth * 0.025),
+                  _buildProfileOption(
+                    assetName: "dangercircle",
+                    title: 'Height: $userHeight',
+                    onTap: () =>
+                        _showEditDialog('Height', userHeight.toString()),
+                    screenWidth: screenWidth,
+                  ),
+                  Divider(
+                      color: Color(0xFFE8F3F1),
+                      thickness: 2,
+                      endIndent: screenWidth * 0.025,
+                      indent: screenWidth * 0.025),
+                  _buildProfileOption(
+                    assetName: "dangercircle",
+                    title: userRole,
+                    onTap: () {},
+                    screenWidth: screenWidth,
+                  ),
+                  Divider(
+                      color: Color(0xFFE8F3F1),
+                      thickness: 2,
+                      endIndent: screenWidth * 0.025,
+                      indent: screenWidth * 0.025),
+                  _buildProfileOption(
+                    assetName: "dangercircle",
+                    title: sharedUsers == '' ? "Shared Users" : sharedUsers,
+                    onTap: () {
+                      sharedUsersDialog(context, "Shared Users", userID,  userEmail);
+                    },
+                    screenWidth: screenWidth,
+                  ),
+                  Divider(
+                      color: Color(0xFFE8F3F1),
+                      thickness: 2,
+                      endIndent: screenWidth * 0.025,
+                      indent: screenWidth * 0.025),
+                  _buildProfileOption(
+                    assetName: "dangercircle",
+                    idShow: true,
+                    title: userID,
+                    onTap: () {
+                      // Empty onTap as we're using the copy button now
+                    },
+                    screenWidth: screenWidth,
+                  ),
+                  SizedBox(height: screenHeight * 0.03),
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        setState(() {
+                          showEditInformation = false;
+                        });
+                      },
+                      child: Text("Go Back",
+                          style: GoogleFonts.albertSans(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.w700,
+                              fontSize: screenWidth * 0.045)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

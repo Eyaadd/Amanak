@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 
 class ChooseRoleScreen extends StatelessWidget {
   static const routeName = "ChooseRole";
+  bool isChecked = false;
 
   ChooseRoleScreen({super.key});
 
@@ -49,10 +50,12 @@ class ChooseRoleScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {
                   provider.setRole("user");
+                  isChecked = true;
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
+                  backgroundColor:
+                      isChecked ? Theme.of(context).primaryColor : Colors.white,
+                  foregroundColor: isChecked ? Colors.white : Colors.black,
                   minimumSize: Size(342, 81),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -77,10 +80,12 @@ class ChooseRoleScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {
                   provider.setRole("Guardian");
+                  isChecked = false;
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFEEF0F7),
-                  foregroundColor: Colors.white,
+                  backgroundColor:
+                      isChecked ? Colors.white : Theme.of(context).primaryColor,
+                  foregroundColor: isChecked ? Colors.black : Colors.white,
                   minimumSize: Size(342, 81),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -94,7 +99,7 @@ class ChooseRoleScreen extends StatelessWidget {
                     ),
                     Text(
                       "Guardian",
-                      style: TextStyle(fontSize: 16, color: Color(0xFF525F7F)),
+                      style: TextStyle(fontSize: 16),
                     ),
                   ],
                 ),

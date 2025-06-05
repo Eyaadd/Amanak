@@ -183,26 +183,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ],
                 ),
-                SizedBox(
-                  height: 32,
-                ),
-                // Sign up with google
-                SocialLoginButton(
-                  icon: Icons.g_mobiledata,
-                  text: "Sign Up with Google",
-                ),
-                SizedBox(height: 16),
-                // Sign up with apple
-                SocialLoginButton(
-                  icon: Icons.apple,
-                  text: "Sign Up with Apple",
-                ),
-                SizedBox(height: 16),
-                // Sign Up button
-                SocialLoginButton(
-                  icon: Icons.facebook,
-                  text: "Sign Up with Facebook",
-                ),
                 SizedBox(height: 16,),
                 ElevatedButton(
                   onPressed: () async {
@@ -230,9 +210,9 @@ class _SignupScreenState extends State<SignupScreen> {
                         email: email,
                         password: password,
                       );
+                      var userID = FirebaseAuth.instance.currentUser!.uid;
                       UserModel user = UserModel(name: name,
-                          email: email);
-                      user.id = FirebaseAuth.instance.currentUser!.uid;
+                          email: email , id: userID);
                       await FirebaseManager.setUser(user).onError((error, stackTrace) {
                         SnackBar(content: Text("$error"),);
                       },);
@@ -279,41 +259,7 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 }
 
-class SocialLoginButton extends StatelessWidget {
-  final IconData icon;
-  final String text;
 
-  SocialLoginButton({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      onPressed: () {
-        // Social login logic
-      },
-      icon: Icon(
-        icon,
-        color: Colors.black,
-        size: 24,
-      ),
-      label: Text(
-        text,
-        style: TextStyle(
-          fontSize: 16,
-          color: Colors.black,
-        ),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        minimumSize: Size(327, 56),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(32),
-            side: BorderSide(color: Color(0xFFE5E7EB))),
-        elevation: 0,
-      ),
-    );
-  }
-}
 
 String? _validateEmail(String email) {
   final regex = RegExp(r'^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$');

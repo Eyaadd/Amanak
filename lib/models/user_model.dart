@@ -19,7 +19,7 @@ class UserModel {
 
   UserModel.fromJson(Map<String, dynamic> json, String id)
       : this(
-          id: id,
+          id: json['id'],
           name: json['name'],
           email: json['email'],
           role: json['role'],
@@ -30,6 +30,7 @@ class UserModel {
 
   Map<String, dynamic> toJson() {
     return {
+      'id' : id,
       'name': name,
       'email': email,
       'role': role,

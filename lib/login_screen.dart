@@ -180,34 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: Theme.of(context).textTheme.titleSmall,),),
                   ],
                 ),
-                SizedBox(height: 45,),
-                Row(
-                  children: [
-                    Expanded(child: Divider(thickness: 1,endIndent: 10  ,)),
-                    Text("OR",
-                    style: Theme.of(context).textTheme.titleSmall!.copyWith(color: Color(0xFFA1A8B0)),),
-                    Expanded(child: Divider(thickness: 1,
-                      indent: 10,))
-                  ],
-                ),
-                SizedBox(height: 24,),
-                SizedBox(height: 16),
-                // Google Log in
-                SocialLoginButton(
-                  icon: Icons.g_mobiledata,
-                  text: "Sign in with Google",
-                ),
-                SizedBox(height: 16),
-                //Apple Log in
-                SocialLoginButton(
-                  icon: Icons.apple,
-                  text: "Sign in with Apple",
-                ),
-                SizedBox(height: 16),
-                SocialLoginButton(
-                  icon: Icons.facebook,
-                  text: "Sign in with Facebook",
-                ),
+
               ],
             ),
           ),
@@ -217,42 +190,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-class SocialLoginButton extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  SocialLoginButton({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      onPressed: () {
-        // Social login logic
-      },
-      icon: Icon(
-        icon,
-        color: Colors.black,
-        size: 24,
-      ),
-      label: Text(
-        text,
-        style: TextStyle(
-          fontSize: 16,
-          color: Colors.black,
-        ),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        minimumSize: Size(327,56),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(32),
-          side: BorderSide(color: Color(0xFFE5E7EB))
-        ),
-        elevation: 0,
-      ),
-    );
-  }
-}
 
 String? _validateEmail(String email) {
   final regex = RegExp(r'^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$');
