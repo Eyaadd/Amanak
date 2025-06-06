@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   google_fonts: ^6.2.1
   flutter_gemini: ^3.0.0
+  url_launcher: ^6.3.1
 
 
 dev_dependencies:

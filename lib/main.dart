@@ -15,6 +15,7 @@ import 'package:flutter_gemini/flutter_gemini.dart';
 import 'firebase/firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
+import 'live_tracking.dart';
 import 'onboarding_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -65,7 +66,7 @@ class MyApp extends StatelessWidget {
             ChooseRoleScreen.routeName : (context) => ChooseRoleScreen(),
             HomeScreen.routeName: (context) => HomeScreen(),
             ChatBot.routeName: (context) => ChatBot(),
-            GuardianLiveTracking.routeName : (context) => GuardianLiveTracking(),
+            LiveTracking.routeName : (context) => LiveTracking(),
             NearestHospitals.routeName : (context) => NearestHospitals()
 
           },

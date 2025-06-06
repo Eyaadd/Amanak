@@ -7,6 +7,7 @@ import 'package:amanak/widgets/pillsearchfield.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../live_tracking.dart';
 import '../provider/my_provider.dart';
 
 class HomeTab extends StatelessWidget {
@@ -63,7 +64,7 @@ class HomeTab extends StatelessWidget {
                             children: [
                               OverlayButton(
                                 assetName: "location",
-                                onTap: () => Navigator.pushNamed(context, GuardianLiveTracking.routeName),
+                                onTap: () => Navigator.pushNamed(context, LiveTracking.routeName),
                               ),
                               SizedBox(height:screenHeight * 0.025),
                               Text(
