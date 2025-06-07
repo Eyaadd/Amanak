@@ -220,45 +220,130 @@ class _LiveTrackingState extends State<LiveTracking> {
 
   void _startLocationUpdates() {
     _locationTimer?.cancel(); // Cancel any existing timer
+
+    // Get initial location with lower accuracy for faster first fix
+    Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.reduced,
+      timeLimit: const Duration(seconds: 15),
+    ).then((position) async {
+      if (mounted) {
+        setState(() {
+          _currentPosition = position;
+        });
+        await _updateLocationInFirestore(position);
+        await _updateCurrentLocationName(position);
+      }
+    }).catchError((e) {
+      print('Error getting initial location: $e');
+      // Try with last known position if available
+      Geolocator.getLastKnownPosition().then((lastPosition) async {
+        if (lastPosition != null && mounted) {
+          setState(() {
+            _currentPosition = lastPosition;
+          });
+          await _updateLocationInFirestore(lastPosition);
+          await _updateCurrentLocationName(lastPosition);
+        }
+      });
+    });
+
+    // Then start periodic updates with high accuracy
     _locationTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
       try {
         if (!_locationPermissionGranted) return;
 
+        // First try to get last known position as a fallback
+        Position? lastKnownPosition = await Geolocator.getLastKnownPosition();
+        if (lastKnownPosition != null && mounted) {
+          setState(() {
+            _currentPosition = lastKnownPosition;
+          });
+          await _updateLocationInFirestore(lastKnownPosition);
+          await _updateCurrentLocationName(lastKnownPosition);
+        }
+
+        // Then try to get current position with increased timeout
         Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 15),
         );
 
-        setState(() {
-          _currentPosition = position;
-        });
-
-        // Update current user's location in Firestore
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(currentUser!.uid)
-            .set({
-          'latitude': position.latitude,
-          'longitude': position.longitude,
-          'lastLocationUpdate': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-
-        // Update current location name
-        currentLocationName =
-        await _getLocationName(position.latitude, position.longitude);
-        if (mounted) setState(() {});
-
-        print(
-            'Your location updated - Lat: ${position.latitude}, Lon: ${position.longitude}');
+        if (mounted) {
+          setState(() {
+            _currentPosition = position;
+          });
+          await _updateLocationInFirestore(position);
+          await _updateCurrentLocationName(position);
+        }
       } catch (e) {
         print('Error updating location: $e');
+        if (mounted) {
+          String errorMessage = 'Error updating location';
+          if (e is TimeoutException) {
+            errorMessage =
+            'Location update timed out. Please check your GPS settings and try again.';
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+              action: SnackBarAction(
+                label: 'Retry',
+                textColor: Colors.white,
+                onPressed: () {
+                  _startLocationUpdates();
+                },
+              ),
+            ),
+          );
+        }
+      }
+    });
+  }
+
+  Future<void> _updateLocationInFirestore(Position position) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser!.uid)
+          .set({
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+        'lastLocationUpdate': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      print(
+          'Location updated in Firestore - Lat: ${position.latitude}, Lon: ${position.longitude}');
+    } catch (e) {
+      print('Error updating Firestore: $e');
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error updating location: $e'),
+            content: Text('Error saving location: $e'),
             backgroundColor: Colors.red,
           ),
         );
       }
-    });
+    }
+  }
+
+  Future<void> _updateCurrentLocationName(Position position) async {
+    try {
+      String locationName =
+      await _getLocationName(position.latitude, position.longitude);
+      if (mounted) {
+        setState(() {
+          currentLocationName = locationName;
+        });
+      }
+    } catch (e) {
+      print('Error updating location name: $e');
+      if (mounted) {
+        setState(() {
+          currentLocationName = 'Location name unavailable';
+        });
+      }
+    }
   }
 
   void _listenToSharedUserLocation(String sharedUserId, String email) {

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:amanak/login_screen.dart';
@@ -40,11 +41,15 @@ void showSuccessDialog(BuildContext context) {
         actions: [
           Center(
             child: ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                // Sign out the user first
+                await FirebaseAuth.instance.signOut();
+
+                // Then navigate to the login screen
                 Navigator.pushNamedAndRemoveUntil(
                   context,
                   LoginScreen.routeName,
-                      (route) => false,
+                  (route) => false,
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -58,9 +63,9 @@ void showSuccessDialog(BuildContext context) {
               child: Text(
                 "Login",
                 style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
               ),
             ),
           ),

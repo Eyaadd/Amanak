@@ -22,7 +22,7 @@ class ChooseRoleScreen extends StatelessWidget {
         actionsIconTheme: IconThemeData(color: Color(0xFF101623)),
         centerTitle: true,
         title: Text(
-          "Sign Up",
+          "Choose Your Role",
           style: Theme.of(context)
               .textTheme
               .titleMedium!
@@ -35,17 +35,7 @@ class ChooseRoleScreen extends StatelessWidget {
           child: Column(
             children: [
               SizedBox(
-                height: 20,
-              ),
-              Text(
-                "Choose Your Role",
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium!
-                    .copyWith(color: Colors.black),
-              ),
-              SizedBox(
-                height: 140,
+                height: 160,
               ),
               ElevatedButton(
                 onPressed: () {

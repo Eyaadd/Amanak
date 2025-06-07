@@ -13,7 +13,144 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _loginEmailController = TextEditingController();
   final _loginPasswordController = TextEditingController();
+  final _forgotPasswordEmailController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
+  bool _isResetLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Check if user is already logged in on screen init
+    _checkCurrentUser();
+  }
+
+  void _checkCurrentUser() async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      // User is already logged in, navigate to home screen
+      Future.microtask(() {
+        Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+      });
+    }
+  }
+
+  // Show forgot password dialog
+  void _showForgotPasswordDialog() {
+    // Pre-fill with email from login field if available
+    _forgotPasswordEmailController.text = _loginEmailController.text.trim();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Reset Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Enter your email address to receive a password reset link',
+              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: _forgotPasswordEmailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                hintText: 'Email Address',
+                prefixIcon: Icon(Icons.email_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          _isResetLoading
+              ? Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                )
+              : ElevatedButton(
+                  onPressed: () => _sendPasswordResetEmail(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                  ),
+                  child: Text('Reset Password',
+                      style: TextStyle(color: Colors.white)),
+                ),
+        ],
+      ),
+    );
+  }
+
+  // Send password reset email
+  Future<void> _sendPasswordResetEmail(BuildContext dialogContext) async {
+    final email = _forgotPasswordEmailController.text.trim();
+
+    // Validate email
+    if (_validateEmail(email) != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter a valid email address')),
+      );
+      return;
+    }
+
+    // Set loading state
+    setState(() {
+      _isResetLoading = true;
+    });
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+
+      // Close dialog and show success message
+      Navigator.pop(dialogContext);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Password reset link sent to $email'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+
+      switch (e.code) {
+        case 'user-not-found':
+          errorMessage = 'No user found with this email address';
+          break;
+        case 'invalid-email':
+          errorMessage = 'The email address is not valid';
+          break;
+        default:
+          errorMessage = e.message ?? 'An error occurred. Please try again';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isResetLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 44,
                 ),
                 TextField(
+                  cursorColor: Theme.of(context).primaryColor,
                   controller: _loginEmailController,
                   decoration: InputDecoration(
                     focusedBorder: OutlineInputBorder(
@@ -64,8 +202,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 16,
                 ),
                 TextField(
+                  cursorColor: Theme.of(context).primaryColor,
                   controller: _loginPasswordController,
-                  obscureText: _isPasswordVisible,
+                  obscureText: !_isPasswordVisible,
                   decoration: InputDecoration(
                     hintText: "Enter Your Password",
                     hintStyle: Theme.of(context)
@@ -107,9 +246,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
-                      onPressed: () {
-                        // Forgot password logic
-                      },
+                      onPressed: _showForgotPasswordDialog,
                       child: Text(
                         "Forgot password?",
                         style: TextStyle(color: Theme.of(context).primaryColor),
@@ -121,32 +258,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 32,
                 ),
                 ElevatedButton(
-                  onPressed: () async {
-                    final email = _loginEmailController.text.trim();
-                    final password = _loginPasswordController.text.trim();
-
-                    if (_validateEmail(email) != null ||
-                        _validatePassword(password) != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content:
-                                Text('Please enter valid email and password')),
-                      );
-                      return;
-                    }
-
-                    try {
-                      UserCredential userCredential = await FirebaseAuth
-                          .instance
-                          .signInWithEmailAndPassword(
-                              email: email, password: password);
-                      Navigator.popAndPushNamed(context, HomeScreen.routeName);
-                    } on FirebaseAuthException catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(e.message ?? 'Login failed')),
-                      );
-                    }
-                  },
+                  onPressed: _isLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
@@ -155,11 +267,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(32),
                     ),
                   ),
-                  child: Text(
-                    "Login",
-                    style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                        fontWeight: FontWeight.w700, color: Colors.white),
-                  ),
+                  child: _isLoading
+                      ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          "Login",
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleSmall!
+                              .copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white),
+                        ),
                 ),
                 SizedBox(
                   height: 24,
@@ -175,12 +300,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           .copyWith(color: Color(0xFF717784)),
                     ),
                     InkWell(
-                      onTap: () => Navigator.pushNamed(context , SignupScreen.routeName),
-                    child: Text("Sign Up",
-                      style: Theme.of(context).textTheme.titleSmall,),),
+                      onTap: () =>
+                          Navigator.pushNamed(context, SignupScreen.routeName),
+                      child: Text(
+                        "Sign Up",
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                    ),
                   ],
                 ),
-
               ],
             ),
           ),
@@ -188,8 +316,52 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-}
 
+  Future<void> _handleLogin() async {
+    final email = _loginEmailController.text.trim();
+    final password = _loginPasswordController.text.trim();
+
+    if (_validateEmail(email) != null || _validatePassword(password) != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter valid email and password')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Sign in with email and password
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Navigate to home screen
+      Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message ?? 'Login failed')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _loginEmailController.dispose();
+    _loginPasswordController.dispose();
+    _forgotPasswordEmailController.dispose();
+    super.dispose();
+  }
+}
 
 String? _validateEmail(String email) {
   final regex = RegExp(r'^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$');

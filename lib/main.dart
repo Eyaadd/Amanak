@@ -23,27 +23,24 @@ const apiKey = "AIzaSyDLePMB53Q1Nud4ZG8a2XA9UUYuSLCrY6c";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Gemini.init(apiKey:  apiKey );
+  Gemini.init(apiKey: apiKey);
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
+
+  // Note: Firebase Auth persistence is handled automatically on mobile platforms
+  // No need to call setPersistence() which is web-only
+
   // Check if user is already logged in
   User? currentUser = FirebaseAuth.instance.currentUser;
-  print('Current user on app start: ${currentUser?.email ?? 'No user logged in'}');
-  
-  // Sign out user in debug mode
-  assert(() {
-    if (currentUser != null) {
-      FirebaseAuth.instance.signOut();
-      print('User signed out in debug mode');
-    }
-    return true;
-  }());
-  
+  print(
+      'Current user on app start: ${currentUser?.email ?? 'No user logged in'}');
+
+  // Removed debug sign out since we want persistence
+  // We'll manage this with a proper logout button instead
+
   runApp(ChangeNotifierProvider(
-      create: (context) => MyProvider(),
-      child: MyApp()));
+      create: (context) => MyProvider(), child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -53,22 +50,26 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Check if user is already logged in
+    final bool isLoggedIn = FirebaseAuth.instance.currentUser != null;
+    final String initialRoute =
+        isLoggedIn ? HomeScreen.routeName : LoginScreen.routeName;
+
     return ResponsiveSizer(
       builder: (context, orientation, screenType) {
         return MaterialApp(
           theme: lightTheme.themeData,
           debugShowCheckedModeBanner: false,
-          initialRoute: LoginScreen.routeName,
+          initialRoute: initialRoute,
           routes: {
-            OnBoardingScreen.routeName: (context)=> OnBoardingScreen(),
+            OnBoardingScreen.routeName: (context) => OnBoardingScreen(),
             LoginScreen.routeName: (context) => LoginScreen(),
             SignupScreen.routeName: (context) => SignupScreen(),
-            ChooseRoleScreen.routeName : (context) => ChooseRoleScreen(),
+            ChooseRoleScreen.routeName: (context) => ChooseRoleScreen(),
             HomeScreen.routeName: (context) => HomeScreen(),
             ChatBot.routeName: (context) => ChatBot(),
-            LiveTracking.routeName : (context) => LiveTracking(),
-            NearestHospitals.routeName : (context) => NearestHospitals()
-
+            LiveTracking.routeName: (context) => LiveTracking(),
+            NearestHospitals.routeName: (context) => NearestHospitals()
           },
         );
       },

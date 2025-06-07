@@ -50,6 +50,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 SizedBox(height: 20,),
                 // Sign Up Name
                 TextField(
+                  cursorColor: Theme.of(context).primaryColor,
                   controller: _nameController,
                   decoration: InputDecoration(
                     focusedBorder: OutlineInputBorder(
@@ -75,6 +76,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 //Sign up name
                 TextField(
+                  cursorColor: Theme.of(context).primaryColor,
                   controller: _signupEmailController,
                   decoration: InputDecoration(
                     focusedBorder: OutlineInputBorder(
@@ -100,6 +102,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 // Sign up password
                 TextField(
+                  cursorColor: Theme.of(context).primaryColor,
                   controller: _signupPasswordController,
                   obscureText: _isPasswordVisible,
                   decoration: InputDecoration(
@@ -203,23 +206,33 @@ class _SignupScreenState extends State<SignupScreen> {
                       );
                       return;
                     }
-
                     try {
-                      final credential = await FirebaseAuth.instance
-                          .createUserWithEmailAndPassword(
-                        email: email,
-                        password: password,
-                      );
-                      var userID = FirebaseAuth.instance.currentUser!.uid;
-                      UserModel user = UserModel(name: name,
-                          email: email , id: userID);
-                      await FirebaseManager.setUser(user).onError((error, stackTrace) {
-                        SnackBar(content: Text("$error"),);
-                      },);
-                      var provider = Provider.of<MyProvider>(context,listen: false);
-                      provider.setUserModel(user.id, user.name, user.email);
-                      Navigator.pushNamed(context, ChooseRoleScreen.routeName);
-                    } on FirebaseAuthException catch (e) {
+                      if (_isChecked) {
+                        final credential = await FirebaseAuth.instance
+                            .createUserWithEmailAndPassword(
+                          email: email,
+                          password: password,
+                        );
+                        var userID = FirebaseAuth.instance.currentUser!.uid;
+                        UserModel user = UserModel(name: name,
+                            email: email, id: userID);
+                        await FirebaseManager.setUser(user).onError((error,
+                            stackTrace) {
+                          SnackBar(content: Text("$error"),);
+                        },);
+                        var provider = Provider.of<MyProvider>(
+                            context, listen: false);
+                        provider.setUserModel(user.id, user.name, user.email);
+                        Navigator.pushNamedAndRemoveUntil(context, ChooseRoleScreen.routeName,(route) => false, );
+                      }
+                      else{
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  'Please accept Terms Of Service and Privacy Policy')),
+                        );
+                      }
+                    }on FirebaseAuthException catch (e) {
                       if (e.code == 'weak-password') {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
