@@ -2,6 +2,7 @@ import 'package:amanak/firebase/firebase_manager.dart';
 import 'package:amanak/home_screen.dart';
 import 'package:amanak/models/user_model.dart';
 import 'package:amanak/provider/my_provider.dart';
+import 'package:amanak/signup/guardian_user_assignment.dart';
 import 'package:amanak/widgets/success_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -98,21 +99,33 @@ class ChooseRoleScreen extends StatelessWidget {
                 height: 260,
               ),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   UserModel user = UserModel(
                       name: provider.userName,
                       email: provider.userEmail,
                       id: provider.userID,
                       role: provider.chosedRole);
-                  FirebaseManager.updateEvent(user).onError(
-                    (error, stackTrace) {
-                      SnackBar(content: Text("$error"));
-                    },
-                  ).then(
-                    (value) {
-                      showSuccessDialog(context);
-                    },
-                  );
+
+                  if (provider.chosedRole == "Guardian") {
+                    // For guardians, navigate to user assignment screen
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => GuardianUserAssignment(user: user),
+                      ),
+                    );
+                  } else {
+                    // For regular users, complete registration
+                    await FirebaseManager.updateEvent(user).onError(
+                      (error, stackTrace) {
+                        SnackBar(content: Text("$error"));
+                      },
+                    ).then(
+                      (value) {
+                        showSuccessDialog(context);
+                      },
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).primaryColor,
