@@ -1,4 +1,5 @@
 import 'package:amanak/models/user_model.dart';
+import 'package:amanak/models/pill_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -29,7 +30,8 @@ class FirebaseManager {
   static Future<Map<String, String>> getNameAndRole(String userId) async {
     try {
       var collection = getUsersCollection();
-      DocumentSnapshot<UserModel> docSnapshot = await collection.doc(userId).get();
+      DocumentSnapshot<UserModel> docSnapshot =
+          await collection.doc(userId).get();
 
       if (!docSnapshot.exists) {
         print("Didn't Find $userId");
@@ -49,8 +51,8 @@ class FirebaseManager {
           'name': user.name,
           'email': user.email,
           'role': user.role,
-          'id' : user.id,
-          'sharedUsers' : user.sharedUsers
+          'id': user.id,
+          'sharedUsers': user.sharedUsers
         };
       }
 
@@ -58,9 +60,8 @@ class FirebaseManager {
         'name': 'User Name',
         'email': 'user@email.com',
         'role': '',
-        'id' : '',
-        'sharedUsers' : ''
-
+        'id': '',
+        'sharedUsers': ''
       };
     } catch (e) {
       print('Error getting user data: $e');
@@ -68,13 +69,14 @@ class FirebaseManager {
         'name': 'User Name',
         'email': 'user@email.com',
         'role': '',
-        'id' : '',
-        'sharedUsers' : ''
+        'id': '',
+        'sharedUsers': ''
       };
     }
   }
 
-  static Future<void> linkUser(String currentUserId, String sharedEmail, String currentUserEmail) async {
+  static Future<void> linkUser(
+      String currentUserId, String sharedEmail, String currentUserEmail) async {
     final firestore = FirebaseFirestore.instance;
 
     // Check if the shared user exists
@@ -102,4 +104,53 @@ class FirebaseManager {
     }
   }
 
+  // Pills collection methods
+  static CollectionReference<PillModel> getPillsCollection(String userId) {
+    return FirebaseFirestore.instance
+        .collection("users")
+        .doc(userId)
+        .collection("pills")
+        .withConverter(
+      fromFirestore: (snapshot, _) {
+        return PillModel.fromJson(snapshot.data()!, snapshot.id);
+      },
+      toFirestore: (value, _) {
+        return value.toJson();
+      },
+    );
+  }
+
+  static Future<String> addPill(PillModel pill, {String? userId}) async {
+    final currentUserId = userId ?? FirebaseAuth.instance.currentUser!.uid;
+    var collection = getPillsCollection(currentUserId);
+    DocumentReference docRef = await collection.add(pill);
+    return docRef.id;
+  }
+
+  static Future<void> updatePill(PillModel pill, {String? userId}) async {
+    final currentUserId = userId ?? FirebaseAuth.instance.currentUser!.uid;
+    var collection = getPillsCollection(currentUserId);
+    return collection.doc(pill.id).update(pill.toJson());
+  }
+
+  static Future<void> deletePill(String pillId, {String? userId}) async {
+    final currentUserId = userId ?? FirebaseAuth.instance.currentUser!.uid;
+    var collection = getPillsCollection(currentUserId);
+    return collection.doc(pillId).delete();
+  }
+
+  static Stream<List<PillModel>> getPillsStream({String? userId}) {
+    final currentUserId = userId ?? FirebaseAuth.instance.currentUser!.uid;
+    var collection = getPillsCollection(currentUserId);
+    return collection
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
+
+  static Future<List<PillModel>> getPills({String? userId}) async {
+    final currentUserId = userId ?? FirebaseAuth.instance.currentUser!.uid;
+    var collection = getPillsCollection(currentUserId);
+    var snapshot = await collection.get();
+    return snapshot.docs.map((doc) => doc.data()).toList();
+  }
 }

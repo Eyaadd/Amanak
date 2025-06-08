@@ -220,130 +220,45 @@ class _LiveTrackingState extends State<LiveTracking> {
 
   void _startLocationUpdates() {
     _locationTimer?.cancel(); // Cancel any existing timer
-
-    // Get initial location with lower accuracy for faster first fix
-    Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.reduced,
-      timeLimit: const Duration(seconds: 15),
-    ).then((position) async {
-      if (mounted) {
-        setState(() {
-          _currentPosition = position;
-        });
-        await _updateLocationInFirestore(position);
-        await _updateCurrentLocationName(position);
-      }
-    }).catchError((e) {
-      print('Error getting initial location: $e');
-      // Try with last known position if available
-      Geolocator.getLastKnownPosition().then((lastPosition) async {
-        if (lastPosition != null && mounted) {
-          setState(() {
-            _currentPosition = lastPosition;
-          });
-          await _updateLocationInFirestore(lastPosition);
-          await _updateCurrentLocationName(lastPosition);
-        }
-      });
-    });
-
-    // Then start periodic updates with high accuracy
     _locationTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
       try {
         if (!_locationPermissionGranted) return;
 
-        // First try to get last known position as a fallback
-        Position? lastKnownPosition = await Geolocator.getLastKnownPosition();
-        if (lastKnownPosition != null && mounted) {
-          setState(() {
-            _currentPosition = lastKnownPosition;
-          });
-          await _updateLocationInFirestore(lastKnownPosition);
-          await _updateCurrentLocationName(lastKnownPosition);
-        }
-
-        // Then try to get current position with increased timeout
         Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 15),
         );
 
-        if (mounted) {
-          setState(() {
-            _currentPosition = position;
-          });
-          await _updateLocationInFirestore(position);
-          await _updateCurrentLocationName(position);
-        }
+        setState(() {
+          _currentPosition = position;
+        });
+
+        // Update current user's location in Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .set({
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+          'lastLocationUpdate': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+
+        // Update current location name
+        currentLocationName =
+            await _getLocationName(position.latitude, position.longitude);
+        if (mounted) setState(() {});
+
+        print(
+            'Your location updated - Lat: ${position.latitude}, Lon: ${position.longitude}');
       } catch (e) {
         print('Error updating location: $e');
-        if (mounted) {
-          String errorMessage = 'Error updating location';
-          if (e is TimeoutException) {
-            errorMessage =
-            'Location update timed out. Please check your GPS settings and try again.';
-          }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
-              action: SnackBarAction(
-                label: 'Retry',
-                textColor: Colors.white,
-                onPressed: () {
-                  _startLocationUpdates();
-                },
-              ),
-            ),
-          );
-        }
-      }
-    });
-  }
-
-  Future<void> _updateLocationInFirestore(Position position) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser!.uid)
-          .set({
-        'latitude': position.latitude,
-        'longitude': position.longitude,
-        'lastLocationUpdate': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      print(
-          'Location updated in Firestore - Lat: ${position.latitude}, Lon: ${position.longitude}');
-    } catch (e) {
-      print('Error updating Firestore: $e');
-      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving location: $e'),
+            content: Text('Error updating location: $e'),
             backgroundColor: Colors.red,
           ),
         );
       }
-    }
-  }
-
-  Future<void> _updateCurrentLocationName(Position position) async {
-    try {
-      String locationName =
-      await _getLocationName(position.latitude, position.longitude);
-      if (mounted) {
-        setState(() {
-          currentLocationName = locationName;
-        });
-      }
-    } catch (e) {
-      print('Error updating location name: $e');
-      if (mounted) {
-        setState(() {
-          currentLocationName = 'Location name unavailable';
-        });
-      }
-    }
+    });
   }
 
   void _listenToSharedUserLocation(String sharedUserId, String email) {
@@ -592,6 +507,49 @@ class _LiveTrackingState extends State<LiveTracking> {
     }
   }
 
+  Future<void> _navigateToLocation(double lat, double lng) async {
+    try {
+      final GoogleMapController controller = await _controller.future;
+      controller.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(lat, lng),
+            zoom: zoomClose,
+          ),
+        ),
+      );
+    } catch (e) {
+      print('Error navigating to location: $e');
+    }
+  }
+
+  Future<void> _navigateToUserLocation() async {
+    if (_currentPosition != null) {
+      await _navigateToLocation(
+          _currentPosition!.latitude, _currentPosition!.longitude);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Your location is not available yet. Please wait.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _navigateToSharedUserLocation() async {
+    if (sharedUserLat != null && sharedUserLng != null) {
+      await _navigateToLocation(sharedUserLat!, sharedUserLng!);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Shared user location is not available yet.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     bool hasCurrentLocation = _currentPosition != null;
@@ -613,259 +571,269 @@ class _LiveTrackingState extends State<LiveTracking> {
       body: _isLoading
           ? loadingContainer()
           : Stack(
-        children: <Widget>[
-          showMap
-              ? GoogleMap(
-            mapType: MapType.normal,
-            markers: {
-              if (hasCurrentLocation)
-                Marker(
-                  position: LatLng(
-                    _currentPosition!.latitude,
-                    _currentPosition!.longitude,
-                  ),
-                  markerId: const MarkerId('current_location'),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueMagenta,
-                  ),
-                  infoWindow: InfoWindow(
-                    title: 'Your Location',
-                    snippet: currentLocationName,
-                  ),
-                ),
-              if (hasSharedLocation)
-                Marker(
-                  position: LatLng(sharedUserLat!, sharedUserLng!),
-                  markerId: const MarkerId('shared_user'),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueBlue,
-                  ),
-                  infoWindow: InfoWindow(
-                    title: 'Shared User Location',
-                    snippet: sharedUserEmail,
-                  ),
-                ),
-            },
-            initialCameraPosition: CameraPosition(
-              target: LatLng(
-                _currentPosition?.latitude ?? (sharedUserLat ?? 0),
-                _currentPosition?.longitude ?? (sharedUserLng ?? 0),
-              ),
-              zoom: zoomClose,
-            ),
-            onMapCreated: (GoogleMapController controller) {
-              _controller.complete(controller);
-              if (hasCurrentLocation && hasSharedLocation) {
-                newCameraPosition();
-              }
-            },
-          )
-              : loadingContainer(),
-          // Zoom and refresh controls
-          Positioned(
-            right: 16,
-            top: MediaQuery.of(context).size.height * 0.2,
-            child: Column(
-              children: [
-                FloatingActionButton.small(
-                  heroTag: "zoomIn",
-                  backgroundColor: Colors.white,
-                  onPressed: () => _zoomMap(true),
-                  child: const Icon(Icons.add, color: primaryBlue),
-                ),
-                const SizedBox(height: 8),
-                FloatingActionButton.small(
-                  heroTag: "zoomOut",
-                  backgroundColor: Colors.white,
-                  onPressed: () => _zoomMap(false),
-                  child: const Icon(Icons.remove, color: primaryBlue),
-                ),
-                const SizedBox(height: 8),
-                FloatingActionButton.small(
-                  heroTag: "refresh",
-                  backgroundColor: Colors.white,
-                  onPressed: () {
-                    setState(() {});
-                    if (hasCurrentLocation && hasSharedLocation) {
-                      newCameraPosition();
-                    }
-                  },
-                  child: const Icon(Icons.refresh, color: primaryBlue),
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 25.h,
-              width: MediaQuery.of(context).size.width,
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: showMap
-                  ? Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (hasCurrentLocation) ...[
-                    const Text(
-                      'Your Location',
-                      style: TextStyle(
-                        color: primaryBlue,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on,
-                          color: primaryBlue,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            currentLocationName,
-                            style: const TextStyle(
-                              color: Colors.black87,
-                              fontSize: 12,
+              children: <Widget>[
+                showMap
+                    ? GoogleMap(
+                        mapType: MapType.normal,
+                        markers: {
+                          if (hasCurrentLocation)
+                            Marker(
+                              position: LatLng(
+                                _currentPosition!.latitude,
+                                _currentPosition!.longitude,
+                              ),
+                              markerId: const MarkerId('current_location'),
+                              icon: BitmapDescriptor.defaultMarkerWithHue(
+                                BitmapDescriptor.hueMagenta,
+                              ),
+                              infoWindow: InfoWindow(
+                                title: 'Your Location',
+                                snippet: currentLocationName,
+                              ),
+                              onTap: () => _navigateToUserLocation(),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                  if (hasSharedLocation) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      'Tracking: ${sharedUserEmail ?? ""}',
-                      style: const TextStyle(
-                        color: primaryBlue,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on,
-                          color: primaryBlue,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            sharedLocationName,
-                            style: const TextStyle(
-                              color: Colors.black87,
-                              fontSize: 12,
+                          if (hasSharedLocation)
+                            Marker(
+                              position: LatLng(sharedUserLat!, sharedUserLng!),
+                              markerId: const MarkerId('shared_user'),
+                              icon: BitmapDescriptor.defaultMarkerWithHue(
+                                BitmapDescriptor.hueBlue,
+                              ),
+                              infoWindow: InfoWindow(
+                                title: 'Shared User Location',
+                                snippet: sharedUserEmail,
+                              ),
+                              onTap: () => _navigateToSharedUserLocation(),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                        },
+                        initialCameraPosition: CameraPosition(
+                          target: LatLng(
+                            _currentPosition?.latitude ?? (sharedUserLat ?? 0),
+                            _currentPosition?.longitude ?? (sharedUserLng ?? 0),
                           ),
+                          zoom: zoomClose,
                         ),
-                      ],
-                    ),
-                  ],
-                  const Spacer(),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
+                        onMapCreated: (GoogleMapController controller) {
+                          _controller.complete(controller);
+                          if (hasCurrentLocation && hasSharedLocation) {
                             newCameraPosition();
-                          },
-                          icon: const Icon(
-                            Icons.my_location,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          label: const Text(
-                            'Show Both',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryBlue,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius.circular(10),
-                            ),
-                          ),
-                        ),
+                          }
+                        },
+                      )
+                    : loadingContainer(),
+                // Zoom and refresh controls
+                Positioned(
+                  right: 16,
+                  top: MediaQuery.of(context).size.height * 0.2,
+                  child: Column(
+                    children: [
+                      FloatingActionButton.small(
+                        heroTag: "zoomIn",
+                        backgroundColor: Colors.white,
+                        onPressed: () => _zoomMap(true),
+                        child: const Icon(Icons.add, color: primaryBlue),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: _openDirections,
-                          icon: const Icon(
-                            Icons.directions,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          label: const Text(
-                            'Directions',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryBlue,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius.circular(10),
-                            ),
-                          ),
-                        ),
+                      const SizedBox(height: 8),
+                      FloatingActionButton.small(
+                        heroTag: "zoomOut",
+                        backgroundColor: Colors.white,
+                        onPressed: () => _zoomMap(false),
+                        child: const Icon(Icons.remove, color: primaryBlue),
+                      ),
+                      const SizedBox(height: 8),
+                      FloatingActionButton.small(
+                        heroTag: "refresh",
+                        backgroundColor: Colors.white,
+                        onPressed: () {
+                          setState(() {});
+                          if (hasCurrentLocation && hasSharedLocation) {
+                            newCameraPosition();
+                          }
+                        },
+                        child: const Icon(Icons.refresh, color: primaryBlue),
+                      ),
+                      const SizedBox(height: 8),
+                      FloatingActionButton.small(
+                        heroTag: "myLocation",
+                        backgroundColor: Colors.white,
+                        onPressed: _navigateToUserLocation,
+                        child: const Icon(Icons.person_pin_circle,
+                            color: primaryBlue),
                       ),
                     ],
                   ),
-                ],
-              )
-                  : const Center(
-                child: Text(
-                  'Waiting for location updates...',
-                  style: TextStyle(
-                    color: Colors.black54,
-                    fontSize: 16,
+                ),
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: 25.h,
+                    width: MediaQuery.of(context).size.width,
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, -5),
+                        ),
+                      ],
+                    ),
+                    child: showMap
+                        ? Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (hasCurrentLocation) ...[
+                                const Text(
+                                  'Your Location',
+                                  style: TextStyle(
+                                    color: primaryBlue,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.location_on,
+                                      color: primaryBlue,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        currentLocationName,
+                                        style: const TextStyle(
+                                          color: Colors.black87,
+                                          fontSize: 12,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                              if (hasSharedLocation) ...[
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Tracking: ${sharedUserEmail ?? ""}',
+                                  style: const TextStyle(
+                                    color: primaryBlue,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.location_on,
+                                      color: primaryBlue,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        sharedLocationName,
+                                        style: const TextStyle(
+                                          color: Colors.black87,
+                                          fontSize: 12,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                              const Spacer(),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        newCameraPosition();
+                                      },
+                                      icon: const Icon(
+                                        Icons.my_location,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                      label: const Text(
+                                        'Show Both',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: primaryBlue,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 10,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: _openDirections,
+                                      icon: const Icon(
+                                        Icons.directions,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                      label: const Text(
+                                        'Directions',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: primaryBlue,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 10,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          )
+                        : const Center(
+                            child: Text(
+                              'Waiting for location updates...',
+                              style: TextStyle(
+                                color: Colors.black54,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 
