@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MessagingTab extends StatefulWidget {
   static const routeName = "Messaging";
@@ -10,24 +12,68 @@ class MessagingTab extends StatefulWidget {
 
 class _MessagingTabState extends State<MessagingTab> {
   final TextEditingController _messageController = TextEditingController();
-  final List<ChatMessage> _messages = [];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String? _currentUserEmail;
+  String? _guardianEmail;
+  String? _chatPartnerName;
+  Stream<QuerySnapshot>? _messagesStream;
 
   @override
   void initState() {
     super.initState();
-    // Add some dummy messages for testing
-    _messages.addAll([
-      ChatMessage(
-        text: "Hello! How are you?",
-        isMe: false,
-        time: DateTime.now().subtract(const Duration(minutes: 5)),
-      ),
-      ChatMessage(
-        text: "I'm good, thanks! How about you?",
-        isMe: true,
-        time: DateTime.now().subtract(const Duration(minutes: 4)),
-      ),
-    ]);
+    _initializeChat();
+  }
+
+  Future<void> _initializeChat() async {
+    try {
+      // Get current user's email
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+      
+      _currentUserEmail = currentUser.email;
+
+      // Get user's data from Firestore
+      final userDoc = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: _currentUserEmail)
+          .get();
+
+      if (userDoc.docs.isNotEmpty) {
+        final userData = userDoc.docs.first.data();
+        _guardianEmail = userData['sharedUsers'] as String?;
+
+        if (_guardianEmail != null) {
+          // Get guardian's name
+          final guardianDoc = await _firestore
+              .collection('users')
+              .where('email', isEqualTo: _guardianEmail)
+              .get();
+
+          if (guardianDoc.docs.isNotEmpty) {
+            setState(() {
+              _chatPartnerName = guardianDoc.docs.first.data()['name'] as String?;
+            });
+          }
+
+          // Set up messages stream
+          _messagesStream = _firestore
+              .collection('chats')
+              .doc(_getChatId())
+              .collection('messages')
+              .orderBy('timestamp', descending: true)
+              .snapshots();
+        }
+      }
+    } catch (e) {
+      print('Error initializing chat: $e');
+    }
+  }
+
+  String _getChatId() {
+    // Create a unique chat ID by combining both user emails
+    final emails = [_currentUserEmail, _guardianEmail]..sort();
+    return '${emails[0]}_${emails[1]}';
   }
 
   @override
@@ -36,60 +82,78 @@ class _MessagingTabState extends State<MessagingTab> {
     super.dispose();
   }
 
-  void _sendMessage() {
-    if (_messageController.text.trim().isEmpty) return;
+  Future<void> _sendMessage() async {
+    if (_messageController.text.trim().isEmpty || 
+        _currentUserEmail == null || 
+        _guardianEmail == null) return;
 
-    setState(() {
-      _messages.add(
-        ChatMessage(
-          text: _messageController.text,
-          isMe: true,
-          time: DateTime.now(),
-        ),
-      );
-    });
-    _messageController.clear();
+    try {
+      final chatId = _getChatId();
+      await _firestore
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .add({
+        'text': _messageController.text,
+        'senderEmail': _currentUserEmail,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      _messageController.clear();
+    } catch (e) {
+      print('Error sending message: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
+        title: Row(
           children: [
-            CircleAvatar(
+            const CircleAvatar(
               radius: 16,
               backgroundColor: Colors.grey,
               child: Icon(Icons.person, color: Colors.white, size: 20),
             ),
-            SizedBox(width: 8),
-            Text('John Doe'),
+            const SizedBox(width: 8),
+            Text(_chatPartnerName ?? 'Loading...'),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.video_call),
-            onPressed: () {
-              // Handle video call
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.call),
-            onPressed: () {
-              // Handle voice call
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                return _buildMessageBubble(message);
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _messagesStream,
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Something went wrong'));
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final messages = snapshot.data?.docs ?? [];
+
+                return ListView.builder(
+                  reverse: true,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final message = messages[index].data() as Map<String, dynamic>;
+                    final isMe = message['senderEmail'] == _currentUserEmail;
+                    
+                    return _buildMessageBubble(
+                      ChatMessage(
+                        text: message['text'] as String,
+                        isMe: isMe,
+                        time: (message['timestamp'] as Timestamp).toDate(),
+                      ),
+                    );
+                  },
+                );
               },
             ),
           ),
@@ -148,12 +212,6 @@ class _MessagingTabState extends State<MessagingTab> {
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.attach_file),
-            onPressed: () {
-              // Handle attachment
-            },
-          ),
           Expanded(
             child: TextField(
               controller: _messageController,
