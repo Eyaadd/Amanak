@@ -1,7 +1,9 @@
 import 'package:amanak/chatbot.dart';
 import 'package:amanak/gaurdian_location.dart';
 import 'package:amanak/login_screen.dart';
+import 'package:amanak/medicine_search_screen.dart';
 import 'package:amanak/nearest_hospitals.dart';
+import 'package:amanak/services/database_service.dart';
 import 'package:amanak/signup/choose_role.dart';
 import 'package:amanak/signup/signup_screen.dart';
 import 'package:amanak/theme/base_theme.dart';
@@ -28,8 +30,8 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Note: Firebase Auth persistence is handled automatically on mobile platforms
-  // No need to call setPersistence() which is web-only
+  // Initialize the database
+  await DatabaseService().database;
 
   // Check if user is already logged in
   User? currentUser = FirebaseAuth.instance.currentUser;
@@ -69,7 +71,8 @@ class MyApp extends StatelessWidget {
             HomeScreen.routeName: (context) => HomeScreen(),
             ChatBot.routeName: (context) => ChatBot(),
             LiveTracking.routeName: (context) => LiveTracking(),
-            NearestHospitals.routeName: (context) => NearestHospitals()
+            NearestHospitals.routeName: (context) => NearestHospitals(),
+            MedicineSearchScreen.routeName: (context) => MedicineSearchScreen(),
           },
         );
       },

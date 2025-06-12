@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../live_tracking.dart';
+import '../medicine_search_screen.dart';
 import '../provider/my_provider.dart';
 import 'package:amanak/models/pill_model.dart';
 import 'package:amanak/firebase/firebase_manager.dart';
@@ -26,22 +27,72 @@ class _HomeTabState extends State<HomeTab> {
   final _searchController = TextEditingController();
   List<PillModel> _todayPills = [];
   bool _isLoading = true;
+  bool _isReadOnly = false;
+  String _currentUserRole = "";
+  String _displayUserId = "";
+  String _displayName = "";
 
   @override
   void initState() {
     super.initState();
-    _loadPills();
+    _checkUserRoleAndLoadData();
   }
 
-  Future<void> _loadPills() async {
+  // Check user role and load appropriate data
+  Future<void> _checkUserRoleAndLoadData() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final userId = FirebaseAuth.instance.currentUser?.uid;
-      if (userId != null) {
-        final pillsList = await FirebaseManager.getPills(userId: userId);
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+      if (currentUserId != null) {
+        // Get user data for the current user
+        final userData = await FirebaseManager.getNameAndRole(currentUserId);
+        final userRole = userData['role'] ?? '';
+        final sharedUserEmail = userData['sharedUsers'] ?? '';
+
+        _currentUserRole = userRole;
+        _displayUserId = currentUserId;
+        _displayName = userData['name'] ?? 'User';
+
+        if (userRole.toLowerCase() == 'guardian' &&
+            sharedUserEmail.isNotEmpty) {
+          // If guardian, find the elder user's ID by their email
+          final elderData =
+              await FirebaseManager.getUserByEmail(sharedUserEmail);
+          if (elderData != null) {
+            _displayUserId = elderData['id'] ?? '';
+            if (_displayUserId.isNotEmpty) {
+              setState(() {
+                _isReadOnly = true;
+              });
+              _displayName = elderData['name'] ?? 'Elder';
+            }
+          }
+        }
+
+        // Load pills for either current user (elder) or shared user (for guardian)
+        await _loadPills(_displayUserId);
+      }
+    } catch (e) {
+      print('Error checking user role: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadPills([String? userId]) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final targetUserId = userId ?? FirebaseAuth.instance.currentUser?.uid;
+      if (targetUserId != null) {
+        final pillsList = await FirebaseManager.getPills(userId: targetUserId);
 
         final today = DateTime.now();
         final todayDate = DateTime(today.year, today.month, today.day);
@@ -76,6 +127,16 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Future<void> _markPillAsTaken(PillModel pill, bool taken) async {
+    // Only allow elder to mark pills
+    if (_isReadOnly) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Guardian view is read-only. Cannot mark pills as taken.')),
+      );
+      return;
+    }
+
     try {
       setState(() {
         // Update UI immediately for better user experience
@@ -188,7 +249,7 @@ class _HomeTabState extends State<HomeTab> {
     return SafeArea(
       child: Scaffold(
         body: RefreshIndicator(
-          onRefresh: _loadPills,
+          onRefresh: _checkUserRoleAndLoadData,
           child: SingleChildScrollView(
             physics: AlwaysScrollableScrollPhysics(),
             child: Padding(
@@ -344,7 +405,8 @@ class _HomeTabState extends State<HomeTab> {
                               children: [
                                 OverlayButton(
                                   assetName: "pills",
-                                  onTap: () => provider.changeCalendarIndex(),
+                                  onTap: (){provider.changeCalendarIndex();
+                                    Navigator.pushNamed(context, MedicineSearchScreen.routeName);},
                                 ),
                                 SizedBox(height: screenHeight * 0.025),
                                 Text(
@@ -397,7 +459,9 @@ class _HomeTabState extends State<HomeTab> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Pill Reminder",
+                        _isReadOnly
+                            ? "${_displayName}'s Pill Reminder"
+                            : "Pill Reminder",
                         style:
                             Theme.of(context).textTheme.titleMedium!.copyWith(
                                   color: Colors.black,
@@ -422,7 +486,9 @@ class _HomeTabState extends State<HomeTab> {
 
                   // Today's Pills
                   _isLoading
-                      ? Center(child: CircularProgressIndicator())
+                      ? Center(child: CircularProgressIndicator(
+                    color: Theme.of(context).primaryColor,
+                  ))
                       : Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -625,26 +691,37 @@ class _HomeTabState extends State<HomeTab> {
               },
             ),
           ),
-          // Add checkbox for all pills
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Transform.scale(
-              scale: 1.3, // Make checkbox larger
-              child: Checkbox(
-                value: pill.taken,
-                activeColor: Colors.green[700],
-                checkColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
+          // Add checkbox for elder or status icon for guardian
+          _isReadOnly
+              ? Padding(
+                  // For guardians - show status icon instead of checkbox
+                  padding: const EdgeInsets.only(right: 16.0),
+                  child: Icon(
+                    pill.taken ? Icons.check_circle : Icons.pending_actions,
+                    color: pill.taken ? Colors.green[700] : Colors.orange,
+                    size: 28, // Larger icon
+                  ),
+                )
+              : Padding(
+                  // For elders - show checkbox to mark pills as taken
+                  padding: const EdgeInsets.only(right: 16.0),
+                  child: Transform.scale(
+                    scale: 1.3, // Make checkbox larger
+                    child: Checkbox(
+                      value: pill.taken,
+                      activeColor: Colors.green[700],
+                      checkColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      onChanged: (bool? value) {
+                        if (value != null) {
+                          _markPillAsTaken(pill, value);
+                        }
+                      },
+                    ),
+                  ),
                 ),
-                onChanged: (bool? value) {
-                  if (value != null) {
-                    _markPillAsTaken(pill, value);
-                  }
-                },
-              ),
-            ),
-          ),
         ],
       ),
     );

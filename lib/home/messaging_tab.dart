@@ -30,7 +30,7 @@ class _MessagingTabState extends State<MessagingTab> {
       // Get current user's email
       final currentUser = _auth.currentUser;
       if (currentUser == null) return;
-      
+
       _currentUserEmail = currentUser.email;
 
       // Get user's data from Firestore
@@ -52,7 +52,8 @@ class _MessagingTabState extends State<MessagingTab> {
 
           if (guardianDoc.docs.isNotEmpty) {
             setState(() {
-              _chatPartnerName = guardianDoc.docs.first.data()['name'] as String?;
+              _chatPartnerName =
+                  guardianDoc.docs.first.data()['name'] as String?;
             });
           }
 
@@ -83,8 +84,8 @@ class _MessagingTabState extends State<MessagingTab> {
   }
 
   Future<void> _sendMessage() async {
-    if (_messageController.text.trim().isEmpty || 
-        _currentUserEmail == null || 
+    if (_messageController.text.trim().isEmpty ||
+        _currentUserEmail == null ||
         _guardianEmail == null) return;
 
     try {
@@ -142,14 +143,21 @@ class _MessagingTabState extends State<MessagingTab> {
                   padding: const EdgeInsets.all(16),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    final message = messages[index].data() as Map<String, dynamic>;
+                    final message =
+                        messages[index].data() as Map<String, dynamic>;
                     final isMe = message['senderEmail'] == _currentUserEmail;
-                    
+
+                    // Handle null timestamp (happens for messages still processing on server side)
+                    final timestamp = message['timestamp'];
+                    final messageTime = timestamp != null
+                        ? (timestamp as Timestamp).toDate()
+                        : DateTime.now();
+
                     return _buildMessageBubble(
                       ChatMessage(
                         text: message['text'] as String,
                         isMe: isMe,
-                        time: (message['timestamp'] as Timestamp).toDate(),
+                        time: messageTime,
                       ),
                     );
                   },
@@ -246,4 +254,4 @@ class ChatMessage {
     required this.isMe,
     required this.time,
   });
-} 
+}

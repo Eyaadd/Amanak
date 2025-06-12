@@ -153,4 +153,32 @@ class FirebaseManager {
     var snapshot = await collection.get();
     return snapshot.docs.map((doc) => doc.data()).toList();
   }
+
+  // Helper method to find a user by email
+  static Future<Map<String, String>?> getUserByEmail(String email) async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final query = await firestore
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+
+      if (query.docs.isNotEmpty) {
+        final doc = query.docs.first;
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          'name': data['name'] ?? '',
+          'email': data['email'] ?? '',
+          'role': data['role'] ?? '',
+          'sharedUsers': data['sharedUsers'] ?? '',
+        };
+      }
+      return null;
+    } catch (e) {
+      print('Error finding user by email: $e');
+      return null;
+    }
+  }
 }

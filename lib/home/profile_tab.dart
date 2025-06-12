@@ -582,7 +582,7 @@ class _ProfileTabState extends State<ProfileTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildProfileOption(
-                      assetName: "emergencyic",
+                      assetName: "name",
                       title: '$userName',
                       onTap: () => _showEditDialog('Name', userName),
                       screenWidth: screenWidth,
@@ -593,7 +593,7 @@ class _ProfileTabState extends State<ProfileTab> {
                         endIndent: screenWidth * 0.025,
                         indent: screenWidth * 0.025),
                     _buildProfileOption(
-                      assetName: "editic",
+                      assetName: "age",
                       title: '$userAge',
                       onTap: () => _showEditDialog('Age', userAge.toString()),
                       screenWidth: screenWidth,
@@ -604,7 +604,7 @@ class _ProfileTabState extends State<ProfileTab> {
                         endIndent: screenWidth * 0.025,
                         indent: screenWidth * 0.025),
                     _buildProfileOption(
-                      assetName: "dangercircle",
+                      assetName: "height",
                       title: 'Height: $userHeight',
                       onTap: () =>
                           _showEditDialog('Height', userHeight.toString()),
@@ -616,7 +616,7 @@ class _ProfileTabState extends State<ProfileTab> {
                         endIndent: screenWidth * 0.025,
                         indent: screenWidth * 0.025),
                     _buildProfileOption(
-                      assetName: "dangercircle",
+                      assetName: "userrole",
                       title: userRole,
                       onTap: () {},
                       screenWidth: screenWidth,
@@ -627,7 +627,7 @@ class _ProfileTabState extends State<ProfileTab> {
                         endIndent: screenWidth * 0.025,
                         indent: screenWidth * 0.025),
                     _buildProfileOption(
-                      assetName: "dangercircle",
+                      assetName: "shareduser",
                       title: sharedUsers == '' ? "Shared Users" : sharedUsers,
                       onTap: () {
                         sharedUsersDialog(
