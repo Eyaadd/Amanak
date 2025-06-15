@@ -707,20 +707,9 @@ class NotiService {
         alert: true,
         badge: true,
         sound: true,
-        provisional: false,
-        criticalAlert: true,
-        announcement: true,
       );
 
       print('FCM Authorization status: ${settings.authorizationStatus}');
-
-      // Configure FCM for background notifications
-      await FirebaseMessaging.instance
-          .setForegroundNotificationPresentationOptions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
 
       // Get FCM token
       String? token = await _firebaseMessaging.getToken();
@@ -745,53 +734,8 @@ class NotiService {
           _showFcmNotification(message);
         }
       });
-
-      // Handle when a notification opens the app from terminated state
-      FirebaseMessaging.instance
-          .getInitialMessage()
-          .then((RemoteMessage? message) {
-        if (message != null) {
-          print('App opened from terminated state via notification');
-          print('Initial message: ${message.data}');
-
-          // Process the initial message
-          _handleNotificationOpenedApp(message);
-        }
-      });
-
-      // Handle notification opening the app from background state
-      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        print('App opened from background state via notification');
-        print('Message data: ${message.data}');
-
-        // Process the message
-        _handleNotificationOpenedApp(message);
-      });
     } catch (e) {
       print('Error initializing FCM: $e');
-    }
-  }
-
-  // Handle when notification opens the app
-  void _handleNotificationOpenedApp(RemoteMessage message) {
-    try {
-      final data = message.data;
-      final notificationType = data['type'];
-
-      print('Handling notification open: $notificationType');
-
-      // Process based on notification type
-      if (notificationType == 'pill_taken') {
-        // Navigate to pill details or relevant screen
-        print('Pill taken notification: ${data['pillName']}');
-      } else if (notificationType == 'pill_missed') {
-        // Navigate to missed pill screen
-        print('Pill missed notification: ${data['pillName']}');
-      }
-
-      // You can add navigation logic here when needed
-    } catch (e) {
-      print('Error handling notification open: $e');
     }
   }
 

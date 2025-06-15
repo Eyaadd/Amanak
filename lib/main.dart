@@ -31,20 +31,6 @@ import 'package:timezone/timezone.dart' as tz;
 
 const apiKey = "AIzaSyDLePMB53Q1Nud4ZG8a2XA9UUYuSLCrY6c";
 
-// Create a channel for high priority notifications
-const AndroidNotificationChannel channel = AndroidNotificationChannel(
-  'high_importance_channel',
-  'High Importance Notifications',
-  description: 'This channel is used for important notifications.',
-  importance: Importance.high,
-  playSound: true,
-  enableVibration: true,
-);
-
-// Initialize FlutterLocalNotificationsPlugin
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
-
 // Background handler for notification taps
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse notificationResponse) {
@@ -65,31 +51,11 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   print("Handling a background message: ${message.messageId}");
-  print("Background message data: ${message.data}");
-  print("Background message notification: ${message.notification?.title}");
 
-  // Show notification even when app is in background
-  if (message.notification != null) {
-    await flutterLocalNotificationsPlugin.show(
-      message.hashCode,
-      message.notification!.title,
-      message.notification!.body,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          channel.id,
-          channel.name,
-          channelDescription: channel.description,
-          icon: '@mipmap/ic_launcher',
-          priority: Priority.high,
-          importance: Importance.high,
-        ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
-      ),
-    );
+  // You can process the message here or show a notification
+  final notiService = NotiService();
+  if (!notiService.isInitialized) {
+    await notiService.initNotification();
   }
 }
 
@@ -99,24 +65,8 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Set up Firebase Messaging background handler
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  // Create notification channel for Android
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(channel);
-
-  // Request permission for iOS
-  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
-
   // Set up background notification handler
-  flutterLocalNotificationsPlugin.initialize(
+  FlutterLocalNotificationsPlugin().initialize(
     const InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(),
@@ -125,9 +75,18 @@ void main() async {
     onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
   );
 
+  // Set up Firebase Messaging background handler
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
   // Initialize notification service
   final notiService = NotiService();
   await notiService.initNotification();
+
+  // Check for any pending notifications
+  final authUser = FirebaseAuth.instance.currentUser;
+  if (authUser != null) {
+    await notiService.checkPendingNotifications();
+  }
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
