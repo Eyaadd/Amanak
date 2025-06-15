@@ -11,6 +11,8 @@ class UserModel {
   double? latitude;
   double? longitude;
   DateTime? lastLocationUpdate;
+  String? timezone;
+  String? fcmToken;
 
   UserModel({
     this.id = "",
@@ -23,23 +25,27 @@ class UserModel {
     this.latitude,
     this.longitude,
     this.lastLocationUpdate,
+    this.timezone,
+    this.fcmToken,
   });
 
   UserModel.fromJson(Map<String, dynamic> json, String id)
       : this(
-    id: json['id'],
-    name: json['name'],
-    email: json['email'],
-    role: json['role'],
-    age: json['age'],
-    height: json['height'],
-    sharedUsers: json['sharedUsers'],
-    latitude: json['latitude']?.toDouble(),
-    longitude: json['longitude']?.toDouble(),
-    lastLocationUpdate: json['lastLocationUpdate'] != null
-        ? (json['lastLocationUpdate'] as Timestamp).toDate()
-        : null,
-  );
+          id: json['id'],
+          name: json['name'],
+          email: json['email'],
+          role: json['role'],
+          age: json['age'],
+          height: json['height'],
+          sharedUsers: json['sharedUsers'],
+          latitude: json['latitude']?.toDouble(),
+          longitude: json['longitude']?.toDouble(),
+          lastLocationUpdate: json['lastLocationUpdate'] != null
+              ? (json['lastLocationUpdate'] as Timestamp).toDate()
+              : null,
+          timezone: json['timezone'],
+          fcmToken: json['fcmToken'],
+        );
 
   Map<String, dynamic> toJson() {
     return {
@@ -55,6 +61,8 @@ class UserModel {
       'lastLocationUpdate': lastLocationUpdate != null
           ? Timestamp.fromDate(lastLocationUpdate!)
           : null,
+      'timezone': timezone,
+      'fcmToken': fcmToken,
     };
   }
 }

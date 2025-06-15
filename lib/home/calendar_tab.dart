@@ -163,37 +163,44 @@ class _CalendarTabState extends State<CalendarTab> {
                 // Add to Firebase
                 final pillId = await FirebaseManager.addPill(pillModel);
 
+                if (pillId.isEmpty) {
+                  throw Exception("Invalid pill ID returned from Firebase");
+                }
+
                 // Update local state with the returned ID
-                pillModel.id = pillId;
+                final updatedPillModel = pillModel.copyWith(id: pillId);
 
                 // Update UI - mark all days in the duration
                 setState(() {
-                  final startDate = DateTime(pillModel.dateTime.year,
-                      pillModel.dateTime.month, pillModel.dateTime.day);
+                  final startDate = DateTime(
+                      updatedPillModel.dateTime.year,
+                      updatedPillModel.dateTime.month,
+                      updatedPillModel.dateTime.day);
 
                   // Add pill to its start date
                   if (_pills[startDate] != null) {
-                    _pills[startDate]!.add(pillModel);
+                    _pills[startDate]!.add(updatedPillModel);
                   } else {
-                    _pills[startDate] = [pillModel];
+                    _pills[startDate] = [updatedPillModel];
                   }
 
                   // Mark all days in the duration
-                  for (int i = 1; i < pillModel.duration; i++) {
+                  for (int i = 1; i < updatedPillModel.duration; i++) {
                     final nextDate = startDate.add(Duration(days: i));
                     final nextDateKey =
                         DateTime(nextDate.year, nextDate.month, nextDate.day);
 
                     if (_pills[nextDateKey] != null) {
-                      _pills[nextDateKey]!.add(pillModel);
+                      _pills[nextDateKey]!.add(updatedPillModel);
                     } else {
-                      _pills[nextDateKey] = [pillModel];
+                      _pills[nextDateKey] = [updatedPillModel];
                     }
                   }
                 });
 
                 Navigator.of(context).pop();
               } catch (e) {
+                print('Error saving pill: $e');
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Error saving pill: $e')),
                 );
@@ -234,9 +241,10 @@ class _CalendarTabState extends State<CalendarTab> {
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(
-        color: Theme.of(context).primaryColor,
-      ))
+          ? Center(
+              child: CircularProgressIndicator(
+              color: Theme.of(context).primaryColor,
+            ))
           : Padding(
               padding: EdgeInsets.all(4.w),
               child: Column(
@@ -579,7 +587,7 @@ class _CalendarTabState extends State<CalendarTab> {
           child: Container(
             margin: EdgeInsets.only(bottom: 2.w),
             decoration: BoxDecoration(
-              color: pill.taken ? Colors.green[50] : Color(0xFF015C92),
+              color: _getPillCardColor(pill),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -591,15 +599,15 @@ class _CalendarTabState extends State<CalendarTab> {
                     leading: Container(
                       padding: EdgeInsets.all(2.w),
                       child: Icon(
-                        pill.taken ? Icons.check_circle : Icons.medication,
-                        color: pill.taken ? Colors.green[700] : Colors.white,
+                        _getPillStatusIcon(pill),
+                        color: _getPillTextColor(pill),
                         size: 6.w,
                       ),
                     ),
                     title: Text(
                       pill.name,
                       style: TextStyle(
-                        color: pill.taken ? Colors.green[700] : Colors.white,
+                        color: _getPillTextColor(pill),
                         fontWeight: FontWeight.bold,
                         fontSize: 15.sp,
                       ),
@@ -611,10 +619,7 @@ class _CalendarTabState extends State<CalendarTab> {
                         Text(
                           '${pill.dosage} - ${pill.timesPerDay} Times per day',
                           style: TextStyle(
-                            color: pill.taken
-                                ? Colors.green[700]
-                                    ?.withAlpha(204) // 0.8 opacity
-                                : Colors.white,
+                            color: _getPillSubtitleColor(pill),
                             fontSize: 13.sp,
                           ),
                         ),
@@ -626,24 +631,26 @@ class _CalendarTabState extends State<CalendarTab> {
                               decoration: BoxDecoration(
                                 color: pill.taken
                                     ? Colors.green[100]
-                                    : Colors.white30,
+                                    : (pill.missed
+                                        ? Colors.red[100]
+                                        : Colors.white30),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
                                 Icons.access_time,
                                 color: pill.taken
                                     ? Colors.green[700]
-                                    : Colors.white,
+                                    : (pill.missed
+                                        ? Colors.red[700]
+                                        : Colors.white),
                                 size: 4.w,
                               ),
                             ),
                             SizedBox(width: 1.w),
                             Text(
-                              '${pill.alarmHour}:${pill.alarmMinute.toString().padLeft(2, '0')}',
+                              pill.getFormattedTime(),
                               style: TextStyle(
-                                color: pill.taken
-                                    ? Colors.green[700]?.withAlpha(204)
-                                    : Colors.white70,
+                                color: _getPillSubtitleColor(pill),
                                 fontSize: 13.sp,
                               ),
                             ),
@@ -654,7 +661,9 @@ class _CalendarTabState extends State<CalendarTab> {
                                   Icons.snooze,
                                   color: pill.taken
                                       ? Colors.green[700]
-                                      : Colors.white,
+                                      : (pill.missed
+                                          ? Colors.red[700]
+                                          : Colors.white),
                                   size: 4.w,
                                 ),
                               ),
@@ -662,10 +671,20 @@ class _CalendarTabState extends State<CalendarTab> {
                         ),
                         if (pill.taken && pill.takenDate != null)
                           Text(
-                            'Taken at: ${DateFormat('hh:mm a').format(pill.takenDate!)}',
+                            'Taken at: ${DateFormat('h:mm a').format(pill.takenDate!)}',
                             style: TextStyle(
                               fontSize: 11.sp,
                               color: Colors.green[700],
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        if (pill.missed && !pill.taken)
+                          Text(
+                            'Missed!',
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              color: Colors.red[700],
+                              fontWeight: FontWeight.bold,
                               fontStyle: FontStyle.italic,
                             ),
                           ),
@@ -675,8 +694,7 @@ class _CalendarTabState extends State<CalendarTab> {
                         ? IconButton(
                             icon: Icon(
                               Icons.edit,
-                              color:
-                                  pill.taken ? Colors.green[700] : Colors.white,
+                              color: _getPillTextColor(pill),
                               size: 5.w,
                             ),
                             onPressed: () {
@@ -724,8 +742,10 @@ class _CalendarTabState extends State<CalendarTab> {
                   Padding(
                     padding: EdgeInsets.only(right: 4.w),
                     child: Icon(
-                      pill.taken ? Icons.check_circle : Icons.pending_actions,
-                      color: pill.taken ? Colors.green[700] : Colors.orange,
+                      _getPillStatusIcon(pill),
+                      color: pill.taken
+                          ? Colors.green[700]
+                          : (pill.missed ? Colors.red[700] : Colors.orange),
                       size: 6.w,
                     ),
                   ),
@@ -737,35 +757,56 @@ class _CalendarTabState extends State<CalendarTab> {
     );
   }
 
-  Future<void> _markPillAsTaken(PillModel pill, bool taken) async {
+  // Mark a pill as taken or not taken
+  Future<void> _markPillAsTaken(PillModel pill, bool isTaken) async {
     // Only allow elder to mark pills
     if (_isReadOnly) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(
-                'Guardian view is read-only. Cannot mark pills as taken.')),
+          content:
+              Text('Guardian view is read-only. Cannot mark pills as taken.'),
+        ),
       );
       return;
     }
 
     try {
-      // Update the pill model
+      // Get current user role
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
+      final userRole = userData['role'] ?? '';
+
+      // Only elders should be able to mark pills as taken
+      if (userRole == 'guardian') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Guardians cannot mark pills as taken.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      // Update the pill with the new taken status
       final updatedPill = pill.copyWith(
-        taken: taken,
-        takenDate: taken ? DateTime.now() : null,
+        taken: isTaken,
+        takenDate: isTaken ? DateTime.now() : null,
+        missed: isTaken ? false : pill.missed, // Reset missed status if taken
       );
 
       // Update in Firebase
       await FirebaseManager.updatePill(updatedPill);
 
-      // Refresh the list
+      // Update local state
       refreshData();
 
-      // Show confirmation
+      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            taken
+            isTaken
                 ? '${pill.name} marked as taken'
                 : '${pill.name} marked as not taken',
             style: TextStyle(fontSize: 14.sp),
@@ -782,6 +823,7 @@ class _CalendarTabState extends State<CalendarTab> {
             style: TextStyle(fontSize: 14.sp),
           ),
           backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
         ),
       );
     }
@@ -812,16 +854,17 @@ class _CalendarTabState extends State<CalendarTab> {
             onSubmit: (updatedPill) async {
               try {
                 // Preserve the ID
-                updatedPill.id = pill.id;
+                final pillWithId = updatedPill.copyWith(id: pill.id);
 
                 // Update in Firebase
-                await FirebaseManager.updatePill(updatedPill);
+                await FirebaseManager.updatePill(pillWithId);
 
                 // Reload all pills to update across all days
                 refreshData();
 
                 Navigator.of(context).pop();
               } catch (e) {
+                print('Error updating pill: $e');
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Error updating pill: $e')),
                 );
@@ -831,6 +874,47 @@ class _CalendarTabState extends State<CalendarTab> {
         ),
       ),
     );
+  }
+
+  // Helper methods for pill card UI
+  Color _getPillCardColor(PillModel pill) {
+    if (pill.taken) {
+      return Colors.green[50]!;
+    } else if (pill.missed) {
+      return Colors.red[50]!;
+    } else {
+      return Color(0xFF015C92);
+    }
+  }
+
+  Color _getPillTextColor(PillModel pill) {
+    if (pill.taken) {
+      return Colors.green[700]!;
+    } else if (pill.missed) {
+      return Colors.red[700]!;
+    } else {
+      return Colors.white;
+    }
+  }
+
+  Color _getPillSubtitleColor(PillModel pill) {
+    if (pill.taken) {
+      return Colors.green[700]!.withAlpha(204); // 0.8 opacity
+    } else if (pill.missed) {
+      return Colors.red[700]!.withAlpha(204); // 0.8 opacity
+    } else {
+      return Colors.white70;
+    }
+  }
+
+  IconData _getPillStatusIcon(PillModel pill) {
+    if (pill.taken) {
+      return Icons.check_circle;
+    } else if (pill.missed) {
+      return Icons.warning_rounded;
+    } else {
+      return Icons.medication;
+    }
   }
 }
 
@@ -858,6 +942,7 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
   late DateTime _selectedDate;
   late TimeOfDay _selectedTime;
   late bool _allowSnooze;
+  late int _treatmentPeriod; // Total treatment period in days
 
   @override
   void initState() {
@@ -869,6 +954,8 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
     _noteController = TextEditingController(text: existingPill?.note ?? '');
     _timesPerDay = existingPill?.timesPerDay ?? 1;
     _duration = existingPill?.duration ?? 7;
+    _treatmentPeriod =
+        existingPill?.duration ?? 7; // Initialize with duration if existing
     _selectedDate = existingPill?.dateTime ?? DateTime.now();
     _selectedTime = existingPill != null
         ? TimeOfDay(
@@ -887,6 +974,8 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Color(0xFF015C92); // App's primary color
+
     return Padding(
       padding: EdgeInsets.all(4.w),
       child: Form(
@@ -903,7 +992,7 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF015C92),
+                  color: primaryColor,
                 ),
               ),
               SizedBox(height: 2.h),
@@ -913,9 +1002,14 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                 controller: _nameController,
                 decoration: InputDecoration(
                   labelText: 'Medication Name',
-                  prefixIcon: Icon(Icons.medication, size: 5.w),
+                  prefixIcon:
+                      Icon(Icons.medication, size: 5.w, color: primaryColor),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(3.w),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(3.w),
+                    borderSide: BorderSide(color: primaryColor, width: 2),
                   ),
                   contentPadding: EdgeInsets.symmetric(
                     vertical: 2.h,
@@ -937,9 +1031,14 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                 controller: _dosageController,
                 decoration: InputDecoration(
                   labelText: 'Dosage (e.g., 500mg)',
-                  prefixIcon: Icon(Icons.biotech, size: 5.w),
+                  prefixIcon:
+                      Icon(Icons.biotech, size: 5.w, color: primaryColor),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(3.w),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(3.w),
+                    borderSide: BorderSide(color: primaryColor, width: 2),
                   ),
                   contentPadding: EdgeInsets.symmetric(
                     vertical: 2.h,
@@ -957,141 +1056,247 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
               SizedBox(height: 2.h),
 
               // Times per day
-              Row(
-                children: [
-                  Text('Times Per Day:', style: TextStyle(fontSize: 15.sp)),
-                  SizedBox(width: 3.w),
-                  DropdownButton<int>(
-                    value: _timesPerDay,
-                    items: [1, 2, 3, 4, 5].map((int value) {
-                      return DropdownMenuItem<int>(
-                        value: value,
-                        child: Text(
-                          '$value time(s)',
-                          style: TextStyle(fontSize: 15.sp),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(3.w),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Times Per Day',
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    SizedBox(height: 1.h),
+                    Row(
+                      children: [
+                        Icon(Icons.access_time, size: 5.w, color: primaryColor),
+                        SizedBox(width: 3.w),
+                        DropdownButton<int>(
+                          value: _timesPerDay,
+                          items: [1, 2, 3, 4, 5].map((int value) {
+                            return DropdownMenuItem<int>(
+                              value: value,
+                              child: Text(
+                                '$value time(s)',
+                                style: TextStyle(fontSize: 15.sp),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (newValue) {
+                            setState(() {
+                              _timesPerDay = newValue!;
+                            });
+                          },
+                          underline: Container(),
+                          icon:
+                              Icon(Icons.arrow_drop_down, color: primaryColor),
                         ),
-                      );
-                    }).toList(),
-                    onChanged: (newValue) {
-                      setState(() {
-                        _timesPerDay = newValue!;
-                      });
-                    },
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
               SizedBox(height: 2.h),
 
-              // Duration
-              Row(
-                children: [
-                  Text('Duration:', style: TextStyle(fontSize: 15.sp)),
-                  SizedBox(width: 3.w),
-                  DropdownButton<int>(
-                    value: _duration,
-                    items: [1, 3, 5, 7, 14, 21, 28, 30].map((int value) {
-                      return DropdownMenuItem<int>(
-                        value: value,
-                        child: Text(
-                          '$value day(s)',
-                          style: TextStyle(fontSize: 15.sp),
+              // Total Treatment Period
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(3.w),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Total Treatment Period',
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    SizedBox(height: 1.h),
+                    Row(
+                      children: [
+                        Icon(Icons.calendar_month,
+                            size: 5.w, color: primaryColor),
+                        SizedBox(width: 3.w),
+                        DropdownButton<int>(
+                          value: _treatmentPeriod,
+                          items: [1, 3, 5, 7, 14, 21, 28, 30, 60, 90]
+                              .map((int value) {
+                            return DropdownMenuItem<int>(
+                              value: value,
+                              child: Text(
+                                '$value day(s)',
+                                style: TextStyle(fontSize: 15.sp),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (newValue) {
+                            setState(() {
+                              _treatmentPeriod = newValue!;
+                              _duration =
+                                  newValue; // Set duration to match treatment period
+                            });
+                          },
+                          underline: Container(),
+                          icon:
+                              Icon(Icons.arrow_drop_down, color: primaryColor),
                         ),
-                      );
-                    }).toList(),
-                    onChanged: (newValue) {
-                      setState(() {
-                        _duration = newValue!;
-                      });
-                    },
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
               SizedBox(height: 2.h),
 
               // Date picker
-              ListTile(
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 2.w,
-                  vertical: 0.5.h,
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(3.w),
                 ),
-                leading: Icon(Icons.calendar_today, size: 5.w),
-                title: Text(
-                  'Start Date',
-                  style: TextStyle(fontSize: 15.sp),
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.calendar_today,
+                      size: 5.w, color: primaryColor),
+                  title: Text(
+                    'Start Date',
+                    style: TextStyle(fontSize: 15.sp),
+                  ),
+                  subtitle: Text(
+                    DateFormat('MMM d, yyyy').format(_selectedDate),
+                    style: TextStyle(fontSize: 14.sp),
+                  ),
+                  trailing: Icon(Icons.edit, color: primaryColor),
+                  onTap: () async {
+                    final DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: _selectedDate,
+                      firstDate: DateTime.now()
+                          .subtract(Duration(days: 1)), // Allow today
+                      lastDate: DateTime.now().add(Duration(days: 365)),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: ColorScheme.light(
+                              primary: primaryColor,
+                              onPrimary: Colors.white,
+                              onSurface: Colors.black,
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (picked != null && picked != _selectedDate) {
+                      setState(() {
+                        _selectedDate = picked;
+                      });
+                    }
+                  },
                 ),
-                subtitle: Text(
-                  DateFormat('MMM d, yyyy').format(_selectedDate),
-                  style: TextStyle(fontSize: 14.sp),
-                ),
-                onTap: () async {
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: _selectedDate,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(Duration(days: 365)),
-                  );
-                  if (picked != null && picked != _selectedDate) {
-                    setState(() {
-                      _selectedDate = picked;
-                    });
-                  }
-                },
               ),
+              SizedBox(height: 2.h),
 
               // Time picker
-              ListTile(
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 2.w,
-                  vertical: 0.5.h,
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(3.w),
                 ),
-                leading: Icon(Icons.access_time, size: 5.w),
-                title: Text(
-                  'Reminder Time',
-                  style: TextStyle(fontSize: 15.sp),
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading:
+                      Icon(Icons.access_time, size: 5.w, color: primaryColor),
+                  title: Text(
+                    'Reminder Time',
+                    style: TextStyle(fontSize: 15.sp),
+                  ),
+                  subtitle: Text(
+                    _selectedTime.format(context),
+                    style: TextStyle(fontSize: 14.sp),
+                  ),
+                  trailing: Icon(Icons.edit, color: primaryColor),
+                  onTap: () async {
+                    final TimeOfDay? picked = await showTimePicker(
+                      context: context,
+                      initialTime: _selectedTime,
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: ColorScheme.light(
+                              primary: primaryColor,
+                              onPrimary: Colors.white,
+                              onSurface: Colors.black,
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (picked != null && picked != _selectedTime) {
+                      setState(() {
+                        _selectedTime = picked;
+                      });
+                    }
+                  },
                 ),
-                subtitle: Text(
-                  _selectedTime.format(context),
-                  style: TextStyle(fontSize: 14.sp),
-                ),
-                onTap: () async {
-                  final TimeOfDay? picked = await showTimePicker(
-                    context: context,
-                    initialTime: _selectedTime,
-                  );
-                  if (picked != null && picked != _selectedTime) {
-                    setState(() {
-                      _selectedTime = picked;
-                    });
-                  }
-                },
               ),
+              SizedBox(height: 2.h),
 
               // Allow snooze
-              SwitchListTile(
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 2.w,
-                  vertical: 0.5.h,
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(3.w),
                 ),
-                title: Text(
-                  'Allow Snooze',
-                  style: TextStyle(fontSize: 15.sp),
+                child: SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Row(
+                    children: [
+                      Icon(Icons.notifications_active,
+                          size: 5.w, color: primaryColor),
+                      SizedBox(width: 3.w),
+                      Text(
+                        'Snooze Reminder (5 min before)',
+                        style: TextStyle(fontSize: 15.sp),
+                      ),
+                    ],
+                  ),
+                  value: _allowSnooze,
+                  activeColor: primaryColor,
+                  onChanged: (value) {
+                    setState(() {
+                      _allowSnooze = value;
+                    });
+                  },
                 ),
-                value: _allowSnooze,
-                onChanged: (value) {
-                  setState(() {
-                    _allowSnooze = value;
-                  });
-                },
               ),
+              SizedBox(height: 2.h),
 
               // Notes
               TextFormField(
                 controller: _noteController,
                 decoration: InputDecoration(
                   labelText: 'Notes (optional)',
-                  prefixIcon: Icon(Icons.note, size: 5.w),
+                  prefixIcon: Icon(Icons.note, size: 5.w, color: primaryColor),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(3.w),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(3.w),
+                    borderSide: BorderSide(color: primaryColor, width: 2),
                   ),
                   contentPadding: EdgeInsets.symmetric(
                     vertical: 2.h,
@@ -1113,13 +1318,13 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                     },
                     child: Text(
                       'Cancel',
-                      style: TextStyle(fontSize: 15.sp),
+                      style: TextStyle(fontSize: 15.sp, color: primaryColor),
                     ),
                   ),
                   SizedBox(width: 3.w),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF015C92),
+                      backgroundColor: primaryColor,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(3.w),
@@ -1136,7 +1341,8 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                           name: _nameController.text,
                           dosage: _dosageController.text,
                           timesPerDay: _timesPerDay,
-                          duration: _duration,
+                          duration:
+                              _treatmentPeriod, // Use treatment period as duration
                           dateTime: DateTime(
                             _selectedDate.year,
                             _selectedDate.month,

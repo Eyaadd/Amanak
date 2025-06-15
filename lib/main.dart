@@ -3,6 +3,7 @@ import 'package:amanak/gaurdian_location.dart';
 import 'package:amanak/login_screen.dart';
 import 'package:amanak/medicine_search_screen.dart';
 import 'package:amanak/nearest_hospitals.dart';
+import 'package:amanak/notifications/noti_service.dart';
 import 'package:amanak/services/database_service.dart';
 import 'package:amanak/signup/choose_role.dart';
 import 'package:amanak/signup/signup_screen.dart';
@@ -20,15 +21,122 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 import 'live_tracking.dart';
 import 'onboarding_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:amanak/firebase/firebase_manager.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 const apiKey = "AIzaSyDLePMB53Q1Nud4ZG8a2XA9UUYuSLCrY6c";
 
+// Create a channel for high priority notifications
+const AndroidNotificationChannel channel = AndroidNotificationChannel(
+  'high_importance_channel',
+  'High Importance Notifications',
+  description: 'This channel is used for important notifications.',
+  importance: Importance.high,
+  playSound: true,
+  enableVibration: true,
+);
+
+// Initialize FlutterLocalNotificationsPlugin
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
+// Background handler for notification taps
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse notificationResponse) {
+  // Handle notification response here
+  print('Notification tapped in background: ${notificationResponse.payload}');
+
+  // Parse the payload
+  final payload = notificationResponse.payload;
+  if (payload != null) {
+    print('Background notification handler initialized');
+  }
+}
+
+// Background message handler for Firebase Cloud Messaging
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Need to initialize Firebase here for background handling
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  print("Handling a background message: ${message.messageId}");
+  print("Background message data: ${message.data}");
+  print("Background message notification: ${message.notification?.title}");
+
+  // Show notification even when app is in background
+  if (message.notification != null) {
+    await flutterLocalNotificationsPlugin.show(
+      message.hashCode,
+      message.notification!.title,
+      message.notification!.body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          channel.id,
+          channel.name,
+          channelDescription: channel.description,
+          icon: '@mipmap/ic_launcher',
+          priority: Priority.high,
+          importance: Importance.high,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      ),
+    );
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Gemini.init(apiKey: apiKey);
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Set up Firebase Messaging background handler
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // Create notification channel for Android
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+
+  // Request permission for iOS
+  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
+  // Set up background notification handler
+  flutterLocalNotificationsPlugin.initialize(
+    const InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      iOS: DarwinInitializationSettings(),
+    ),
+    onDidReceiveNotificationResponse: notificationTapBackground,
+    onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
+  );
+
+  // Initialize notification service
+  final notiService = NotiService();
+  await notiService.initNotification();
+
+  // Set preferred orientations
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  // Initialize Gemini
+  Gemini.init(apiKey: apiKey);
 
   // Initialize the database
   await DatabaseService().database;
@@ -38,11 +146,29 @@ void main() async {
   print(
       'Current user on app start: ${currentUser?.email ?? 'No user logged in'}');
 
-  // Removed debug sign out since we want persistence
-  // We'll manage this with a proper logout button instead
+  // If user is logged in, reschedule all pill notifications
+  if (currentUser != null) {
+    try {
+      await FirebaseManager.rescheduleAllNotifications();
+      print('Rescheduled all pill notifications');
+    } catch (e) {
+      print('Error rescheduling notifications: $e');
+    }
+  }
 
-  runApp(ChangeNotifierProvider(
-      create: (context) => MyProvider(), child: MyApp()));
+  // Check for missed pills on app startup
+  try {
+    await FirebaseManager.checkForMissedPills();
+  } catch (e) {
+    print('Error checking for missed pills: $e');
+  }
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => MyProvider(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

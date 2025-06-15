@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 
 import '../home_screen.dart';
 
@@ -27,7 +28,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var provider = Provider.of<MyProvider>(context,listen: false);
+    var provider = Provider.of<MyProvider>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -47,7 +48,9 @@ class _SignupScreenState extends State<SignupScreen> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                SizedBox(height: 20,),
+                SizedBox(
+                  height: 20,
+                ),
                 // Sign Up Name
                 TextField(
                   cursorColor: Theme.of(context).primaryColor,
@@ -150,17 +153,15 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: Checkbox(
                         value: _isChecked,
                         side: BorderSide(color: Color(0xFFD3D6DA)),
-                        checkColor:Theme.of(context).primaryColor ,
+                        checkColor: Theme.of(context).primaryColor,
                         activeColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6)),
-                        onChanged:
-                          (value) {
+                        onChanged: (value) {
                           setState(() {
                             _isChecked = value!;
                           });
-                      },
-
+                        },
                       ),
                     ),
                     Expanded(
@@ -171,12 +172,14 @@ class _SignupScreenState extends State<SignupScreen> {
                             TextSpan(text: "I agree to the Amanak "),
                             TextSpan(
                               text: "Terms of Service ",
-                              style: TextStyle(color: Theme.of(context).primaryColor),
+                              style: TextStyle(
+                                  color: Theme.of(context).primaryColor),
                             ),
                             TextSpan(text: "and "),
                             TextSpan(
                               text: "Privacy Policy",
-                              style: TextStyle(color: Theme.of(context).primaryColor),
+                              style: TextStyle(
+                                  color: Theme.of(context).primaryColor),
                             ),
                           ],
                         ),
@@ -186,7 +189,9 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 16,),
+                SizedBox(
+                  height: 16,
+                ),
                 ElevatedButton(
                   onPressed: () async {
                     final email = _signupEmailController.text.trim();
@@ -214,25 +219,40 @@ class _SignupScreenState extends State<SignupScreen> {
                           password: password,
                         );
                         var userID = FirebaseAuth.instance.currentUser!.uid;
-                        UserModel user = UserModel(name: name,
-                            email: email, id: userID);
-                        await FirebaseManager.setUser(user).onError((error,
-                            stackTrace) {
-                          SnackBar(content: Text("$error"),);
-                        },);
-                        var provider = Provider.of<MyProvider>(
-                            context, listen: false);
+
+                        // Get the user's timezone
+                        String timezone =
+                            await FlutterTimezone.getLocalTimezone();
+
+                        UserModel user = UserModel(
+                            name: name,
+                            email: email,
+                            id: userID,
+                            timezone: timezone);
+
+                        await FirebaseManager.setUser(user).onError(
+                          (error, stackTrace) {
+                            SnackBar(
+                              content: Text("$error"),
+                            );
+                          },
+                        );
+                        var provider =
+                            Provider.of<MyProvider>(context, listen: false);
                         provider.setUserModel(user.id, user.name, user.email);
-                        Navigator.pushNamedAndRemoveUntil(context, ChooseRoleScreen.routeName,(route) => false, );
-                      }
-                      else{
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          ChooseRoleScreen.routeName,
+                          (route) => false,
+                        );
+                      } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                               content: Text(
                                   'Please accept Terms Of Service and Privacy Policy')),
                         );
                       }
-                    }on FirebaseAuthException catch (e) {
+                    } on FirebaseAuthException catch (e) {
                       if (e.code == 'weak-password') {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -271,8 +291,6 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 }
-
-
 
 String? _validateEmail(String email) {
   final regex = RegExp(r'^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$');

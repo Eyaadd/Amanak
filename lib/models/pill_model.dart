@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:amanak/notifications/noti_service.dart';
 
 class PillModel {
   String id;
@@ -12,6 +13,7 @@ class PillModel {
   bool allowSnooze;
   String note;
   bool taken;
+  bool missed;
   DateTime? takenDate;
 
   PillModel({
@@ -26,26 +28,28 @@ class PillModel {
     this.allowSnooze = true,
     this.note = "",
     this.taken = false,
+    this.missed = false,
     this.takenDate,
   });
 
   PillModel.fromJson(Map<String, dynamic> json, String id)
       : this(
-    id: id,
-    name: json['name'] ?? "",
-    dosage: json['dosage'] ?? "",
-    timesPerDay: json['timesPerDay'] ?? 1,
-    duration: json['duration'] ?? 1,
-    dateTime: (json['dateTime'] as Timestamp).toDate(),
-    alarmHour: json['alarmHour'] ?? 8,
-    alarmMinute: json['alarmMinute'] ?? 0,
-    allowSnooze: json['allowSnooze'] ?? true,
-    note: json['note'] ?? "",
-    taken: json['taken'] ?? false,
-    takenDate: json['takenDate'] != null
-        ? (json['takenDate'] as Timestamp).toDate()
-        : null,
-  );
+          id: id,
+          name: json['name'] ?? "",
+          dosage: json['dosage'] ?? "",
+          timesPerDay: json['timesPerDay'] ?? 1,
+          duration: json['duration'] ?? 1,
+          dateTime: (json['dateTime'] as Timestamp).toDate(),
+          alarmHour: json['alarmHour'] ?? 8,
+          alarmMinute: json['alarmMinute'] ?? 0,
+          allowSnooze: json['allowSnooze'] ?? true,
+          note: json['note'] ?? "",
+          taken: json['taken'] ?? false,
+          missed: json['missed'] ?? false,
+          takenDate: json['takenDate'] != null
+              ? (json['takenDate'] as Timestamp).toDate()
+              : null,
+        );
 
   Map<String, dynamic> toJson() {
     return {
@@ -59,6 +63,7 @@ class PillModel {
       'allowSnooze': allowSnooze,
       'note': note,
       'taken': taken,
+      'missed': missed,
       'takenDate': takenDate != null ? Timestamp.fromDate(takenDate!) : null,
     };
   }
@@ -76,6 +81,7 @@ class PillModel {
     bool? allowSnooze,
     String? note,
     bool? taken,
+    bool? missed,
     DateTime? takenDate,
   }) {
     return PillModel(
@@ -90,7 +96,29 @@ class PillModel {
       allowSnooze: allowSnooze ?? this.allowSnooze,
       note: note ?? this.note,
       taken: taken ?? this.taken,
+      missed: missed ?? this.missed,
       takenDate: takenDate ?? this.takenDate,
     );
+  }
+
+  // Schedule notifications for this pill
+  Future<void> scheduleNotifications() async {
+    final notiService = NotiService();
+    await notiService.schedulePillNotifications(this);
+  }
+
+  // Cancel notifications for this pill
+  Future<void> cancelNotifications() async {
+    final notiService = NotiService();
+    await notiService.cancelPillNotifications(id);
+  }
+
+  // Format time in 12-hour format with AM/PM
+  String getFormattedTime() {
+    final hour = alarmHour;
+    final minute = alarmMinute.toString().padLeft(2, '0');
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final hour12 = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+    return '$hour12:$minute $period';
   }
 }

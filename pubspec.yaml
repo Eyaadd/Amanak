@@ -41,8 +41,11 @@ dependencies:
   path_provider: ^2.1.2
   path: ^1.8.3
   flutter_local_notifications: ^16.3.2
-  timezone: ^0.9.2
+  timezone: ^0.9.4
   flutter_typeahead: ^5.2.0
+  firebase_messaging: ^15.2.7
+  flutter_timezone: ^4.1.1
+  cloud_functions: ^5.5.2
 
 
 dev_dependencies:

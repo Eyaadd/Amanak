@@ -1,1 +1,15 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"live-tracking-1bfec","appId":"1:16114501520:android:a64ba6cf3fa4e6d70c5515","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"live-tracking-1bfec","configurations":{"android":"1:16114501520:android:a64ba6cf3fa4e6d70c5515","ios":"1:16114501520:ios:df1e299bc65fcfd10c5515"}}}}}}
+{
+     "functions": [
+       {
+         "source": "amanak-functions",
+         "codebase": "amanak",
+         "ignore": [
+           "node_modules",
+           ".git",
+           "firebase-debug.log",
+           "firebase-debug.*.log",
+           "*.local"
+         ]
+       }
+     ]
+   }

@@ -33,15 +33,14 @@ class _ChatBotState extends State<ChatBot> {
         titleSpacing: screenWidth * 0.09,
         title: Row(
           children: [
-            SvgPicture.asset("assets/svg/gemini.svg",
-                height: screenHeight * 0.06),
-            SizedBox(width: screenWidth * 0.02),
-            Text(
-              "Gemini AI",
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge!
-                  .copyWith(color: Colors.black),
+            Center(
+              child: Text(
+                "How Can I Help You Today?",
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall!
+                    .copyWith(color: Theme.of(context).primaryColor),
+              ),
             )
           ],
         ),

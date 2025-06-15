@@ -1,7 +1,10 @@
+import 'package:amanak/firebase/firebase_manager.dart';
 import 'package:amanak/home_screen.dart';
+import 'package:amanak/models/user_model.dart';
 import 'package:amanak/signup/signup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 
 class LoginScreen extends StatefulWidget {
   static const String routeName = "LoginScreen";
@@ -339,11 +342,53 @@ class _LoginScreenState extends State<LoginScreen> {
         password: password,
       );
 
+      // Get current user ID
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        // Get the user's current timezone
+        final currentTimezone = await FlutterTimezone.getLocalTimezone();
+
+        // Get user data from Firestore
+        final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
+
+        // If timezone has changed or is not set, update it
+        if (userData['timezone'] != currentTimezone) {
+          // Get the full user model
+          final userCollection = FirebaseManager.getUsersCollection();
+          final userDoc = await userCollection.doc(currentUser.uid).get();
+
+          if (userDoc.exists) {
+            final userModel = userDoc.data()!;
+            // Update the timezone
+            final updatedUser = UserModel(
+              id: userModel.id,
+              name: userModel.name,
+              email: userModel.email,
+              role: userModel.role,
+              age: userModel.age,
+              height: userModel.height,
+              sharedUsers: userModel.sharedUsers,
+              latitude: userModel.latitude,
+              longitude: userModel.longitude,
+              lastLocationUpdate: userModel.lastLocationUpdate,
+              timezone: currentTimezone,
+            );
+
+            // Save the updated user model
+            await FirebaseManager.updateEvent(updatedUser);
+          }
+        }
+      }
+
       // Navigate to home screen
       Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message ?? 'Login failed')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred: $e')),
       );
     } finally {
       if (mounted) {
