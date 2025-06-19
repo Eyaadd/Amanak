@@ -1,5 +1,7 @@
-import 'package:amanak/models/medicine_model.dart';
-import 'package:amanak/services/database_service.dart';
+import 'package:amanak/medicine_detail_screen.dart';
+import 'package:amanak/models/medicine_json_model.dart';
+import 'package:amanak/models/medicine_search_result.dart';
+import 'package:amanak/services/medicines_json_service.dart';
 import 'package:flutter/material.dart';
 
 class MedicineSearchScreen extends StatefulWidget {
@@ -13,14 +15,35 @@ class MedicineSearchScreen extends StatefulWidget {
 
 class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final DatabaseService _databaseService = DatabaseService();
-  List<Medicine> _searchResults = [];
+  final MedicinesJsonService _medicinesService = MedicinesJsonService();
+  List<MedicineSearchResult> _searchResults = [];
   bool _isLoading = false;
   String? _initialQuery;
 
   @override
   void initState() {
     super.initState();
+    // Initialize the medicines service
+    _initializeMedicinesService();
+  }
+
+  Future<void> _initializeMedicinesService() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _medicinesService.ensureInitialized();
+    } catch (e) {
+      print('Error initializing medicines service: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading medicine data: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -51,7 +74,9 @@ class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
     });
 
     try {
-      final results = await _databaseService.searchMedicines(query);
+      // Using the new service method to get medicines with descriptions
+      final results = await _medicinesService.searchMedicinesWithDetails(query);
+
       setState(() {
         _searchResults = results;
         _isLoading = false;
@@ -127,8 +152,8 @@ class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
                     : ListView.builder(
                         itemCount: _searchResults.length,
                         itemBuilder: (context, index) {
-                          final medicine = _searchResults[index];
-                          return MedicineCard(medicine: medicine);
+                          final result = _searchResults[index];
+                          return MedicineCard(result: result);
                         },
                       ),
           ),
@@ -139,9 +164,9 @@ class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
 }
 
 class MedicineCard extends StatelessWidget {
-  final Medicine medicine;
+  final MedicineSearchResult result;
 
-  const MedicineCard({Key? key, required this.medicine}) : super(key: key);
+  const MedicineCard({Key? key, required this.result}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -151,143 +176,53 @@ class MedicineCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
-          _showMedicineDetails(context, medicine);
+          // Navigate to the detail screen with the medicine key
+          Navigator.pushNamed(
+            context,
+            MedicineDetailScreen.routeName,
+            arguments: result.id,
+          );
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: result.isArabic
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
             children: [
+              // Medicine Name
               Text(
-                medicine.name,
+                result.name,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
+                textAlign: result.isArabic ? TextAlign.right : TextAlign.left,
               ),
               const SizedBox(height: 8),
-              Text(
-                'Generics: ${medicine.generics}',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[700],
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Manufacturer: ${medicine.manufacturer}',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[700],
-                ),
-              ),
-              if (medicine.dosageForm.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  'Dosage Form: ${medicine.dosageForm}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
+
+              // Description Preview
+              if (result.description.isNotEmpty)
+                Directionality(
+                  textDirection:
+                      result.isArabic ? TextDirection.rtl : TextDirection.ltr,
+                  child: Text(
+                    result.description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign:
+                        result.isArabic ? TextAlign.right : TextAlign.left,
                   ),
                 ),
-              ],
             ],
           ),
         ),
       ),
-    );
-  }
-
-  void _showMedicineDetails(BuildContext context, Medicine medicine) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                medicine.name,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildInfoRow('Generics', medicine.generics),
-              const SizedBox(height: 12),
-              _buildInfoRow('Manufacturer', medicine.manufacturer),
-              if (medicine.dosageForm.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                _buildInfoRow('Dosage Form', medicine.dosageForm),
-              ],
-              const SizedBox(height: 24),
-              const Text(
-                'Important Notes',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '• Always consult with your doctor before starting, stopping, or changing any medicine.',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    '• Follow your doctor\'s instructions regarding dosage and timing.',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    '• Keep all medicines out of reach of children.',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 100,
-          child: Text(
-            '$label:',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black54,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

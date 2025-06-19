@@ -1,10 +1,11 @@
 import 'package:amanak/chatbot.dart';
 import 'package:amanak/gaurdian_location.dart';
 import 'package:amanak/login_screen.dart';
+import 'package:amanak/medicine_detail_screen.dart';
 import 'package:amanak/medicine_search_screen.dart';
 import 'package:amanak/nearest_hospitals.dart';
 import 'package:amanak/notifications/noti_service.dart';
-import 'package:amanak/services/database_service.dart';
+import 'package:amanak/services/medicines_json_service.dart';
 import 'package:amanak/signup/choose_role.dart';
 import 'package:amanak/signup/signup_screen.dart';
 import 'package:amanak/theme/base_theme.dart';
@@ -28,8 +29,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:amanak/home/messaging_tab.dart';
 
 const apiKey = "AIzaSyDLePMB53Q1Nud4ZG8a2XA9UUYuSLCrY6c";
+
+// Global navigator key for app-wide navigation
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 // Background handler for notification taps
 @pragma('vm:entry-point')
@@ -41,6 +46,15 @@ void notificationTapBackground(NotificationResponse notificationResponse) {
   final payload = notificationResponse.payload;
   if (payload != null) {
     print('Background notification handler initialized');
+
+    // Handle message notifications
+    if (payload.startsWith('message:')) {
+      final parts = payload.split(':');
+      if (parts.length >= 4) {
+        // This will be handled when app is launched
+        // Navigation will happen in the onDidReceiveBackgroundNotificationResponse handler
+      }
+    }
   }
 }
 
@@ -97,8 +111,13 @@ void main() async {
   // Initialize Gemini
   Gemini.init(apiKey: apiKey);
 
-  // Initialize the database
-  await DatabaseService().database;
+  // Initialize the medicines JSON service
+  try {
+    await MedicinesJsonService().initialize();
+    print('Medicines JSON data loaded successfully');
+  } catch (e) {
+    print('Error initializing medicines data: $e');
+  }
 
   // Check if user is already logged in
   User? currentUser = FirebaseAuth.instance.currentUser;
@@ -145,6 +164,7 @@ class MyApp extends StatelessWidget {
     return ResponsiveSizer(
       builder: (context, orientation, screenType) {
         return MaterialApp(
+          navigatorKey: navigatorKey, // Add global navigator key
           theme: lightTheme.themeData,
           debugShowCheckedModeBanner: false,
           initialRoute: initialRoute,
@@ -158,6 +178,20 @@ class MyApp extends StatelessWidget {
             LiveTracking.routeName: (context) => LiveTracking(),
             NearestHospitals.routeName: (context) => NearestHospitals(),
             MedicineSearchScreen.routeName: (context) => MedicineSearchScreen(),
+            MedicineDetailScreen.routeName: (context) => MedicineDetailScreen(),
+            MessagingTab.routeName: (context) => MessagingTab(),
+          },
+          onGenerateRoute: (settings) {
+            // Handle deep linking for message notifications
+            if (settings.name == '/messaging') {
+              // Extract the arguments
+              final args = settings.arguments as Map<String, dynamic>?;
+              return MaterialPageRoute(
+                builder: (context) => MessagingTab(),
+                settings: settings,
+              );
+            }
+            return null;
           },
         );
       },

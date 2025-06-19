@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:amanak/firebase/firebase_manager.dart';
 import 'package:amanak/models/pill_model.dart';
@@ -13,6 +14,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:amanak/main.dart'; // Import for navigatorKey
 
 class NotiService {
   final FlutterLocalNotificationsPlugin notificationsPlugin =
@@ -21,6 +23,9 @@ class NotiService {
   bool _isInitialized = false;
   String? _localTimezone;
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+
+  // Track if the app is in foreground
+  bool _isInForeground = false;
 
   // Singleton pattern
   factory NotiService() {
@@ -31,6 +36,12 @@ class NotiService {
 
   bool get isInitialized => _isInitialized;
   String? get localTimezone => _localTimezone;
+  bool get isInForeground => _isInForeground;
+
+  // Update foreground state
+  void setForegroundState(bool isInForeground) {
+    _isInForeground = isInForeground;
+  }
 
   // Constants
   static const int PILL_REMINDER_ID_PREFIX = 100000;
@@ -38,6 +49,7 @@ class NotiService {
   static const int MISSED_NOTIFICATION_ID_PREFIX = 300000;
   static const int LOCATION_NOTIFICATION_ID_PREFIX = 400000;
   static const int PILL_TAKEN_NOTIFICATION_ID_PREFIX = 500000;
+  static const int MESSAGE_NOTIFICATION_ID_PREFIX = 600000;
   static const int GRACE_PERIOD_MINUTES =
       30; // Grace period for marking pill as taken
 
@@ -49,6 +61,9 @@ class NotiService {
     tz_data.initializeTimeZones();
     _localTimezone = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(_localTimezone!));
+
+    // Set up app lifecycle observer to track foreground state
+    WidgetsBinding.instance.addObserver(_AppLifecycleObserver(this));
 
     // Request permissions for iOS
     if (Platform.isIOS) {
@@ -123,6 +138,18 @@ class NotiService {
             playSound: true,
           ),
         );
+
+        // Create channel for messages
+        await androidImplementation.createNotificationChannel(
+          AndroidNotificationChannel(
+            'message_channel',
+            'Messages',
+            description: 'Notifications for new messages',
+            importance: Importance.high,
+            enableVibration: true,
+            playSound: true,
+          ),
+        );
       }
     }
 
@@ -164,7 +191,69 @@ class NotiService {
     final String? payload = response.payload;
     if (payload != null) {
       print('Notification tapped with payload: $payload');
-      // Handle the payload - e.g., navigate to a specific screen
+
+      // Parse payload to determine action
+      if (payload.startsWith('take:')) {
+        // Handle pill taking action
+        _handlePillAction(payload);
+      } else if (payload.startsWith('check_missed:')) {
+        // Handle missed pill check
+        _handleMissedCheck(payload);
+      } else if (payload.startsWith('message:')) {
+        // Handle message notification tap
+        _handleMessageTap(payload);
+      }
+    }
+  }
+
+  // Handle pill action when notification tapped in foreground
+  void _handlePillAction(String payload) {
+    try {
+      final parts = payload.split(':');
+      if (parts.length >= 2) {
+        final pillId = parts[1];
+        print('Handling pill action for pill ID: $pillId');
+        // In a real implementation, navigate to pill detail or take action
+      }
+    } catch (e) {
+      print('Error handling pill action: $e');
+    }
+  }
+
+  // Handle missed pill check when notification tapped in foreground
+  void _handleMissedCheck(String payload) {
+    try {
+      final parts = payload.split(':');
+      if (parts.length >= 2) {
+        final pillId = parts[1];
+        print('Handling missed check for pill ID: $pillId');
+        // In a real implementation, navigate to pill detail or take action
+      }
+    } catch (e) {
+      print('Error handling missed check: $e');
+    }
+  }
+
+  // Handle message notification tap
+  void _handleMessageTap(String payload) {
+    try {
+      // Extract message data from payload
+      // Format: message:chatId:senderId:senderName
+      final parts = payload.split(':');
+      if (parts.length >= 4) {
+        final chatId = parts[1];
+        final senderId = parts[2];
+        final senderName = parts[3];
+
+        // Navigate to messaging screen using global navigator key
+        navigatorKey.currentState?.pushNamed('/messaging', arguments: {
+          'chatId': chatId,
+          'senderId': senderId,
+          'senderName': senderName,
+        });
+      }
+    } catch (e) {
+      print('Error handling message tap: $e');
     }
   }
 
@@ -270,6 +359,27 @@ class NotiService {
         // Use default sound if custom sound is not available
         playSound: true,
         color: Colors.green,
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    );
+  }
+
+  // Notification details for messages
+  NotificationDetails messageDetails() {
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        'message_channel',
+        'Messages',
+        channelDescription: 'Notifications for new messages',
+        importance: Importance.high,
+        priority: Priority.high,
+        playSound: true,
+        styleInformation: BigTextStyleInformation(
+            ''), // Allow for longer text in notification
       ),
       iOS: DarwinNotificationDetails(
         presentAlert: true,
@@ -591,56 +701,117 @@ class NotiService {
     );
   }
 
-  // Check for pending notifications and deliver them
+  // Check for pending notifications for the current user
   Future<void> checkPendingNotifications() async {
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
 
-      // Get pending notifications for this user
+      // Check if there are any pending notifications in Firestore
       final pendingNotifications = await FirebaseFirestore.instance
           .collection('pending_notifications')
           .where('userId', isEqualTo: currentUser.uid)
           .where('delivered', isEqualTo: false)
           .get();
 
-      if (pendingNotifications.docs.isEmpty) {
-        print('No pending notifications found');
-        return;
-      }
+      if (pendingNotifications.docs.isNotEmpty) {
+        for (var doc in pendingNotifications.docs) {
+          final data = doc.data();
+          final title = data['title'] as String?;
+          final body = data['body'] as String?;
+          final notificationData = data['data'] as Map<String, dynamic>?;
 
-      print('Found ${pendingNotifications.docs.length} pending notifications');
+          // Show the notification locally
+          if (title != null && body != null) {
+            if (notificationData != null &&
+                notificationData['type'] == 'message') {
+              // For message notifications
+              await notificationsPlugin.show(
+                MESSAGE_NOTIFICATION_ID_PREFIX + doc.id.hashCode % 10000,
+                title,
+                body,
+                messageDetails(),
+                payload:
+                    'message:${notificationData['chatId'] ?? ''}:${notificationData['senderId'] ?? ''}:${notificationData['senderName'] ?? ''}',
+              );
+            } else {
+              // For other types of notifications
+              await notificationsPlugin.show(
+                doc.id.hashCode,
+                title,
+                body,
+                NotificationDetails(
+                  android: AndroidNotificationDetails(
+                    'high_importance_channel',
+                    'High Importance Notifications',
+                    channelDescription:
+                        'This channel is used for important notifications.',
+                    importance: Importance.high,
+                    priority: Priority.high,
+                  ),
+                  iOS: const DarwinNotificationDetails(),
+                ),
+              );
+            }
+          }
 
-      // Process each notification
-      for (final doc in pendingNotifications.docs) {
-        final data = doc.data();
-        final title = data['title'] as String;
-        final body = data['body'] as String;
-
-        // Show the notification
-        await showNotification(
-          id: doc.id.hashCode % 10000,
-          title: title,
-          body: body,
-          details: NotificationDetails(
-            android: AndroidNotificationDetails(
-              'high_importance_channel',
-              'High Importance Notifications',
-              channelDescription:
-                  'This channel is used for important notifications.',
-              importance: Importance.high,
-              priority: Priority.high,
-            ),
-            iOS: const DarwinNotificationDetails(),
-          ),
-        );
-
-        // Mark as delivered
-        await doc.reference.update({'delivered': true});
-        print('Delivered pending notification: $title');
+          // Mark as delivered
+          await FirebaseFirestore.instance
+              .collection('pending_notifications')
+              .doc(doc.id)
+              .update({'delivered': true});
+        }
       }
     } catch (e) {
       print('Error checking pending notifications: $e');
+    }
+  }
+
+  // Check specifically for pending message notifications
+  Future<void> checkPendingMessageNotifications() async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      // Check if there are any pending message notifications in Firestore
+      final pendingNotifications = await FirebaseFirestore.instance
+          .collection('pending_notifications')
+          .where('userId', isEqualTo: currentUser.uid)
+          .where('delivered', isEqualTo: false)
+          .get();
+
+      if (pendingNotifications.docs.isNotEmpty) {
+        for (var doc in pendingNotifications.docs) {
+          final data = doc.data();
+          final title = data['title'] as String?;
+          final body = data['body'] as String?;
+          final notificationData = data['data'] as Map<String, dynamic>?;
+
+          // Process only message notifications
+          if (title != null &&
+              body != null &&
+              notificationData != null &&
+              notificationData['type'] == 'message') {
+            // Show the message notification
+            await notificationsPlugin.show(
+              MESSAGE_NOTIFICATION_ID_PREFIX + doc.id.hashCode % 10000,
+              title,
+              body,
+              messageDetails(),
+              payload:
+                  'message:${notificationData['chatId'] ?? ''}:${notificationData['senderId'] ?? ''}:${notificationData['senderName'] ?? ''}',
+            );
+
+            // Mark as delivered
+            await FirebaseFirestore.instance
+                .collection('pending_notifications')
+                .doc(doc.id)
+                .update({'delivered': true});
+          }
+        }
+      }
+    } catch (e) {
+      print('Error checking pending message notifications: $e');
     }
   }
 
@@ -728,7 +899,38 @@ class NotiService {
         print('Got a message whilst in the foreground!');
         print('Message data: ${message.data}');
 
-        if (message.notification != null) {
+        // Check if this is a message notification
+        if (message.data.containsKey('type') &&
+            message.data['type'] == 'message') {
+          // Check if we should show the notification
+          final context = navigatorKey.currentContext;
+          if (context != null) {
+            final currentRoute = ModalRoute.of(context)?.settings.name;
+            if (_isInForeground && currentRoute == 'Messaging') {
+              print(
+                  'Skipping message notification as user is already in messaging tab');
+              return;
+            }
+          }
+
+          // Handle message notifications without notification payload (data-only)
+          final title = message.data['title'] ?? 'New Message';
+          final body = message.data['body'] ?? '';
+
+          // Create a payload for message notifications
+          final chatId = message.data['chatId'] ?? '';
+          final senderId = message.data['senderId'] ?? '';
+          final senderName = message.data['senderName'] ?? '';
+
+          // Show local notification for the message
+          notificationsPlugin.show(
+            MESSAGE_NOTIFICATION_ID_PREFIX + message.hashCode % 10000,
+            title,
+            body,
+            messageDetails(),
+            payload: 'message:$chatId:$senderId:$senderName',
+          );
+        } else if (message.notification != null) {
           print(
               'Message also contained a notification: ${message.notification}');
           _showFcmNotification(message);
@@ -757,29 +959,60 @@ class NotiService {
     }
   }
 
-  // Show notification from FCM message
+  // Show FCM notification from message
   void _showFcmNotification(RemoteMessage message) {
     try {
       final notification = message.notification;
       final android = message.notification?.android;
+      final data = message.data;
+
+      // For message notifications, check if we should show them
+      if (data.containsKey('type') && data['type'] == 'message') {
+        // Don't show notification if the app is in foreground and user is in the messaging tab
+        final context = navigatorKey.currentContext;
+        if (context != null) {
+          final currentRoute = ModalRoute.of(context)?.settings.name;
+          if (_isInForeground && currentRoute == 'Messaging') {
+            print('Skipping notification as user is already in messaging tab');
+            return;
+          }
+        }
+      }
+
+      NotificationDetails details;
+      String? payload;
+
+      // Check if this is a message notification
+      if (data.containsKey('type') && data['type'] == 'message') {
+        details = messageDetails();
+        // Create a payload for message notifications
+        final chatId = data['chatId'] ?? '';
+        final senderId = data['senderId'] ?? '';
+        final senderName = data['senderName'] ?? '';
+        payload = 'message:$chatId:$senderId:$senderName';
+      } else {
+        // Default notification details
+        details = NotificationDetails(
+          android: AndroidNotificationDetails(
+            'high_importance_channel',
+            'High Importance Notifications',
+            channelDescription:
+                'This channel is used for important notifications.',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: android?.smallIcon,
+          ),
+          iOS: const DarwinNotificationDetails(),
+        );
+      }
 
       if (notification != null) {
         notificationsPlugin.show(
           message.hashCode,
           notification.title,
           notification.body,
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              'high_importance_channel',
-              'High Importance Notifications',
-              channelDescription:
-                  'This channel is used for important notifications.',
-              importance: Importance.high,
-              priority: Priority.high,
-              icon: android?.smallIcon,
-            ),
-            iOS: const DarwinNotificationDetails(),
-          ),
+          details,
+          payload: payload,
         );
       }
     } catch (e) {
@@ -826,7 +1059,6 @@ class NotiService {
       };
 
       // Try to send via Cloud Functions if available
-      // Note: Cloud Functions often have connectivity issues with emulators
       try {
         // Try with default region (us-central1)
         final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
@@ -840,6 +1072,19 @@ class NotiService {
         print('Cloud Function not available: $functionError');
         print(
             'This error is common when testing on emulators without Google Play Services');
+
+        // If we can't send via FCM, try local notification
+        if (data != null && data['type'] == 'message') {
+          // For message notifications, show a local notification
+          await notificationsPlugin.show(
+            MESSAGE_NOTIFICATION_ID_PREFIX + userId.hashCode % 10000,
+            title,
+            body,
+            messageDetails(),
+            payload:
+                'message:${data['chatId'] ?? ''}:${data['senderId'] ?? ''}:${data['senderName'] ?? ''}',
+          );
+        }
 
         // Log the message details
         print('Would send FCM message: $message');
@@ -861,5 +1106,17 @@ class NotiService {
     } catch (e) {
       print('Error sending FCM notification: $e');
     }
+  }
+}
+
+// App lifecycle observer to track foreground state
+class _AppLifecycleObserver extends WidgetsBindingObserver {
+  final NotiService _notiService;
+
+  _AppLifecycleObserver(this._notiService);
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _notiService.setForegroundState(state == AppLifecycleState.resumed);
   }
 }
