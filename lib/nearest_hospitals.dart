@@ -27,6 +27,7 @@ class _NearestHospitalsState extends State<NearestHospitals> {
   bool _isLoading = true;
   String? _errorMessage;
   bool _isRefreshing = false;
+  Map<String, dynamic>? _selectedHospital;
 
   static const Color primaryBlue = Color(0xFF015C92);
   double _currentZoom = 14.0;
@@ -199,7 +200,64 @@ class _NearestHospitalsState extends State<NearestHospitals> {
     }
   }
 
+  void _updateMarkers() {
+    Set<Marker> newMarkers = {};
+
+    // Always add user marker
+    if (_currentLocation != null) {
+      newMarkers.add(Marker(
+        markerId: const MarkerId('user_location'),
+        position: _currentLocation!,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        infoWindow: const InfoWindow(title: 'Your Location'),
+      ));
+    }
+
+    // Add hospital markers based on selection
+    if (_selectedHospital != null) {
+      // Only show the selected hospital
+      final hospital = _selectedHospital!;
+      newMarkers.add(
+        Marker(
+          markerId: MarkerId(hospital['place_id']),
+          position: hospital['location'],
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          infoWindow: InfoWindow(
+            title: hospital['name'],
+            snippet:
+            '${hospital['distance'].toStringAsFixed(1)} km • ${hospital['address']}',
+          ),
+          onTap: () => _showHospitalDetails(hospital),
+        ),
+      );
+    } else {
+      // Show all hospitals
+      for (var hospital in _hospitals) {
+        newMarkers.add(
+          Marker(
+            markerId: MarkerId(hospital['place_id']),
+            position: hospital['location'],
+            icon:
+            BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+            infoWindow: InfoWindow(
+              title: hospital['name'],
+              snippet:
+              '${hospital['distance'].toStringAsFixed(1)} km • ${hospital['address']}',
+            ),
+            onTap: () => _showHospitalDetails(hospital),
+          ),
+        );
+      }
+    }
+
+    setState(() {
+      _markers = newMarkers;
+    });
+  }
+
   Future<void> _fetchHospitalsWithRadius(int radius) async {
+    if (_currentLocation == null) return;
+
     final lat = _currentLocation!.latitude;
     final lng = _currentLocation!.longitude;
     const apiKey = 'AIzaSyBtPvYgEr-gpBs4FoN2ucSbzrqzsCg4nMs';
@@ -207,8 +265,6 @@ class _NearestHospitalsState extends State<NearestHospitals> {
     Set<String> existingPlaceIds =
     _hospitals.map((h) => h['place_id'] as String).toSet();
 
-    // Keep existing markers and add new ones
-    Set<Marker> newMarkers = Set.from(_markers);
     List<Map<String, dynamic>> newHospitals = List.from(_hospitals);
 
     try {
@@ -233,7 +289,6 @@ class _NearestHospitalsState extends State<NearestHospitals> {
             final name = place['name'].toString();
             final placeId = place['place_id'] as String;
 
-            // Skip veterinary facilities and duplicates
             if (name.toLowerCase().contains('vet') ||
                 name.toLowerCase().contains('animal') ||
                 name.toLowerCase().contains('pet') ||
@@ -260,30 +315,16 @@ class _NearestHospitalsState extends State<NearestHospitals> {
             };
 
             newHospitals.add(hospital);
-            newMarkers.add(
-              Marker(
-                markerId: MarkerId(placeId),
-                position: latLng,
-                icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueRed),
-                infoWindow: InfoWindow(
-                  title: name,
-                  snippet: '${distance.toStringAsFixed(1)} km • $address',
-                ),
-                onTap: () => _showHospitalDetails(hospital),
-              ),
-            );
           }
 
-          // Sort and update UI with new results
           newHospitals.sort((a, b) =>
               (a['distance'] as double).compareTo(b['distance'] as double));
 
           setState(() {
-            _markers = newMarkers;
             _hospitals = newHospitals;
             _filteredHospitals = newHospitals;
           });
+          _updateMarkers();
 
           if (nextPageToken != null) {
             await Future.delayed(const Duration(seconds: 2));
@@ -296,6 +337,13 @@ class _NearestHospitalsState extends State<NearestHospitals> {
     } catch (e) {
       print('Error in _fetchHospitalsWithRadius: $e');
     }
+  }
+
+  void _showAllHospitals() {
+    setState(() {
+      _selectedHospital = null;
+    });
+    _updateMarkers();
   }
 
   void _showHospitalDetails(Map<String, dynamic> hospital) {
@@ -398,6 +446,10 @@ class _NearestHospitalsState extends State<NearestHospitals> {
                   child: ElevatedButton.icon(
                     onPressed: () {
                       Navigator.pop(context);
+                      setState(() {
+                        _selectedHospital = hospital;
+                      });
+                      _updateMarkers();
                       _moveToLocation(hospital['location']);
                     },
                     icon: const Icon(Icons.location_searching,
@@ -454,6 +506,33 @@ class _NearestHospitalsState extends State<NearestHospitals> {
       ),
       body: Column(
         children: [
+          if (_selectedHospital != null)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              color: primaryBlue.withOpacity(0.1),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Showing: ${_selectedHospital!['name']}',
+                      style: const TextStyle(
+                        color: primaryBlue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: _showAllHospitals,
+                    icon: const Icon(Icons.view_list),
+                    label: const Text('Show All'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: primaryBlue,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
