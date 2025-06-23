@@ -216,44 +216,40 @@ class _HomeTabState extends State<HomeTab> {
     }
   }
 
-  String _getTimeStatus(PillModel pill) {
-    // If pill is already taken, return taken status
-    if (pill.taken) {
-      return "taken";
-    }
-
-    // If pill is explicitly marked as missed, return missed status
-    if (pill.missed) {
-      return "missed";
-    }
-
+  List<Map<String, String>> _getTimeStatuses(PillModel pill) {
     final now = DateTime.now();
+    List<Map<String, String>> statuses = [];
+    
+    for (final t in pill.times) {
+      final timeKey = pill.getTimeKey(t);
     final pillTime = DateTime(
       now.year,
       now.month,
       now.day,
-      pill.alarmHour,
-      pill.alarmMinute,
+        t['hour'] ?? 8,
+        t['minute'] ?? 0,
     );
 
-    // If pill time is more than 5 minutes ago and not taken, mark as overdue/missed
-    if (now.difference(pillTime).inMinutes > 5) {
-      return "missed";
+      String status;
+      if (pill.isTimeTaken(timeKey)) {
+        status = "taken";
+      } else if (now.difference(pillTime).inMinutes > 5) {
+        status = "missed";
+      } else if (now.difference(pillTime).inMinutes <= 5 && now.difference(pillTime).inMinutes >= 0) {
+        status = "due-now";
+      } else if (pillTime.isAfter(now)) {
+        status = "upcoming";
+      } else {
+        status = "upcoming";
     }
 
-    // If pill time is within last 5 minutes or next 30 minutes, mark as due now
-    if (now.difference(pillTime).inMinutes <= 5 &&
-        now.difference(pillTime).inMinutes >= 0) {
-      return "due-now";
+      statuses.add({
+        'timeKey': timeKey,
+        'time': '${(t['hour']! > 12 ? t['hour']! - 12 : t['hour']!)}:${(t['minute']! < 10 ? '0' : '')}${t['minute']!} ${t['hour']! >= 12 ? 'PM' : 'AM'}',
+        'status': status
+      });
     }
-
-    // If pill time is in the future, mark as upcoming
-    if (pillTime.isAfter(now)) {
-      return "upcoming";
-    }
-
-    // Default
-    return "upcoming";
+    return statuses;
   }
 
   String _getStatusText(String status) {
@@ -296,6 +292,74 @@ class _HomeTabState extends State<HomeTab> {
       }
     } catch (e) {
       print('Error checking for missed pills: $e');
+    }
+  }
+
+  // Mark a specific time as taken
+  Future<void> _markTimeAsTaken(PillModel pill, String timeKey) async {
+    // Only allow elder to mark pills
+    if (_isReadOnly) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('Guardian view is read-only. Cannot mark pills as taken.'),
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Get current user role
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
+      final userRole = userData['role'] ?? '';
+      final userName = userData['name'] ?? 'User';
+      final sharedUserEmail = userData['sharedUsers'] ?? '';
+
+      // Only elders should be able to mark pills as taken
+      if (userRole == 'guardian') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Guardians cannot mark pills as taken.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      // Create a copy of the pill and update its taken times
+      final updatedPill = pill.copyWith();
+      updatedPill.markTimeTaken(timeKey, DateTime.now());
+
+      await FirebaseManager.updatePill(updatedPill);
+
+      // Check if notification was sent to guardian
+      if (sharedUserEmail.isNotEmpty) {
+        final guardianData = await FirebaseManager.getUserByEmail(sharedUserEmail);
+        if (guardianData != null) {
+          final guardianId = guardianData['id'] ?? '';
+          print('Guardian ID: $guardianId');
+        }
+      }
+
+      _loadPills(); // Reload pills to update UI
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${pill.name} marked as taken for ${timeKey.replaceAll('-', ':')}'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      print('Error marking pill time as taken: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error marking pill as taken'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -574,7 +638,7 @@ class _HomeTabState extends State<HomeTab> {
                                     : Column(
                                         children: _todayPills
                                             .map((pill) => _buildPillCard(
-                                                pill, _getTimeStatus(pill)))
+                                                pill, _getTimeStatuses(pill)))
                                             .toList(),
                                       ),
                               ],
@@ -628,20 +692,27 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildPillCard(PillModel pill, String status) {
-    // If pill is already taken, override the status
-    if (pill.taken) {
-      status = "taken";
-    } else if (pill.missed) {
-      status = "missed";
+  Widget _buildPillCard(PillModel pill, List<Map<String, String>> timeStatuses) {
+    // Determine overall card color based on most urgent status
+    String overallStatus = "upcoming";
+    for (final timeStatus in timeStatuses) {
+      final status = timeStatus['status']!;
+      if (status == "due-now") {
+        overallStatus = "due-now";
+        break;
+      } else if (status == "missed" && overallStatus != "due-now") {
+        overallStatus = "missed";
+      } else if (status == "taken" && overallStatus == "upcoming") {
+        overallStatus = "taken";
+      }
     }
 
     final Color cardColor;
     final Color textColor;
     final IconData statusIcon;
 
-    // Determine colors and icon based on status
-    switch (status) {
+    // Determine colors and icon based on overall status
+    switch (overallStatus) {
       case "upcoming":
         cardColor = Colors.grey[100]!;
         textColor = Colors.grey[800]!;
@@ -668,8 +739,8 @@ class _HomeTabState extends State<HomeTab> {
         statusIcon = Icons.warning_rounded;
         break;
       default:
-        cardColor = Color(0xFFE6F2F9); // Light blue
-        textColor = Color(0xFF015C92); // Dark blue
+        cardColor = Color(0xFFE6F2F9);
+        textColor = Color(0xFF015C92);
         statusIcon = Icons.medication;
     }
 
@@ -686,14 +757,13 @@ class _HomeTabState extends State<HomeTab> {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: ListTile(
-              contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 10), // Larger padding
+          // Pill header
+          ListTile(
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               leading: Container(
-                padding: EdgeInsets.all(10), // Larger padding
+              padding: EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
@@ -708,7 +778,7 @@ class _HomeTabState extends State<HomeTab> {
                 child: Icon(
                   Icons.medication,
                   color: textColor,
-                  size: 28, // Larger icon
+                size: 28,
                 ),
               ),
               title: Text(
@@ -716,100 +786,84 @@ class _HomeTabState extends State<HomeTab> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: textColor,
-                  fontSize: 18, // Larger font
+                fontSize: 18,
                 ),
               ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
+            subtitle: Text(
                     '${pill.dosage} - ${pill.timesPerDay} ${pill.timesPerDay > 1 ? "times" : "time"} per day',
                     style: TextStyle(
                       color: textColor.withOpacity(0.8),
-                      fontSize: 14, // Larger font
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.access_time,
-                        size: 16, // Larger icon
-                        color: textColor.withOpacity(0.7),
-                      ),
-                      SizedBox(width: 4),
-                      Text(
-                        pill.getFormattedTime(), // Use the new formatted time method
-                        style: TextStyle(
-                          color: textColor.withOpacity(0.7),
-                          fontSize: 14, // Larger font
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (pill.taken && pill.takenDate != null)
-                    Text(
-                      'Taken at: ${DateFormat('h:mm a').format(pill.takenDate!)}',
-                      style: TextStyle(
-                        fontSize: 14, // Larger font
-                        color: Colors.green[700],
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  if (pill.missed && !pill.taken)
-                    Text(
-                      'Missed!',
-                      style: TextStyle(
-                        fontSize: 14, // Larger font
-                        color: Colors.red[700],
-                        fontWeight: FontWeight.bold,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                ],
+                fontSize: 14,
               ),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    statusIcon,
-                    color: textColor,
-                    size: 24, // Larger icon
+            ),
+          ),
+          // Time slots
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              children: timeStatuses.map((timeStatus) {
+                final status = timeStatus['status']!;
+                Color timeColor;
+                switch (status) {
+                  case "missed":
+                    timeColor = Colors.red[700]!;
+                    break;
+                  case "due-now":
+                    timeColor = Colors.orange[700]!;
+                    break;
+                  case "taken":
+                    timeColor = Colors.green[700]!;
+                    break;
+                  default:
+                    timeColor = textColor.withOpacity(0.7);
+                }
+
+                return Container(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.grey[300]!,
+                        width: 0.5,
+                      ),
+                    ),
                   ),
-                  SizedBox(height: 4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.access_time,
+                              size: 16,
+                              color: timeColor,
+                            ),
+                            SizedBox(width: 8),
+                    Text(
+                              timeStatus['time']!,
+                      style: TextStyle(
+                                color: timeColor,
+                                fontSize: 14,
+                                fontWeight: status == "due-now" ? FontWeight.bold : FontWeight.normal,
+                      ),
+                  ),
+                            SizedBox(width: 12),
                   Text(
                     _getStatusText(status),
                     style: TextStyle(
-                      fontSize: 12, // Larger font
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
+                                color: timeColor,
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
                     ),
                   ),
                 ],
               ),
-              onTap: () {
-                Provider.of<MyProvider>(context, listen: false)
-                    .changeCalendarIndex();
-              },
-            ),
-          ),
-          // Add checkbox for elder or status icon for guardian
-          _isReadOnly
-              ? Padding(
-                  // For guardians - show status icon instead of checkbox
-                  padding: const EdgeInsets.only(right: 16.0),
-                  child: Icon(
-                    pill.taken ? Icons.check_circle : Icons.pending_actions,
-                    color: pill.taken ? Colors.green[700] : Colors.orange,
-                    size: 28, // Larger icon
-                  ),
-                )
-              : Padding(
-                  // For elders - show checkbox to mark pills as taken
-                  padding: const EdgeInsets.only(right: 16.0),
-                  child: Transform.scale(
-                    scale: 1.3, // Make checkbox larger
+                      ),
+                      if (!_isReadOnly)
+                        Transform.scale(
+                          scale: 1.2,
                     child: Checkbox(
-                      value: pill.taken,
+                            value: status == "taken",
                       activeColor: Colors.green[700],
                       checkColor: Colors.white,
                       shape: RoundedRectangleBorder(
@@ -817,10 +871,24 @@ class _HomeTabState extends State<HomeTab> {
                       ),
                       onChanged: (bool? value) {
                         if (value != null && value) {
-                          _markPillAsTaken(pill);
+                                _markTimeAsTaken(pill, timeStatus['timeKey']!);
                         }
                       },
                     ),
+                        ),
+                      if (_isReadOnly)
+                        Padding(
+                          padding: EdgeInsets.only(right: 8),
+                          child: Icon(
+                            status == "taken" ? Icons.check_circle : Icons.pending_actions,
+                            color: status == "taken" ? Colors.green[700] : Colors.orange,
+                            size: 24,
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              }).toList(),
                   ),
                 ),
         ],

@@ -400,6 +400,17 @@ class NotiService {
       final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
       final userName = userData['name'] ?? 'User';
       final userRole = userData['role'] ?? '';
+      final sharedUserEmail = userData['sharedUsers'] ?? '';
+
+      // Get guardian data if this is an elder's account
+      String? guardianId;
+      String? guardianFcmToken;
+      if (userRole != 'guardian' && sharedUserEmail.isNotEmpty) {
+        final guardianData = await FirebaseManager.getUserByEmail(sharedUserEmail);
+        if (guardianData != null) {
+          guardianId = guardianData['id'];
+        }
+      }
 
       // Only schedule pill reminders for elders, not for guardians
       if (userRole != 'guardian') {
@@ -424,53 +435,92 @@ class NotiService {
           // Calculate the date for this day
           final pillDate = startDate.add(Duration(days: day));
 
-          // Calculate the exact time for the pill on this day
-          final pillTime = tz.TZDateTime(
-            tzLocation,
-            pillDate.year,
-            pillDate.month,
-            pillDate.day,
-            pill.alarmHour,
-            pill.alarmMinute,
-          );
-
-          // Calculate the reminder time (5 minutes before)
-          final reminderTime = pillTime.subtract(Duration(minutes: 5));
-
-          // Only schedule if the time is in the future
-          final now = tz.TZDateTime.now(tzLocation);
-          if (reminderTime.isAfter(now)) {
-            // Schedule 5-minute advance reminder
-            await _scheduleNotification(
-              id: dueIdBase + day,
-              title: "Medicine Reminder",
-              body:
-                  "${userName}, don't forget to take ${pill.name} after 5 minutes.",
-              scheduledTime: reminderTime,
-              details: _pillReminderDetails(),
-              payload: "reminder:${pill.id}:${day}",
-            );
-          }
-
-          // Only schedule if the time is in the future
-          if (pillTime.isAfter(now)) {
-            // Schedule exact time reminder
-            await _scheduleNotification(
-              id: reminderIdBase + day,
-              title: "Medicine Time",
-              body:
-                  "${userName}, it's time to take your medicine: ${pill.name}.",
-              scheduledTime: pillTime,
-              details: _pillReminderDetails(),
-              payload: "take:${pill.id}:${day}",
+          // For each time in the pill's times list
+          for (int tIndex = 0; tIndex < pill.times.length; tIndex++) {
+            final t = pill.times[tIndex];
+            final pillTime = tz.TZDateTime(
+              tzLocation,
+              pillDate.year,
+              pillDate.month,
+              pillDate.day,
+              t['hour'] ?? 8,
+              t['minute'] ?? 0,
             );
 
-            // Schedule a check for missed pill 5 minutes after the scheduled time
-            final checkTime = pillTime.add(Duration(
-                minutes:
-                    6)); // 6 minutes after to ensure 5 minute threshold is passed
-            await _scheduleMissedPillCheck(
-                pill, day, checkTime, missedIdBase + day);
+            // Calculate the reminder time (5 minutes before)
+            final reminderTime = pillTime.subtract(Duration(minutes: 5));
+
+            // Only schedule if the time is in the future
+            final now = tz.TZDateTime.now(tzLocation);
+            if (reminderTime.isAfter(now)) {
+              // Schedule 5-minute advance reminder for elder
+              await _scheduleNotification(
+                id: dueIdBase + day * 10 + tIndex,
+                title: "Medicine Reminder",
+                body: "${userName}, don't forget to take ${pill.name} after 5 minutes.",
+                scheduledTime: reminderTime,
+                details: _pillReminderDetails(),
+                payload: "reminder:${pill.id}:${day}:${tIndex}",
+              );
+
+              // Send advance reminder to guardian if available
+              if (guardianId != null) {
+                // Schedule FCM notification for guardian
+                final guardianReminderTime = reminderTime.toLocal();
+                if (guardianReminderTime.isAfter(DateTime.now())) {
+                  await sendFcmNotification(
+                    userId: guardianId,
+                    title: "Medicine Reminder for ${userName}",
+                    body: "${userName} needs to take ${pill.name} in 5 minutes.",
+                    data: {
+                      'type': 'pill_reminder',
+                      'pillId': pill.id,
+                      'pillName': pill.name,
+                      'elderName': userName,
+                      'scheduledTime': guardianReminderTime.toIso8601String(),
+                    },
+                  );
+                }
+              }
+            }
+
+            // Only schedule if the time is in the future
+            if (pillTime.isAfter(now)) {
+              // Schedule exact time reminder for elder
+              await _scheduleNotification(
+                id: reminderIdBase + day * 10 + tIndex,
+                title: "Medicine Time",
+                body: "${userName}, it's time to take your medicine: ${pill.name}.",
+                scheduledTime: pillTime,
+                details: _pillReminderDetails(),
+                payload: "take:${pill.id}:${day}:${tIndex}",
+              );
+
+              // Send exact time reminder to guardian if available
+              if (guardianId != null) {
+                // Schedule FCM notification for guardian
+                final guardianPillTime = pillTime.toLocal();
+                if (guardianPillTime.isAfter(DateTime.now())) {
+                  await sendFcmNotification(
+                    userId: guardianId,
+                    title: "Medicine Time for ${userName}",
+                    body: "It's time for ${userName} to take ${pill.name}.",
+                    data: {
+                      'type': 'pill_time',
+                      'pillId': pill.id,
+                      'pillName': pill.name,
+                      'elderName': userName,
+                      'scheduledTime': guardianPillTime.toIso8601String(),
+                    },
+                  );
+                }
+              }
+
+              // Schedule a check for missed pill 5 minutes after the scheduled time
+              final checkTime = pillTime.add(Duration(minutes: 6));
+              await _scheduleMissedPillCheck(
+                  pill, day, checkTime, missedIdBase + day * 10 + tIndex);
+            }
           }
         }
       } else {
@@ -660,8 +710,6 @@ class NotiService {
       scheduledTime,
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       payload: payload,
     );
   }

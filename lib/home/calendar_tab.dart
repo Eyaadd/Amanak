@@ -24,12 +24,14 @@ class _CalendarTabState extends State<CalendarTab> {
   String _currentUserRole = "";
   String _displayUserId = "";
   String _displayName = "";
+  late List<TimeOfDay> _timesList;
 
   @override
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
     _checkUserRoleAndLoadData();
+    _timesList = [];
   }
 
   // Helper method to refresh data safely
@@ -523,28 +525,47 @@ class _CalendarTabState extends State<CalendarTab> {
       itemCount: pillsForSelectedDay.length,
       itemBuilder: (context, index) {
         final pill = pillsForSelectedDay[index];
+        return _buildPillCard(pill);
+      },
+    );
+  }
+
+  Widget _buildPillCard(PillModel pill) {
+    final timeStatuses = _getTimeStatuses(pill);
+    
+    // Determine overall card color based on most urgent status
+    String overallStatus = "upcoming";
+    for (final timeStatus in timeStatuses) {
+      final status = timeStatus['status']!;
+      if (status == "due-now") {
+        overallStatus = "due-now";
+        break;
+      } else if (status == "missed" && overallStatus != "due-now") {
+        overallStatus = "missed";
+      } else if (status == "taken" && overallStatus == "upcoming") {
+        overallStatus = "taken";
+      }
+    }
+
         return Dismissible(
-          key: Key("${pill.id}_$selectedDate"),
+      key: Key(pill.id),
+      direction: _isReadOnly ? DismissDirection.none : DismissDirection.endToStart,
           background: Container(
-            color: Colors.red,
             alignment: Alignment.centerRight,
-            padding: EdgeInsets.only(right: 5.w),
+        padding: EdgeInsets.only(right: 4.w),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(10),
+        ),
             child: Icon(Icons.delete, color: Colors.white, size: 6.w),
           ),
-          direction:
-              _isReadOnly ? DismissDirection.none : DismissDirection.endToStart,
           confirmDismiss: (direction) async {
             if (_isReadOnly) return false;
-
             return await showDialog(
               context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: Text("Confirm", style: TextStyle(fontSize: 17.sp)),
-                  content: Text(
-                    "Are you sure you want to delete this pill?",
-                    style: TextStyle(fontSize: 15.sp),
-                  ),
+          builder: (context) => AlertDialog(
+            title: Text("Delete Pill?"),
+            content: Text("Are you sure you want to delete this pill?"),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(false),
@@ -556,8 +577,7 @@ class _CalendarTabState extends State<CalendarTab> {
                           style: TextStyle(color: Colors.red, fontSize: 14.sp)),
                     ),
                   ],
-                );
-              },
+          ),
             );
           },
           onDismissed: (direction) async {
@@ -568,7 +588,7 @@ class _CalendarTabState extends State<CalendarTab> {
               final startDate = DateTime(
                   pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
 
-              if (startDate.isAtSameMomentAs(selectedDate)) {
+          if (startDate.isAtSameMomentAs(_selectedDay!)) {
                 await FirebaseManager.deletePill(pill.id);
               }
 
@@ -590,12 +610,11 @@ class _CalendarTabState extends State<CalendarTab> {
               color: _getPillCardColor(pill),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Row(
+        child: Column(
               children: [
-                Expanded(
-                  child: ListTile(
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.h),
+            // Pill header
+            ListTile(
+              contentPadding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.h),
                     leading: Container(
                       padding: EdgeInsets.all(2.w),
                       child: Icon(
@@ -612,46 +631,106 @@ class _CalendarTabState extends State<CalendarTab> {
                         fontSize: 15.sp,
                       ),
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '${pill.dosage} - ${pill.timesPerDay} Times per day',
+              subtitle: Text(
+                '${pill.dosage} - ${pill.timesPerDay} ${pill.timesPerDay > 1 ? "times" : "time"} per day',
                           style: TextStyle(
                             color: _getPillSubtitleColor(pill),
                             fontSize: 13.sp,
                           ),
                         ),
-                        SizedBox(height: 0.5.h),
-                        Row(
+              trailing: !_isReadOnly
+                ? IconButton(
+                    icon: Icon(
+                      Icons.edit,
+                      color: _getPillTextColor(pill),
+                      size: 5.w,
+                    ),
+                    onPressed: () {
+                      // Only allow editing from the start date
+                      final startDate = DateTime(pill.dateTime.year,
+                          pill.dateTime.month, pill.dateTime.day);
+
+                      if (startDate.isAtSameMomentAs(_selectedDay!)) {
+                        _showEditPillDialog(pill);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  'Edit from the start date (${DateFormat('MMM d').format(startDate)})')),
+                        );
+                      }
+                    },
+                  )
+                : null,
+            ),
+            // Time slots
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.h),
+              child: Column(
+                children: timeStatuses.map((timeStatus) {
+                  final status = timeStatus['status']!;
+                  Color timeColor;
+                  switch (status) {
+                    case "missed":
+                      timeColor = Colors.red[700]!;
+                      break;
+                    case "due-now":
+                      timeColor = Colors.orange[700]!;
+                      break;
+                    case "taken":
+                      timeColor = Colors.green[700]!;
+                      break;
+                    default:
+                      timeColor = _getPillTextColor(pill).withOpacity(0.7);
+                  }
+
+                  return Container(
+                    padding: EdgeInsets.symmetric(vertical: 1.h),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Colors.grey.withOpacity(0.2),
+                          width: 0.5,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Row(
                           children: [
                             Container(
                               padding: EdgeInsets.all(1.w),
                               decoration: BoxDecoration(
-                                color: pill.taken
+                                  color: status == "taken"
                                     ? Colors.green[100]
-                                    : (pill.missed
+                                      : (status == "missed"
                                         ? Colors.red[100]
                                         : Colors.white30),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
                                 Icons.access_time,
-                                color: pill.taken
-                                    ? Colors.green[700]
-                                    : (pill.missed
-                                        ? Colors.red[700]
-                                        : Colors.white),
+                                  color: timeColor,
                                 size: 4.w,
                               ),
                             ),
-                            SizedBox(width: 1.w),
+                              SizedBox(width: 2.w),
                             Text(
-                              pill.getFormattedTime(),
+                                timeStatus['time']!,
                               style: TextStyle(
-                                color: _getPillSubtitleColor(pill),
+                                  color: timeColor,
                                 fontSize: 13.sp,
+                                  fontWeight: status == "due-now" ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                              SizedBox(width: 2.w),
+                              Text(
+                                _getStatusText(status),
+                                style: TextStyle(
+                                  color: timeColor,
+                                  fontSize: 11.sp,
+                                  fontStyle: FontStyle.italic,
                               ),
                             ),
                             if (pill.allowSnooze)
@@ -659,71 +738,18 @@ class _CalendarTabState extends State<CalendarTab> {
                                 padding: EdgeInsets.only(left: 2.w),
                                 child: Icon(
                                   Icons.snooze,
-                                  color: pill.taken
-                                      ? Colors.green[700]
-                                      : (pill.missed
-                                          ? Colors.red[700]
-                                          : Colors.white),
+                                    color: timeColor,
                                   size: 4.w,
                                 ),
                               ),
                           ],
                         ),
-                        if (pill.taken && pill.takenDate != null)
-                          Text(
-                            'Taken at: ${DateFormat('h:mm a').format(pill.takenDate!)}',
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              color: Colors.green[700],
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        if (pill.missed && !pill.taken)
-                          Text(
-                            'Missed!',
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              color: Colors.red[700],
-                              fontWeight: FontWeight.bold,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                      ],
-                    ),
-                    trailing: !_isReadOnly
-                        ? IconButton(
-                            icon: Icon(
-                              Icons.edit,
-                              color: _getPillTextColor(pill),
-                              size: 5.w,
-                            ),
-                            onPressed: () {
-                              // Only allow editing from the start date
-                              final startDate = DateTime(pill.dateTime.year,
-                                  pill.dateTime.month, pill.dateTime.day);
-
-                              if (startDate.isAtSameMomentAs(selectedDate)) {
-                                _showEditPillDialog(pill);
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(
-                                          'Edit from the start date (${DateFormat('MMM d').format(startDate)})')),
-                                );
-                              }
-                            },
-                          )
-                        : null,
-                  ),
-                ),
-                // Add checkbox to mark as taken - only for elders
+                        ),
                 if (!_isReadOnly)
-                  Padding(
-                    padding: EdgeInsets.only(right: 4.w),
-                    child: Transform.scale(
+                          Transform.scale(
                       scale: 1.2,
                       child: Checkbox(
-                        value: pill.taken,
+                              value: status == "taken",
                         activeColor: Colors.green[700],
                         checkColor: Colors.white,
                         shape: RoundedRectangleBorder(
@@ -731,29 +757,29 @@ class _CalendarTabState extends State<CalendarTab> {
                         ),
                         onChanged: (bool? value) {
                           if (value != null) {
-                            _markPillAsTaken(pill, value);
+                                  _markTimeAsTaken(pill, timeStatus['timeKey']!, value);
                           }
                         },
                       ),
                     ),
-                  ),
-                // For guardians, just show if pill was taken or not
                 if (_isReadOnly)
                   Padding(
-                    padding: EdgeInsets.only(right: 4.w),
+                            padding: EdgeInsets.only(right: 2.w),
                     child: Icon(
-                      _getPillStatusIcon(pill),
-                      color: pill.taken
-                          ? Colors.green[700]
-                          : (pill.missed ? Colors.red[700] : Colors.orange),
-                      size: 6.w,
+                              status == "taken" ? Icons.check_circle : Icons.pending_actions,
+                              color: status == "taken" ? Colors.green[700] : Colors.orange,
+                              size: 5.w,
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                }).toList(),
                     ),
                   ),
               ],
             ),
           ),
-        );
-      },
     );
   }
 
@@ -878,42 +904,245 @@ class _CalendarTabState extends State<CalendarTab> {
 
   // Helper methods for pill card UI
   Color _getPillCardColor(PillModel pill) {
-    if (pill.taken) {
+    final timeStatuses = _getTimeStatuses(pill);
+    
+    // Determine overall card color based on most urgent status
+    String overallStatus = "upcoming";
+    for (final timeStatus in timeStatuses) {
+      final status = timeStatus['status']!;
+      if (status == "due-now") {
+        overallStatus = "due-now";
+        break;
+      } else if (status == "missed" && overallStatus != "due-now") {
+        overallStatus = "missed";
+      } else if (status == "taken" && overallStatus == "upcoming") {
+        overallStatus = "taken";
+      }
+    }
+
+    switch (overallStatus) {
+      case "taken":
       return Colors.green[50]!;
-    } else if (pill.missed) {
+      case "missed":
       return Colors.red[50]!;
-    } else {
+      case "due-now":
+        return Colors.orange[50]!;
+      default:
       return Color(0xFF015C92);
     }
   }
 
   Color _getPillTextColor(PillModel pill) {
-    if (pill.taken) {
+    final timeStatuses = _getTimeStatuses(pill);
+    
+    // Determine overall text color based on most urgent status
+    String overallStatus = "upcoming";
+    for (final timeStatus in timeStatuses) {
+      final status = timeStatus['status']!;
+      if (status == "due-now") {
+        overallStatus = "due-now";
+        break;
+      } else if (status == "missed" && overallStatus != "due-now") {
+        overallStatus = "missed";
+      } else if (status == "taken" && overallStatus == "upcoming") {
+        overallStatus = "taken";
+      }
+    }
+
+    switch (overallStatus) {
+      case "taken":
       return Colors.green[700]!;
-    } else if (pill.missed) {
+      case "missed":
       return Colors.red[700]!;
-    } else {
+      case "due-now":
+        return Colors.orange[700]!;
+      default:
       return Colors.white;
     }
   }
 
   Color _getPillSubtitleColor(PillModel pill) {
-    if (pill.taken) {
+    final timeStatuses = _getTimeStatuses(pill);
+    
+    // Determine overall subtitle color based on most urgent status
+    String overallStatus = "upcoming";
+    for (final timeStatus in timeStatuses) {
+      final status = timeStatus['status']!;
+      if (status == "due-now") {
+        overallStatus = "due-now";
+        break;
+      } else if (status == "missed" && overallStatus != "due-now") {
+        overallStatus = "missed";
+      } else if (status == "taken" && overallStatus == "upcoming") {
+        overallStatus = "taken";
+      }
+    }
+
+    switch (overallStatus) {
+      case "taken":
       return Colors.green[700]!.withAlpha(204); // 0.8 opacity
-    } else if (pill.missed) {
+      case "missed":
       return Colors.red[700]!.withAlpha(204); // 0.8 opacity
-    } else {
+      case "due-now":
+        return Colors.orange[700]!.withAlpha(204); // 0.8 opacity
+      default:
       return Colors.white70;
     }
   }
 
   IconData _getPillStatusIcon(PillModel pill) {
-    if (pill.taken) {
+    final timeStatuses = _getTimeStatuses(pill);
+    
+    // Determine overall icon based on most urgent status
+    String overallStatus = "upcoming";
+    for (final timeStatus in timeStatuses) {
+      final status = timeStatus['status']!;
+      if (status == "due-now") {
+        overallStatus = "due-now";
+        break;
+      } else if (status == "missed" && overallStatus != "due-now") {
+        overallStatus = "missed";
+      } else if (status == "taken" && overallStatus == "upcoming") {
+        overallStatus = "taken";
+      }
+    }
+
+    switch (overallStatus) {
+      case "taken":
       return Icons.check_circle;
-    } else if (pill.missed) {
+      case "missed":
       return Icons.warning_rounded;
-    } else {
+      case "due-now":
+        return Icons.notifications_active;
+      default:
       return Icons.medication;
+    }
+  }
+
+  List<Map<String, String>> _getTimeStatuses(PillModel pill) {
+    final now = DateTime.now();
+    List<Map<String, String>> statuses = [];
+    
+    for (final t in pill.times) {
+      final timeKey = pill.getTimeKey(t);
+      final pillTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        t['hour'] ?? 8,
+        t['minute'] ?? 0,
+      );
+      
+      String status;
+      if (pill.isTimeTaken(timeKey)) {
+        status = "taken";
+      } else if (now.difference(pillTime).inMinutes > 5) {
+        status = "missed";
+      } else if (now.difference(pillTime).inMinutes <= 5 && now.difference(pillTime).inMinutes >= 0) {
+        status = "due-now";
+      } else if (pillTime.isAfter(now)) {
+        status = "upcoming";
+      } else {
+        status = "upcoming";
+      }
+      
+      statuses.add({
+        'timeKey': timeKey,
+        'time': '${(t['hour']! > 12 ? t['hour']! - 12 : t['hour']!)}:${(t['minute']! < 10 ? '0' : '')}${t['minute']!} ${t['hour']! >= 12 ? 'PM' : 'AM'}',
+        'status': status
+      });
+    }
+    return statuses;
+  }
+
+  // Mark a specific time as taken
+  Future<void> _markTimeAsTaken(PillModel pill, String timeKey, bool isTaken) async {
+    // Only allow elder to mark pills
+    if (_isReadOnly) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('Guardian view is read-only. Cannot mark pills as taken.'),
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Get current user role
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
+      final userRole = userData['role'] ?? '';
+      final userName = userData['name'] ?? 'User';
+      final sharedUserEmail = userData['sharedUsers'] ?? '';
+
+      // Only elders should be able to mark pills as taken
+      if (userRole == 'guardian') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Guardians cannot mark pills as taken.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      // Create a copy of the pill and update its taken times
+      final updatedPill = pill.copyWith();
+      if (isTaken) {
+        updatedPill.markTimeTaken(timeKey, DateTime.now());
+      } else {
+        updatedPill.markTimeNotTaken(timeKey);
+      }
+
+      await FirebaseManager.updatePill(updatedPill);
+
+      // Check if notification was sent to guardian
+      if (sharedUserEmail.isNotEmpty) {
+        final guardianData = await FirebaseManager.getUserByEmail(sharedUserEmail);
+        if (guardianData != null) {
+          final guardianId = guardianData['id'] ?? '';
+          print('Guardian ID: $guardianId');
+        }
+      }
+
+      _loadPills(); // Reload pills to update UI
+
+      if (isTaken) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${pill.name} marked as taken for ${timeKey.replaceAll('-', ':')}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error marking pill time as taken: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating pill status'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  String _getStatusText(String status) {
+    switch (status) {
+      case "upcoming":
+        return "Upcoming";
+      case "overdue":
+        return "Overdue";
+      case "due-now":
+        return "Due Now";
+      case "taken":
+        return "Taken";
+      case "missed":
+        return "Missed";
+      default:
+        return "Upcoming";
     }
   }
 }
@@ -940,7 +1169,7 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
   late int _timesPerDay;
   late int _duration;
   late DateTime _selectedDate;
-  late TimeOfDay _selectedTime;
+  late List<TimeOfDay> _timesList;
   late bool _allowSnooze;
   late int _treatmentPeriod; // Total treatment period in days
 
@@ -948,20 +1177,28 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
   void initState() {
     super.initState();
     final existingPill = widget.existingPill;
-
     _nameController = TextEditingController(text: existingPill?.name ?? '');
     _dosageController = TextEditingController(text: existingPill?.dosage ?? '');
     _noteController = TextEditingController(text: existingPill?.note ?? '');
     _timesPerDay = existingPill?.timesPerDay ?? 1;
     _duration = existingPill?.duration ?? 7;
-    _treatmentPeriod =
-        existingPill?.duration ?? 7; // Initialize with duration if existing
+    _treatmentPeriod = existingPill?.duration ?? 7;
     _selectedDate = existingPill?.dateTime ?? DateTime.now();
-    _selectedTime = existingPill != null
-        ? TimeOfDay(
-            hour: existingPill.alarmHour, minute: existingPill.alarmMinute)
-        : TimeOfDay.now();
     _allowSnooze = existingPill?.allowSnooze ?? true;
+    _timesList = [];
+    if (existingPill != null && existingPill.times.isNotEmpty) {
+      _timesList = existingPill.times.map((t) => TimeOfDay(hour: t['hour'] ?? 8, minute: t['minute'] ?? 0)).toList();
+    }
+    // Ensure _timesList matches _timesPerDay
+    _syncTimesListWithTimesPerDay();
+  }
+
+  void _syncTimesListWithTimesPerDay() {
+    if (_timesList.length < _timesPerDay) {
+      _timesList.addAll(List.generate(_timesPerDay - _timesList.length, (_) => TimeOfDay(hour: 8, minute: 0)));
+    } else if (_timesList.length > _timesPerDay) {
+      _timesList = _timesList.sublist(0, _timesPerDay);
+    }
   }
 
   @override
@@ -1091,13 +1328,56 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                           onChanged: (newValue) {
                             setState(() {
                               _timesPerDay = newValue!;
+                              _syncTimesListWithTimesPerDay();
                             });
                           },
                           underline: Container(),
-                          icon:
-                              Icon(Icons.arrow_drop_down, color: primaryColor),
+                          icon: Icon(Icons.arrow_drop_down, color: primaryColor),
                         ),
                       ],
+                    ),
+                    SizedBox(height: 1.h),
+                    // Multiple time pickers
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: _timesList.length,
+                      itemBuilder: (context, index) {
+                        if (index >= _timesList.length) return SizedBox.shrink();
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: 1.h),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(Icons.access_time, size: 5.w, color: primaryColor),
+                            title: Text('Reminder Time #${index + 1}', style: TextStyle(fontSize: 15.sp)),
+                            subtitle: Text(_timesList[index].format(context), style: TextStyle(fontSize: 14.sp)),
+                            trailing: Icon(Icons.edit, color: primaryColor),
+                            onTap: () async {
+                              final TimeOfDay? picked = await showTimePicker(
+                                context: context,
+                                initialTime: _timesList[index],
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: Theme.of(context).copyWith(
+                                      colorScheme: ColorScheme.light(
+                                        primary: primaryColor,
+                                        onPrimary: Colors.white,
+                                        onSurface: Colors.black,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (picked != null && picked != _timesList[index]) {
+                                setState(() {
+                                  _timesList[index] = picked;
+                                });
+                              }
+                            },
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -1207,53 +1487,6 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
               ),
               SizedBox(height: 2.h),
 
-              // Time picker
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(3.w),
-                ),
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading:
-                      Icon(Icons.access_time, size: 5.w, color: primaryColor),
-                  title: Text(
-                    'Reminder Time',
-                    style: TextStyle(fontSize: 15.sp),
-                  ),
-                  subtitle: Text(
-                    _selectedTime.format(context),
-                    style: TextStyle(fontSize: 14.sp),
-                  ),
-                  trailing: Icon(Icons.edit, color: primaryColor),
-                  onTap: () async {
-                    final TimeOfDay? picked = await showTimePicker(
-                      context: context,
-                      initialTime: _selectedTime,
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: ColorScheme.light(
-                              primary: primaryColor,
-                              onPrimary: Colors.white,
-                              onSurface: Colors.black,
-                            ),
-                          ),
-                          child: child!,
-                        );
-                      },
-                    );
-                    if (picked != null && picked != _selectedTime) {
-                      setState(() {
-                        _selectedTime = picked;
-                      });
-                    }
-                  },
-                ),
-              ),
-              SizedBox(height: 2.h),
-
               // Allow snooze
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
@@ -1312,17 +1545,20 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
+                  Expanded(
+                    child: TextButton(
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
                     child: Text(
                       'Cancel',
                       style: TextStyle(fontSize: 15.sp, color: primaryColor),
+                      ),
                     ),
                   ),
                   SizedBox(width: 3.w),
-                  ElevatedButton(
+                  Expanded(
+                    child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
                       foregroundColor: Colors.white,
@@ -1336,32 +1572,28 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                     ),
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        // Create pill object
+                          final times = _timesList.map((t) => {'hour': t.hour, 'minute': t.minute}).toList();
                         final pill = PillModel(
                           name: _nameController.text,
                           dosage: _dosageController.text,
                           timesPerDay: _timesPerDay,
-                          duration:
-                              _treatmentPeriod, // Use treatment period as duration
+                            duration: _treatmentPeriod,
                           dateTime: DateTime(
                             _selectedDate.year,
                             _selectedDate.month,
                             _selectedDate.day,
-                            _selectedTime.hour,
-                            _selectedTime.minute,
                           ),
-                          alarmHour: _selectedTime.hour,
-                          alarmMinute: _selectedTime.minute,
+                            times: times,
                           allowSnooze: _allowSnooze,
                           note: _noteController.text,
                         );
-
                         widget.onSubmit(pill);
                       }
                     },
                     child: Text(
                       widget.existingPill != null ? 'Update' : 'Add Medication',
                       style: TextStyle(fontSize: 15.sp),
+                      ),
                     ),
                   ),
                 ],
