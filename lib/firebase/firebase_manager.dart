@@ -228,6 +228,19 @@ class FirebaseManager {
     return snapshot.docs.map((doc) => doc.data()).toList();
   }
 
+  static Future<List<PillModel>> getPillsForDateRange(String userId, DateTime startDate, DateTime endDate) async {
+    var collection = getPillsCollection(userId);
+    var snapshot = await collection.get();
+    var allPills = snapshot.docs.map((doc) => doc.data()).toList();
+    
+    // Filter pills that fall within the date range
+    return allPills.where((pill) {
+      final pillStartDate = DateTime(pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
+      final pillEndDate = pillStartDate.add(Duration(days: pill.duration));
+      return !pillStartDate.isAfter(endDate) && !pillEndDate.isBefore(startDate);
+    }).toList();
+  }
+
   // Helper method to find a user by email
   static Future<Map<String, String>?> getUserByEmail(String email) async {
     try {

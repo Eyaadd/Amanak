@@ -30,6 +30,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:amanak/home/messaging_tab.dart';
+import 'package:amanak/provider/fall_detection_provider.dart';
 
 const apiKey = "AIzaSyDLePMB53Q1Nud4ZG8a2XA9UUYuSLCrY6c";
 
@@ -142,8 +143,11 @@ void main() async {
   }
 
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => MyProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => MyProvider()),
+        ChangeNotifierProvider(create: (_) => FallDetectionProvider()),
+      ],
       child: MyApp(),
     ),
   );

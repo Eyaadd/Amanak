@@ -46,6 +46,10 @@ dependencies:
   firebase_messaging: ^15.2.7
   flutter_timezone: ^4.1.1
   cloud_functions: ^5.5.2
+  # Fall detection dependencies
+  sensors_plus: ^4.0.1
+  workmanager: ^0.5.2
+  shared_preferences: ^2.2.2  # For storing sensor data between background tasks
 
 
 dev_dependencies:

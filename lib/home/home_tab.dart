@@ -3,6 +3,7 @@ import 'package:amanak/gaurdian_location.dart';
 import 'package:amanak/home/messaging_tab.dart';
 import 'package:amanak/nearest_hospitals.dart';
 import 'package:amanak/notifications/noti_service.dart';
+import 'package:amanak/provider/fall_detection_provider.dart';
 import 'package:amanak/widgets/overlay_button.dart';
 import 'package:amanak/widgets/pillsearchfield.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:responsive_sizer/responsive_sizer.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -26,7 +28,6 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  static int selectedHomeIndex = 0;
   final _searchController = TextEditingController();
   List<PillModel> _todayPills = [];
   bool _isLoading = true;
@@ -57,15 +58,14 @@ class _HomeTabState extends State<HomeTab> {
         final userRole = userData['role'] ?? '';
         final sharedUserEmail = userData['sharedUsers'] ?? '';
 
+        print('👤 User Role: $userRole');
         _currentUserRole = userRole;
         _displayUserId = currentUserId;
         _displayName = userData['name'] ?? 'User';
 
-        if (userRole.toLowerCase() == 'guardian' &&
-            sharedUserEmail.isNotEmpty) {
+        if (userRole.toLowerCase() == 'guardian' && sharedUserEmail.isNotEmpty) {
           // If guardian, find the elder user's ID by their email
-          final elderData =
-              await FirebaseManager.getUserByEmail(sharedUserEmail);
+          final elderData = await FirebaseManager.getUserByEmail(sharedUserEmail);
           if (elderData != null) {
             _displayUserId = elderData['id'] ?? '';
             if (_displayUserId.isNotEmpty) {
@@ -81,191 +81,35 @@ class _HomeTabState extends State<HomeTab> {
         await _loadPills(_displayUserId);
       }
     } catch (e) {
-      print('Error checking user role: $e');
+      print('❌ Error checking user role: $e');
       setState(() {
         _isLoading = false;
       });
     }
   }
 
-  Future<void> _loadPills([String? userId]) async {
-    setState(() {
-      _isLoading = true;
-    });
-
+  // Load pills for the specified user
+  Future<void> _loadPills(String userId) async {
     try {
-      final targetUserId = userId ?? FirebaseAuth.instance.currentUser?.uid;
-      if (targetUserId != null) {
-        final pillsList = await FirebaseManager.getPills(userId: targetUserId);
+      final today = DateTime.now();
+      final startOfDay = DateTime(today.year, today.month, today.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1));
 
-        final today = DateTime.now();
-        final todayDate = DateTime(today.year, today.month, today.day);
+      final pills = await FirebaseManager.getPillsForDateRange(
+        userId,
+        startOfDay,
+        endOfDay,
+      );
 
-        // Filter pills for today only
-        final todayPills = <PillModel>[];
-
-        for (var pill in pillsList) {
-          final pillStartDate = DateTime(
-              pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
-
-          // Calculate days since start date
-          final daysSinceStart = todayDate.difference(pillStartDate).inDays;
-
-          // Check if the pill should be taken today
-          if (daysSinceStart >= 0 && daysSinceStart < pill.duration) {
-            todayPills.add(pill);
-          }
-        }
-
-        setState(() {
-          _todayPills = todayPills;
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _todayPills = pills;
+        _isLoading = false;
+      });
     } catch (e) {
       print('Error loading pills: $e');
       setState(() {
         _isLoading = false;
       });
-    }
-  }
-
-  // Mark a pill as taken
-  Future<void> _markPillAsTaken(PillModel pill) async {
-    // Only allow elder to mark pills
-    if (_isReadOnly) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-              Text('Guardian view is read-only. Cannot mark pills as taken.'),
-        ),
-      );
-      return;
-    }
-
-    try {
-      // Get current user role
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) return;
-
-      print('Marking pill as taken: ${pill.name} (ID: ${pill.id})');
-
-      final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
-      final userRole = userData['role'] ?? '';
-      final userName = userData['name'] ?? 'User';
-      final sharedUserEmail = userData['sharedUsers'] ?? '';
-
-      print(
-          'Current user: $userName, Role: $userRole, SharedUser: $sharedUserEmail');
-
-      // Only elders should be able to mark pills as taken
-      if (userRole == 'guardian') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Guardians cannot mark pills as taken.'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        return;
-      }
-
-      final updatedPill = pill.copyWith(
-        taken: true,
-        takenDate: DateTime.now(),
-        missed: false, // Reset missed status when marked as taken
-      );
-
-      print(
-          'Updating pill in Firebase: ${updatedPill.id}, taken: ${updatedPill.taken}');
-      await FirebaseManager.updatePill(updatedPill);
-
-      // Check if notification was sent to guardian
-      if (sharedUserEmail.isNotEmpty) {
-        print(
-            'Guardian email found: $sharedUserEmail. Notification should be sent.');
-
-        // Get guardian details for verification
-        final guardianData =
-            await FirebaseManager.getUserByEmail(sharedUserEmail);
-        if (guardianData != null) {
-          final guardianId = guardianData['id'] ?? '';
-          print('Guardian ID: $guardianId');
-        } else {
-          print('Warning: Could not find guardian with email $sharedUserEmail');
-        }
-      } else {
-        print('No guardian email found. No notification will be sent.');
-      }
-
-      _loadPills(); // Reload pills to update UI
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${pill.name} marked as taken'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      print('Error marking pill as taken: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error marking pill as taken'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  List<Map<String, String>> _getTimeStatuses(PillModel pill) {
-    final now = DateTime.now();
-    List<Map<String, String>> statuses = [];
-    
-    for (final t in pill.times) {
-      final timeKey = pill.getTimeKey(t);
-    final pillTime = DateTime(
-      now.year,
-      now.month,
-      now.day,
-        t['hour'] ?? 8,
-        t['minute'] ?? 0,
-    );
-
-      String status;
-      if (pill.isTimeTaken(timeKey)) {
-        status = "taken";
-      } else if (now.difference(pillTime).inMinutes > 5) {
-        status = "missed";
-      } else if (now.difference(pillTime).inMinutes <= 5 && now.difference(pillTime).inMinutes >= 0) {
-        status = "due-now";
-      } else if (pillTime.isAfter(now)) {
-        status = "upcoming";
-      } else {
-        status = "upcoming";
-    }
-
-      statuses.add({
-        'timeKey': timeKey,
-        'time': '${(t['hour']! > 12 ? t['hour']! - 12 : t['hour']!)}:${(t['minute']! < 10 ? '0' : '')}${t['minute']!} ${t['hour']! >= 12 ? 'PM' : 'AM'}',
-        'status': status
-      });
-    }
-    return statuses;
-  }
-
-  String _getStatusText(String status) {
-    switch (status) {
-      case "upcoming":
-        return "Upcoming";
-      case "overdue":
-        return "Overdue";
-      case "due-now":
-        return "Due Now";
-      case "taken":
-        return "Taken";
-      case "missed":
-        return "Missed";
-      default:
-        return "Upcoming";
     }
   }
 
@@ -286,80 +130,8 @@ class _HomeTabState extends State<HomeTab> {
   Future<void> _checkForMissedPills() async {
     try {
       await FirebaseManager.checkForMissedPills();
-      // Reload pills after checking to reflect any status changes
-      if (mounted) {
-        _loadPills();
-      }
     } catch (e) {
       print('Error checking for missed pills: $e');
-    }
-  }
-
-  // Mark a specific time as taken
-  Future<void> _markTimeAsTaken(PillModel pill, String timeKey) async {
-    // Only allow elder to mark pills
-    if (_isReadOnly) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-              Text('Guardian view is read-only. Cannot mark pills as taken.'),
-        ),
-      );
-      return;
-    }
-
-    try {
-      // Get current user role
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) return;
-
-      final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
-      final userRole = userData['role'] ?? '';
-      final userName = userData['name'] ?? 'User';
-      final sharedUserEmail = userData['sharedUsers'] ?? '';
-
-      // Only elders should be able to mark pills as taken
-      if (userRole == 'guardian') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Guardians cannot mark pills as taken.'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        return;
-      }
-
-      // Create a copy of the pill and update its taken times
-      final updatedPill = pill.copyWith();
-      updatedPill.markTimeTaken(timeKey, DateTime.now());
-
-      await FirebaseManager.updatePill(updatedPill);
-
-      // Check if notification was sent to guardian
-      if (sharedUserEmail.isNotEmpty) {
-        final guardianData = await FirebaseManager.getUserByEmail(sharedUserEmail);
-        if (guardianData != null) {
-          final guardianId = guardianData['id'] ?? '';
-          print('Guardian ID: $guardianId');
-        }
-      }
-
-      _loadPills(); // Reload pills to update UI
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${pill.name} marked as taken for ${timeKey.replaceAll('-', ':')}'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      print('Error marking pill time as taken: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error marking pill as taken'),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
 
@@ -382,39 +154,35 @@ class _HomeTabState extends State<HomeTab> {
                 children: [
                   // Header Row
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          SvgPicture.asset("assets/svg/handshake.svg",
-                              height: screenHeight * 0.07), // Larger icon
-                          SizedBox(width: screenWidth * 0.03),
-                          Text(
-                            "Amanak",
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium!
-                                .copyWith(
-                                  color: Colors.black,
-                                  fontSize: screenWidth * 0.06, // Larger font
-                                ),
-                          ),
-                        ],
+                      SvgPicture.asset("assets/svg/handshake.svg",
+                          height: screenHeight * 0.07),
+                      SizedBox(width: screenWidth * 0.03),
+                      Text(
+                        "Amanak",
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium!
+                            .copyWith(
+                              color: Colors.black,
+                              fontSize: screenWidth * 0.06,
+                            ),
                       ),
+                      Spacer(),
                       SvgPicture.asset("assets/svg/notification.svg",
-                          height: screenHeight * 0.045), // Larger icon
+                          height: screenHeight * 0.045),
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.03),
+
                   // Search Field
                   PillSearchField(
                     controller: _searchController,
-                    onChanged: (value) {
-                      // Handle search
-                    },
+                    onChanged: (value) {},
                   ),
                   SizedBox(height: screenHeight * 0.03),
-                  // Overlay Buttons Row
+
+                  // Quick Actions Grid
                   Column(
                     children: [
                       Row(
@@ -435,8 +203,7 @@ class _HomeTabState extends State<HomeTab> {
                                       .titleSmall!
                                       .copyWith(
                                         color: Color(0xFFA1A8B0),
-                                        fontSize:
-                                            screenWidth * 0.038, // Larger font
+                                        fontSize: screenWidth * 0.038,
                                       ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -459,8 +226,7 @@ class _HomeTabState extends State<HomeTab> {
                                       .titleSmall!
                                       .copyWith(
                                         color: Color(0xFFA1A8B0),
-                                        fontSize:
-                                            screenWidth * 0.038, // Larger font
+                                        fontSize: screenWidth * 0.038,
                                       ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -484,8 +250,7 @@ class _HomeTabState extends State<HomeTab> {
                                       .titleSmall!
                                       .copyWith(
                                         color: Color(0xFFA1A8B0),
-                                        fontSize:
-                                            screenWidth * 0.038, // Larger font
+                                        fontSize: screenWidth * 0.038,
                                       ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -514,8 +279,7 @@ class _HomeTabState extends State<HomeTab> {
                                       .titleSmall!
                                       .copyWith(
                                         color: Color(0xFFA1A8B0),
-                                        fontSize:
-                                            screenWidth * 0.038, // Larger font
+                                        fontSize: screenWidth * 0.038,
                                       ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -540,8 +304,7 @@ class _HomeTabState extends State<HomeTab> {
                                       .titleSmall!
                                       .copyWith(
                                         color: Color(0xFFA1A8B0),
-                                        fontSize:
-                                            screenWidth * 0.038, // Larger font
+                                        fontSize: screenWidth * 0.038,
                                       ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -565,8 +328,7 @@ class _HomeTabState extends State<HomeTab> {
                                       .titleSmall!
                                       .copyWith(
                                         color: Color(0xFFA1A8B0),
-                                        fontSize:
-                                            screenWidth * 0.038, // Larger font
+                                        fontSize: screenWidth * 0.038,
                                       ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -578,6 +340,7 @@ class _HomeTabState extends State<HomeTab> {
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.05),
+
                   // Pill Reminder Section
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -589,7 +352,7 @@ class _HomeTabState extends State<HomeTab> {
                         style:
                             Theme.of(context).textTheme.titleMedium!.copyWith(
                                   color: Colors.black,
-                                  fontSize: screenWidth * 0.055, // Larger font
+                                  fontSize: screenWidth * 0.055,
                                 ),
                       ),
                       GestureDetector(
@@ -600,7 +363,7 @@ class _HomeTabState extends State<HomeTab> {
                               Theme.of(context).textTheme.bodyMedium!.copyWith(
                                     color: Theme.of(context).primaryColor,
                                     fontWeight: FontWeight.w500,
-                                    fontSize: screenWidth * 0.04, // Larger font
+                                    fontSize: screenWidth * 0.04,
                                   ),
                         ),
                       ),
@@ -625,8 +388,7 @@ class _HomeTabState extends State<HomeTab> {
                                   child: Text(
                                     "Today",
                                     style: TextStyle(
-                                      fontSize:
-                                          screenWidth * 0.045, // Larger font
+                                      fontSize: screenWidth * 0.045,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.grey[700],
                                     ),
@@ -685,214 +447,89 @@ class _HomeTabState extends State<HomeTab> {
           style: TextStyle(
             color: Colors.grey[600],
             fontStyle: FontStyle.italic,
-            fontSize: 16, // Larger font
+            fontSize: 16,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildPillCard(PillModel pill, List<Map<String, String>> timeStatuses) {
-    // Determine overall card color based on most urgent status
-    String overallStatus = "upcoming";
-    for (final timeStatus in timeStatuses) {
-      final status = timeStatus['status']!;
-      if (status == "due-now") {
-        overallStatus = "due-now";
-        break;
-      } else if (status == "missed" && overallStatus != "due-now") {
-        overallStatus = "missed";
-      } else if (status == "taken" && overallStatus == "upcoming") {
-        overallStatus = "taken";
-      }
-    }
-
-    final Color cardColor;
-    final Color textColor;
-    final IconData statusIcon;
-
-    // Determine colors and icon based on overall status
-    switch (overallStatus) {
-      case "upcoming":
-        cardColor = Colors.grey[100]!;
-        textColor = Colors.grey[800]!;
-        statusIcon = Icons.schedule;
-        break;
-      case "overdue":
-        cardColor = Colors.red[50]!;
-        textColor = Colors.red[800]!;
-        statusIcon = Icons.warning_rounded;
-        break;
-      case "due-now":
-        cardColor = Colors.orange[50]!;
-        textColor = Colors.orange[800]!;
-        statusIcon = Icons.notifications_active;
-        break;
-      case "taken":
-        cardColor = Colors.green[50]!;
-        textColor = Colors.green[800]!;
-        statusIcon = Icons.check_circle;
-        break;
-      case "missed":
-        cardColor = Colors.red[50]!;
-        textColor = Colors.red[800]!;
-        statusIcon = Icons.warning_rounded;
-        break;
-      default:
-        cardColor = Color(0xFFE6F2F9);
-        textColor = Color(0xFF015C92);
-        statusIcon = Icons.medication;
-    }
-
-    return Container(
+  Widget _buildPillCard(PillModel pill, List<bool> timeStatuses) {
+    return Card(
       margin: EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Pill header
-          ListTile(
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              leading: Container(
-              padding: EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
+      child: Padding(
+        padding: EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  pill.name,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                child: Icon(
-                  Icons.medication,
-                  color: textColor,
-                size: 28,
-                ),
-              ),
-              title: Text(
-                pill.name,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                fontSize: 18,
-                ),
-              ),
-            subtitle: Text(
-                    '${pill.dosage} - ${pill.timesPerDay} ${pill.timesPerDay > 1 ? "times" : "time"} per day',
-                    style: TextStyle(
-                      color: textColor.withOpacity(0.8),
+                if (!_isReadOnly)
+                  Checkbox(
+                    value: pill.taken,
+                    onChanged: (bool? value) async {
+                      if (value != null) {
+                        final updatedPill = pill.copyWith(taken: value);
+                        await FirebaseManager.updatePill(updatedPill);
+                        await _checkUserRoleAndLoadData();
+                      }
+                    },
+                  ),
+              ],
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Times: ${pill.times.join(", ")}',
+              style: TextStyle(
                 fontSize: 14,
+                color: Colors.grey[600],
               ),
             ),
-          ),
-          // Time slots
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              children: timeStatuses.map((timeStatus) {
-                final status = timeStatus['status']!;
-                Color timeColor;
-                switch (status) {
-                  case "missed":
-                    timeColor = Colors.red[700]!;
-                    break;
-                  case "due-now":
-                    timeColor = Colors.orange[700]!;
-                    break;
-                  case "taken":
-                    timeColor = Colors.green[700]!;
-                    break;
-                  default:
-                    timeColor = textColor.withOpacity(0.7);
-                }
-
-                return Container(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Colors.grey[300]!,
-                        width: 0.5,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.access_time,
-                              size: 16,
-                              color: timeColor,
-                            ),
-                            SizedBox(width: 8),
-                    Text(
-                              timeStatus['time']!,
-                      style: TextStyle(
-                                color: timeColor,
-                                fontSize: 14,
-                                fontWeight: status == "due-now" ? FontWeight.bold : FontWeight.normal,
-                      ),
-                  ),
-                            SizedBox(width: 12),
-                  Text(
-                    _getStatusText(status),
-                    style: TextStyle(
-                                color: timeColor,
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
-              ),
-                      ),
-                      if (!_isReadOnly)
-                        Transform.scale(
-                          scale: 1.2,
-                    child: Checkbox(
-                            value: status == "taken",
-                      activeColor: Colors.green[700],
-                      checkColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      onChanged: (bool? value) {
-                        if (value != null && value) {
-                                _markTimeAsTaken(pill, timeStatus['timeKey']!);
-                        }
-                      },
-                    ),
-                        ),
-                      if (_isReadOnly)
-                        Padding(
-                          padding: EdgeInsets.only(right: 8),
-                          child: Icon(
-                            status == "taken" ? Icons.check_circle : Icons.pending_actions,
-                            color: status == "taken" ? Colors.green[700] : Colors.orange,
-                            size: 24,
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              }).toList(),
-                  ),
+            if (pill.note.isNotEmpty) ...[
+              SizedBox(height: 2.h),
+              Text(
+                'Notes: ${pill.note}',
+                style: TextStyle(
+                  color: _getPillSubtitleColor(pill),
+                  fontSize: 13.sp,
                 ),
-        ],
+              ),
+            ],
+          ],
+        ),
       ),
     );
+  }
+
+  List<bool> _getTimeStatuses(PillModel pill) {
+    final now = DateTime.now();
+    return pill.times.map((time) {
+      final hour = time['hour'] ?? 0;
+      final minute = (time['minute'] ?? 0).toString().padLeft(2, '0');
+      final timeString = '$hour:$minute';
+      final pillTime = DateFormat('HH:mm').parse(timeString);
+      final pillDateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        pillTime.hour,
+        pillTime.minute,
+      );
+      return now.isAfter(pillDateTime);
+    }).toList();
+  }
+
+  Color _getPillSubtitleColor(PillModel pill) {
+    // Implement the logic to determine the color based on the pill's status
+    // This is a placeholder and should be replaced with the actual implementation
+    return Colors.grey;
   }
 }

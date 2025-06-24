@@ -162,9 +162,9 @@ class PillModel {
     return times.map((t) {
       final hour = t['hour'] ?? 0;
       final minute = (t['minute'] ?? 0).toString().padLeft(2, '0');
-      final period = hour >= 12 ? 'PM' : 'AM';
-      final hour12 = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-      return '$hour12:$minute $period';
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final hour12 = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+    return '$hour12:$minute $period';
     }).toList();
   }
 

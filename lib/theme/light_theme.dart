@@ -38,8 +38,10 @@ class LightTheme extends BaseTheme {
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: Colors.white,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        selectedItemColor: primaryColor,
+        unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
       ));
 }
