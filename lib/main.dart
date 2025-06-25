@@ -1,18 +1,17 @@
 import 'package:amanak/chatbot.dart';
-import 'package:amanak/gaurdian_location.dart';
 import 'package:amanak/login_screen.dart';
 import 'package:amanak/medicine_detail_screen.dart';
 import 'package:amanak/medicine_search_screen.dart';
 import 'package:amanak/nearest_hospitals.dart';
 import 'package:amanak/notifications/noti_service.dart';
 import 'package:amanak/services/medicines_json_service.dart';
+import 'package:amanak/services/localization_service.dart';
 import 'package:amanak/signup/choose_role.dart';
 import 'package:amanak/signup/signup_screen.dart';
 import 'package:amanak/theme/base_theme.dart';
 import 'package:amanak/home_screen.dart';
 import 'package:amanak/theme/light_theme.dart';
 import 'package:amanak/provider/my_provider.dart';
-import 'package:amanak/widgets/overlay_button.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
@@ -26,10 +25,11 @@ import 'package:amanak/firebase/firebase_manager.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
+import 'package:amanak/screens/language_selection_screen.dart';
 import 'package:amanak/home/messaging_tab.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const apiKey = "AIzaSyDLePMB53Q1Nud4ZG8a2XA9UUYuSLCrY6c";
 
@@ -78,6 +78,10 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Remove the always-clear onboarding flag for production
+  // final prefs = await SharedPreferences.getInstance();
+  // await prefs.remove('onboarding_completed');
 
   // Set up background notification handler
   FlutterLocalNotificationsPlugin().initialize(
@@ -141,33 +145,70 @@ void main() async {
     print('Error checking for missed pills: $e');
   }
 
+  // Initialize localization service
+  final localizationService = LocalizationService();
+  await localizationService.initialize();
+
+  final prefs = await SharedPreferences.getInstance();
+  final bool languageSelected = prefs.getBool('language_selected') ?? false;
+  final bool onboardingCompleted =
+      prefs.getBool('onboarding_completed') ?? false;
+
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => MyProvider(),
-      child: MyApp(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => MyProvider()),
+        ChangeNotifierProvider(create: (context) => localizationService),
+      ],
+      child: MyApp(
+        languageSelected: languageSelected,
+        onboardingCompleted: onboardingCompleted,
+      ),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
   BaseTheme lightTheme = LightTheme();
+  final bool languageSelected;
+  final bool onboardingCompleted;
 
-  MyApp({super.key});
+  MyApp(
+      {super.key,
+      required this.languageSelected,
+      required this.onboardingCompleted});
 
   @override
   Widget build(BuildContext context) {
-    // Check if user is already logged in
+    final localizationService = Provider.of<LocalizationService>(context);
     final bool isLoggedIn = FirebaseAuth.instance.currentUser != null;
-    final String initialRoute =
-        isLoggedIn ? HomeScreen.routeName : LoginScreen.routeName;
+    String initialRoute;
+
+    if (!languageSelected) {
+      initialRoute = LanguageSelectionScreen.routeName;
+    } else if (!onboardingCompleted) {
+      initialRoute = OnBoardingScreen.routeName;
+    } else if (!isLoggedIn) {
+      initialRoute = LoginScreen.routeName;
+    } else {
+      initialRoute = HomeScreen.routeName;
+    }
 
     return ResponsiveSizer(
       builder: (context, orientation, screenType) {
         return MaterialApp(
-          navigatorKey: navigatorKey, // Add global navigator key
+          navigatorKey: navigatorKey,
           theme: lightTheme.themeData,
           debugShowCheckedModeBanner: false,
           initialRoute: initialRoute,
+          locale: localizationService.currentLocale,
+          supportedLocales: LocalizationService.supportedLocales,
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           routes: {
             OnBoardingScreen.routeName: (context) => OnBoardingScreen(),
             LoginScreen.routeName: (context) => LoginScreen(),
@@ -180,11 +221,11 @@ class MyApp extends StatelessWidget {
             MedicineSearchScreen.routeName: (context) => MedicineSearchScreen(),
             MedicineDetailScreen.routeName: (context) => MedicineDetailScreen(),
             MessagingTab.routeName: (context) => MessagingTab(),
+            LanguageSelectionScreen.routeName: (context) =>
+                const LanguageSelectionScreen(),
           },
           onGenerateRoute: (settings) {
-            // Handle deep linking for message notifications
             if (settings.name == '/messaging') {
-              // Extract the arguments
               final args = settings.arguments as Map<String, dynamic>?;
               return MaterialPageRoute(
                 builder: (context) => MessagingTab(),

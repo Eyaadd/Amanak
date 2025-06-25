@@ -18,6 +18,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
   google_maps_flutter: ^2.5.0
   location: ^7.0.1
   flutter_polyline_points: ^2.0.0
@@ -46,6 +49,7 @@ dependencies:
   firebase_messaging: ^15.2.7
   flutter_timezone: ^4.1.1
   cloud_functions: ^5.5.2
+  shared_preferences: ^2.5.3
 
 
 dev_dependencies:
@@ -64,7 +68,7 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
+  generate: true
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

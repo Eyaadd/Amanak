@@ -158,8 +158,12 @@ class FirebaseManager {
 
       // Only process notifications for elder users, not for guardians viewing elder's pills
       if (userRole != 'guardian') {
-        if (pill.taken) {
-          // Cancel notifications if pill is taken
+        final today = DateTime.now();
+        final todayStr = '${today.year}-${today.month}-${today.day}';
+        final isTakenToday = pill.takenDates.containsKey(todayStr);
+
+        if (isTakenToday) {
+          // Cancel notifications if pill is taken today
           await notiService.cancelPillNotifications(pill.id);
 
           // Notify guardian about the pill being taken
@@ -293,14 +297,15 @@ class FirebaseManager {
 
         // Current time
         final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
 
         // Check each pill
         for (var pillDoc in pillsSnapshot.docs) {
           final pill = pillDoc.data();
           final pillId = pill.id;
 
-          // Skip if already taken or already marked as missed
-          if (pill.taken || pill.missed) continue;
+          // Skip if already taken today or already marked as missed
+          if (pill.isTakenOnDate(today) || pill.missed) continue;
 
           // Check if pill time has passed (more than 5 minutes ago)
           final pillTime = DateTime(

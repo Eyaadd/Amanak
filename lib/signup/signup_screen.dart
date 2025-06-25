@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import '../l10n/app_localizations.dart';
 
 import '../home_screen.dart';
 
@@ -35,7 +36,7 @@ class _SignupScreenState extends State<SignupScreen> {
         actionsIconTheme: IconThemeData(color: Color(0xFF101623)),
         centerTitle: true,
         title: Text(
-          "Sign Up",
+          AppLocalizations.of(context)!.signUp,
           style: Theme.of(context)
               .textTheme
               .titleMedium!
@@ -65,7 +66,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     filled: true,
                     fillColor: Color(0xFFF9FAFB),
-                    hintText: "Enter your name",
+                    hintText: AppLocalizations.of(context)!.enterYourName,
                     hintStyle: Theme.of(context)
                         .textTheme
                         .titleSmall!
@@ -77,7 +78,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 SizedBox(
                   height: 16,
                 ),
-                //Sign up name
+                //Sign up email
                 TextField(
                   cursorColor: Theme.of(context).primaryColor,
                   controller: _signupEmailController,
@@ -91,7 +92,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     filled: true,
                     fillColor: Color(0xFFF9FAFB),
-                    hintText: "Enter your email",
+                    hintText: AppLocalizations.of(context)!.enterYourEmail,
                     hintStyle: Theme.of(context)
                         .textTheme
                         .titleSmall!
@@ -109,7 +110,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   controller: _signupPasswordController,
                   obscureText: _isPasswordVisible,
                   decoration: InputDecoration(
-                    hintText: "Enter Your Password",
+                    hintText: AppLocalizations.of(context)!.enterYourPassword,
                     hintStyle: Theme.of(context)
                         .textTheme
                         .titleSmall!
@@ -169,15 +170,21 @@ class _SignupScreenState extends State<SignupScreen> {
                         TextSpan(
                           style: TextStyle(color: Color(0xFF3B4453)),
                           children: [
-                            TextSpan(text: "I agree to the Amanak "),
                             TextSpan(
-                              text: "Terms of Service ",
+                                text: AppLocalizations.of(context)!
+                                        .agreeToAmanak +
+                                    " "),
+                            TextSpan(
+                              text:
+                                  AppLocalizations.of(context)!.termsOfService +
+                                      " ",
                               style: TextStyle(
                                   color: Theme.of(context).primaryColor),
                             ),
-                            TextSpan(text: "and "),
                             TextSpan(
-                              text: "Privacy Policy",
+                                text: AppLocalizations.of(context)!.and + " "),
+                            TextSpan(
+                              text: AppLocalizations.of(context)!.privacyPolicy,
                               style: TextStyle(
                                   color: Theme.of(context).primaryColor),
                             ),
@@ -206,8 +213,9 @@ class _SignupScreenState extends State<SignupScreen> {
                         passwordValidationResult != null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                            content: Text(
-                                'Please enter a valid email and password')),
+                          content: Text(AppLocalizations.of(context)!
+                              .pleaseEnterValidEmailPassword),
+                        ),
                       );
                       return;
                     }

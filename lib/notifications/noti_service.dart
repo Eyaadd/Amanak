@@ -210,10 +210,18 @@ class NotiService {
   void _handlePillAction(String payload) {
     try {
       final parts = payload.split(':');
-      if (parts.length >= 2) {
+      if (parts.length >= 3) {
         final pillId = parts[1];
-        print('Handling pill action for pill ID: $pillId');
+        final day = int.tryParse(parts[2]) ?? 0;
+        final timeIndex = int.tryParse(parts[3]) ?? 0;
+        print(
+            'Handling pill action for pill ID: $pillId, day: $day, timeIndex: $timeIndex');
         // In a real implementation, navigate to pill detail or take action
+        // Could show a dialog to mark this specific dose as taken
+      } else if (parts.length >= 2) {
+        // Backward compatibility for old format
+        final pillId = parts[1];
+        print('Handling pill action for pill ID: $pillId (old format)');
       }
     } catch (e) {
       print('Error handling pill action: $e');
@@ -224,10 +232,18 @@ class NotiService {
   void _handleMissedCheck(String payload) {
     try {
       final parts = payload.split(':');
-      if (parts.length >= 2) {
+      if (parts.length >= 3) {
         final pillId = parts[1];
-        print('Handling missed check for pill ID: $pillId');
+        final day = int.tryParse(parts[2]) ?? 0;
+        final timeIndex = int.tryParse(parts[3]) ?? 0;
+        print(
+            'Handling missed check for pill ID: $pillId, day: $day, timeIndex: $timeIndex');
         // In a real implementation, navigate to pill detail or take action
+        // Could show a dialog to mark this specific dose as missed
+      } else if (parts.length >= 2) {
+        // Backward compatibility for old format
+        final pillId = parts[1];
+        print('Handling missed check for pill ID: $pillId (old format)');
       }
     } catch (e) {
       print('Error handling missed check: $e');
@@ -280,11 +296,18 @@ class NotiService {
   static Future<void> _handleBackgroundPillAction(String payload) async {
     try {
       final parts = payload.split(':');
-      if (parts.length >= 2) {
+      if (parts.length >= 3) {
         final pillId = parts[1];
+        final day = int.tryParse(parts[2]) ?? 0;
+        final timeIndex = int.tryParse(parts[3]) ?? 0;
         // In a real implementation, you would use a background Isolate or WorkManager
         // to handle database operations in the background
-        print('Background action for pill ID: $pillId');
+        print(
+            'Background action for pill ID: $pillId, day: $day, timeIndex: $timeIndex');
+      } else if (parts.length >= 2) {
+        // Backward compatibility for old format
+        final pillId = parts[1];
+        print('Background action for pill ID: $pillId (old format)');
       }
     } catch (e) {
       print('Error handling background pill action: $e');
@@ -295,11 +318,18 @@ class NotiService {
   static Future<void> _handleBackgroundMissedCheck(String payload) async {
     try {
       final parts = payload.split(':');
-      if (parts.length >= 2) {
+      if (parts.length >= 3) {
         final pillId = parts[1];
+        final day = int.tryParse(parts[2]) ?? 0;
+        final timeIndex = int.tryParse(parts[3]) ?? 0;
         // In a real implementation, you would use a background Isolate or WorkManager
         // to handle database operations in the background
-        print('Background missed check for pill ID: $pillId');
+        print(
+            'Background missed check for pill ID: $pillId, day: $day, timeIndex: $timeIndex');
+      } else if (parts.length >= 2) {
+        // Backward compatibility for old format
+        final pillId = parts[1];
+        print('Background missed check for pill ID: $pillId (old format)');
       }
     } catch (e) {
       print('Error handling background missed check: $e');
@@ -424,53 +454,67 @@ class NotiService {
           // Calculate the date for this day
           final pillDate = startDate.add(Duration(days: day));
 
-          // Calculate the exact time for the pill on this day
-          final pillTime = tz.TZDateTime(
-            tzLocation,
-            pillDate.year,
-            pillDate.month,
-            pillDate.day,
-            pill.alarmHour,
-            pill.alarmMinute,
-          );
+          // Schedule notifications for each time of the day
+          for (int timeIndex = 0; timeIndex < pill.times.length; timeIndex++) {
+            final time = pill.times[timeIndex];
 
-          // Calculate the reminder time (5 minutes before)
-          final reminderTime = pillTime.subtract(Duration(minutes: 5));
-
-          // Only schedule if the time is in the future
-          final now = tz.TZDateTime.now(tzLocation);
-          if (reminderTime.isAfter(now)) {
-            // Schedule 5-minute advance reminder
-            await _scheduleNotification(
-              id: dueIdBase + day,
-              title: "Medicine Reminder",
-              body:
-                  "${userName}, don't forget to take ${pill.name} after 5 minutes.",
-              scheduledTime: reminderTime,
-              details: _pillReminderDetails(),
-              payload: "reminder:${pill.id}:${day}",
-            );
-          }
-
-          // Only schedule if the time is in the future
-          if (pillTime.isAfter(now)) {
-            // Schedule exact time reminder
-            await _scheduleNotification(
-              id: reminderIdBase + day,
-              title: "Medicine Time",
-              body:
-                  "${userName}, it's time to take your medicine: ${pill.name}.",
-              scheduledTime: pillTime,
-              details: _pillReminderDetails(),
-              payload: "take:${pill.id}:${day}",
+            // Calculate the exact time for this pill dose on this day
+            final pillTime = tz.TZDateTime(
+              tzLocation,
+              pillDate.year,
+              pillDate.month,
+              pillDate.day,
+              time.hour,
+              time.minute,
             );
 
-            // Schedule a check for missed pill 5 minutes after the scheduled time
-            final checkTime = pillTime.add(Duration(
-                minutes:
-                    6)); // 6 minutes after to ensure 5 minute threshold is passed
-            await _scheduleMissedPillCheck(
-                pill, day, checkTime, missedIdBase + day);
+            // Calculate the reminder time (5 minutes before)
+            final reminderTime = pillTime.subtract(Duration(minutes: 5));
+
+            // Create unique IDs for each time slot
+            final timeSlotId =
+                timeIndex * 1000; // Use timeIndex to create unique IDs
+            final reminderId = dueIdBase + day + timeSlotId;
+            final exactTimeId = reminderIdBase + day + timeSlotId;
+            final missedId = missedIdBase + day + timeSlotId;
+
+            // Only schedule if the time is in the future
+            final now = tz.TZDateTime.now(tzLocation);
+            if (reminderTime.isAfter(now)) {
+              // Schedule 5-minute advance reminder
+              await _scheduleNotification(
+                id: reminderId,
+                title: "Medicine Reminder",
+                body:
+                    "${userName}, don't forget to take ${pill.name} (Dose ${timeIndex + 1}) after 5 minutes.",
+                scheduledTime: reminderTime,
+                details: _pillReminderDetails(),
+                payload: "reminder:${pill.id}:${day}:${timeIndex}",
+              );
+            }
+
+            // Only schedule if the time is in the future
+            if (pillTime.isAfter(now)) {
+              // Schedule exact time reminder
+              final doseText =
+                  pill.times.length > 1 ? " (Dose ${timeIndex + 1})" : "";
+              await _scheduleNotification(
+                id: exactTimeId,
+                title: "Medicine Time",
+                body:
+                    "${userName}, it's time to take your medicine: ${pill.name}$doseText.",
+                scheduledTime: pillTime,
+                details: _pillReminderDetails(),
+                payload: "take:${pill.id}:${day}:${timeIndex}",
+              );
+
+              // Schedule a check for missed pill 5 minutes after the scheduled time
+              final checkTime = pillTime.add(Duration(
+                  minutes:
+                      6)); // 6 minutes after to ensure 5 minute threshold is passed
+              await _scheduleMissedPillCheck(
+                  pill, day, checkTime, missedId, timeIndex);
+            }
           }
         }
       } else {
@@ -481,8 +525,25 @@ class NotiService {
     }
   }
 
-  // Check if a pill was missed and notify guardian if necessary
-  Future<void> checkMissedPill(String pillId, int day) async {
+  // Schedule missed pill check for a specific time slot
+  Future<void> _scheduleMissedPillCheck(PillModel pill, int day,
+      tz.TZDateTime checkTime, int notificationId, int timeIndex) async {
+    try {
+      await _scheduleNotification(
+        id: notificationId,
+        title: "Check Missed Pill",
+        body: "Checking if ${pill.name} was taken",
+        scheduledTime: checkTime,
+        details: _pillReminderDetails(),
+        payload: "check_missed:${pill.id}:${day}:${timeIndex}",
+      );
+    } catch (e) {
+      print('Error scheduling missed pill check: $e');
+    }
+  }
+
+  // Check if a pill was missed
+  Future<void> checkMissedPill(String pillId) async {
     try {
       // Get current user
       final currentUser = FirebaseAuth.instance.currentUser;
@@ -501,8 +562,12 @@ class NotiService {
       final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
       final userRole = userData['role'] ?? '';
 
-      // Check if pill was taken
-      if (!pill.taken) {
+      // Get today's date string
+      final today = DateTime.now();
+      final todayStr = '${today.year}-${today.month}-${today.day}';
+
+      // Check if pill was taken today
+      if (!pill.takenDates.containsKey(todayStr)) {
         // Pill was missed - mark it as missed in Firebase
         final missedPill = pill.copyWith(missed: true);
         await FirebaseManager.updatePill(missedPill);
@@ -628,22 +693,6 @@ class NotiService {
     }
   }
 
-  // Schedule a notification to check if pill was missed
-  Future<void> _scheduleMissedPillCheck(PillModel pill, int day,
-      tz.TZDateTime checkTime, int notificationId) async {
-    // Schedule the check using Android alarm manager or similar mechanism
-    // For now, we'll use the local notifications plugin, but in a real app
-    // you'd want to use a more reliable background mechanism
-    await _scheduleNotification(
-      id: notificationId,
-      title: "Checking medication status",
-      body: "Checking if ${pill.name} was taken",
-      scheduledTime: checkTime,
-      details: _pillReminderDetails(),
-      payload: "check_missed:${pill.id}:${day}",
-    );
-  }
-
   // Schedule a single notification
   Future<void> _scheduleNotification({
     required int id,
@@ -660,9 +709,8 @@ class NotiService {
       scheduledTime,
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       payload: payload,
+      matchDateTimeComponents: null, // you can also remove this line if unused
     );
   }
 

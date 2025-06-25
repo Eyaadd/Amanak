@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:amanak/notifications/noti_service.dart';
 import 'package:amanak/firebase/firebase_manager.dart';
+import '../l10n/app_localizations.dart';
 
 class MessagingTab extends StatefulWidget {
   static const routeName = "Messaging";
@@ -268,62 +269,81 @@ class _MessagingTabState extends State<MessagingTab>
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+
+    if (_currentUserEmail == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(localizations.messages),
+          backgroundColor: Theme.of(context).primaryColor,
+          foregroundColor: Colors.white,
+        ),
+        body: Center(
+          child: Text(localizations.loading),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            const CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.grey,
-              child: Icon(Icons.person, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 8),
-            Text(_chatPartnerName ?? 'Loading...'),
-          ],
-        ),
+        title: Text(_chatPartnerName ?? localizations.messages),
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: _initializeChat,
+          ),
+        ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _messagesStream,
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return const Center(child: Text('Something went wrong'));
-                }
+            child: _messagesStream == null
+                ? Center(
+                    child: Text(localizations.loading),
+                  )
+                : StreamBuilder<QuerySnapshot>(
+                    stream: _messagesStream,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Text(localizations.error),
+                        );
+                      }
 
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
 
-                final messages = snapshot.data?.docs ?? [];
+                      final messages = snapshot.data?.docs ?? [];
+                      final chatMessages = messages.map((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        return ChatMessage(
+                          text: data['text'] ?? '',
+                          isMe: data['senderEmail'] == _currentUserEmail,
+                          time: (data['timestamp'] as Timestamp?)?.toDate() ??
+                              DateTime.now(),
+                        );
+                      }).toList();
 
-                return ListView.builder(
-                  reverse: true,
-                  padding: const EdgeInsets.all(16),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message =
-                        messages[index].data() as Map<String, dynamic>;
-                    final isMe = message['senderEmail'] == _currentUserEmail;
+                      // Sort messages by time
+                      chatMessages.sort((a, b) => a.time.compareTo(b.time));
 
-                    // Handle null timestamp (happens for messages still processing on server side)
-                    final timestamp = message['timestamp'];
-                    final messageTime = timestamp != null
-                        ? (timestamp as Timestamp).toDate()
-                        : DateTime.now();
-
-                    return _buildMessageBubble(
-                      ChatMessage(
-                        text: message['text'] as String,
-                        isMe: isMe,
-                        time: messageTime,
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+                      return ListView.builder(
+                        reverse: true,
+                        padding: EdgeInsets.all(8),
+                        itemCount: chatMessages.length,
+                        itemBuilder: (context, index) {
+                          final message =
+                              chatMessages[chatMessages.length - 1 - index];
+                          return _buildMessageBubble(message);
+                        },
+                      );
+                    },
+                  ),
           ),
           _buildMessageInput(),
         ],
@@ -365,6 +385,7 @@ class _MessagingTabState extends State<MessagingTab>
   }
 
   Widget _buildMessageInput() {
+    final localizations = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -383,8 +404,8 @@ class _MessagingTabState extends State<MessagingTab>
           Expanded(
             child: TextField(
               controller: _messageController,
-              decoration: const InputDecoration(
-                hintText: 'Type a message...',
+              decoration: InputDecoration(
+                hintText: localizations.askQuestion,
                 border: InputBorder.none,
               ),
               maxLines: null,

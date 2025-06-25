@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:amanak/services/database_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ChatBot extends StatefulWidget {

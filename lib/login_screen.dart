@@ -1,10 +1,12 @@
 import 'package:amanak/firebase/firebase_manager.dart';
 import 'package:amanak/home_screen.dart';
 import 'package:amanak/models/user_model.dart';
+import 'package:amanak/screens/language_selection_screen.dart';
 import 'package:amanak/signup/signup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   static const String routeName = "LoginScreen";
@@ -45,56 +47,59 @@ class _LoginScreenState extends State<LoginScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Reset Password'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Enter your email address to receive a password reset link',
-              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: _forgotPasswordEmailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                hintText: 'Email Address',
-                prefixIcon: Icon(Icons.email_outlined),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+      builder: (context) {
+        final localizations = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Text(localizations.forgotPassword),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Enter your email address to receive a password reset link',
+                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: _forgotPasswordEmailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  hintText: localizations.email,
+                  prefixIcon: Icon(Icons.email_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            ],
           ),
-          _isResetLoading
-              ? Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Theme.of(context).primaryColor,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(localizations.cancel),
+            ),
+            _isResetLoading
+                ? Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Theme.of(context).primaryColor,
+                      ),
                     ),
+                  )
+                : ElevatedButton(
+                    onPressed: () => _sendPasswordResetEmail(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                    ),
+                    child: Text('Reset Password',
+                        style: TextStyle(color: Colors.white)),
                   ),
-                )
-              : ElevatedButton(
-                  onPressed: () => _sendPasswordResetEmail(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                  ),
-                  child: Text('Reset Password',
-                      style: TextStyle(color: Colors.white)),
-                ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 
@@ -157,6 +162,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -164,154 +171,187 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: SingleChildScrollView(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(
-                  height: 12,
+                SizedBox(height: 48),
+                // Amanak Logo
+                Center(
+                  child: Image.asset(
+                    'assets/images/amanaklogo.png',
+                    height: 170,
+                    fit: BoxFit.contain,
+                  ),
                 ),
+                SizedBox(height: 20),
+                // Welcome message
                 Text(
-                  "Login",
+                  localizations.welcomeMessage,
                   style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w500,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                SizedBox(
-                  height: 44,
-                ),
-                TextField(
-                  cursorColor: Theme.of(context).primaryColor,
-                  controller: _loginEmailController,
-                  decoration: InputDecoration(
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xFFA1A8B0)),
-                        borderRadius: BorderRadius.circular(24)),
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFFE5E7EB)),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    filled: true,
-                    fillColor: Color(0xFFF9FAFB),
-                    hintText: "Enter your email",
-                    hintStyle: Theme.of(context)
-                        .textTheme
-                        .titleSmall!
-                        .copyWith(color: Color(0xFFA1A8B0)),
-                    prefixIcon: Icon(Icons.email_outlined),
-                    prefixIconColor: Color(0xFFA1A8B0),
+                SizedBox(height: 32),
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                ),
-                SizedBox(
-                  height: 16,
-                ),
-                TextField(
-                  cursorColor: Theme.of(context).primaryColor,
-                  controller: _loginPasswordController,
-                  obscureText: !_isPasswordVisible,
-                  decoration: InputDecoration(
-                    hintText: "Enter Your Password",
-                    hintStyle: Theme.of(context)
-                        .textTheme
-                        .titleSmall!
-                        .copyWith(color: Color(0xFFA1A8B0)),
-                    filled: true,
-                    fillColor: Color(0xFFF9FAFB),
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xFFA1A8B0)),
-                        borderRadius: BorderRadius.circular(24)),
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Color(0xFFE5E7EB),
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    prefixIcon: Icon(Icons.lock_outline),
-                    prefixIconColor: Color(0xFFA1A8B0),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
-                      },
-                    ),
-                    suffixIconColor: Color(0xFFA1A8B0),
-                  ),
-                ),
-                SizedBox(
-                  height: 8,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: _showForgotPasswordDialog,
-                      child: Text(
-                        "Forgot password?",
-                        style: TextStyle(color: Theme.of(context).primaryColor),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 32,
-                ),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _handleLogin,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
-                    minimumSize: Size(327, 56),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(32),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 28),
+                    child: Column(
+                      children: [
+                        Text(
+                          localizations.login,
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
                           ),
-                        )
-                      : Text(
-                          "Login",
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleSmall!
-                              .copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white),
                         ),
-                ),
-                SizedBox(
-                  height: 24,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Don't have an account? ",
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleSmall!
-                          .copyWith(color: Color(0xFF717784)),
+                        SizedBox(height: 32),
+                        TextField(
+                          cursorColor: Theme.of(context).primaryColor,
+                          controller: _loginEmailController,
+                          decoration: InputDecoration(
+                            focusedBorder: OutlineInputBorder(
+                                borderSide:
+                                    BorderSide(color: Color(0xFFA1A8B0)),
+                                borderRadius: BorderRadius.circular(24)),
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            filled: true,
+                            fillColor: Color(0xFFF9FAFB),
+                            hintText: localizations.email,
+                            hintStyle: Theme.of(context)
+                                .textTheme
+                                .titleSmall!
+                                .copyWith(color: Color(0xFFA1A8B0)),
+                            prefixIcon: Icon(Icons.email_outlined),
+                            prefixIconColor: Color(0xFFA1A8B0),
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        TextField(
+                          cursorColor: Theme.of(context).primaryColor,
+                          controller: _loginPasswordController,
+                          obscureText: !_isPasswordVisible,
+                          decoration: InputDecoration(
+                            hintText: localizations.password,
+                            hintStyle: Theme.of(context)
+                                .textTheme
+                                .titleSmall!
+                                .copyWith(color: Color(0xFFA1A8B0)),
+                            filled: true,
+                            fillColor: Color(0xFFF9FAFB),
+                            focusedBorder: OutlineInputBorder(
+                                borderSide:
+                                    BorderSide(color: Color(0xFFA1A8B0)),
+                                borderRadius: BorderRadius.circular(24)),
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Color(0xFFE5E7EB),
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            prefixIcon: Icon(Icons.lock_outline),
+                            prefixIconColor: Color(0xFFA1A8B0),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isPasswordVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isPasswordVisible = !_isPasswordVisible;
+                                });
+                              },
+                            ),
+                            suffixIconColor: Color(0xFFA1A8B0),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 8,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: _showForgotPasswordDialog,
+                              child: Text(
+                                localizations.forgotPassword,
+                                style: TextStyle(
+                                    color: Theme.of(context).primaryColor),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: 32,
+                        ),
+                        ElevatedButton(
+                          onPressed: _isLoading ? null : _handleLogin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            foregroundColor: Colors.white,
+                            minimumSize: Size(327, 56),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(32),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  localizations.login,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleSmall!
+                                      .copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white),
+                                ),
+                        ),
+                        SizedBox(
+                          height: 24,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              localizations.dontHaveAccount,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall!
+                                  .copyWith(color: Color(0xFF717784)),
+                            ),
+                            InkWell(
+                              onTap: () => Navigator.pushNamed(
+                                  context, SignupScreen.routeName),
+                              child: Text(
+                                localizations.signUp,
+                                style: Theme.of(context).textTheme.titleSmall,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    InkWell(
-                      onTap: () =>
-                          Navigator.pushNamed(context, SignupScreen.routeName),
-                      child: Text(
-                        "Sign Up",
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
+                SizedBox(height: 32),
               ],
             ),
           ),
@@ -380,8 +420,9 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
 
-      // Navigate to home screen
-      Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+      // Navigate to language selection screen after login
+      Navigator.of(context)
+          .pushReplacementNamed(LanguageSelectionScreen.routeName);
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message ?? 'Login failed')),

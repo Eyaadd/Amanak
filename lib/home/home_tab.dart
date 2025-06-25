@@ -17,6 +17,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import '../l10n/app_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -169,15 +171,41 @@ class _HomeTabState extends State<HomeTab> {
         return;
       }
 
-      final updatedPill = pill.copyWith(
-        taken: true,
-        takenDate: DateTime.now(),
-        missed: false, // Reset missed status when marked as taken
+      // Update local state immediately for better performance
+      setState(() {
+        final today = DateTime.now();
+        pill.markTakenOnDate(today, true);
+        pill.missed = false;
+      });
+
+      // Show immediate feedback
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${pill.name} marked as taken'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 1),
+        ),
       );
 
-      print(
-          'Updating pill in Firebase: ${updatedPill.id}, taken: ${updatedPill.taken}');
-      await FirebaseManager.updatePill(updatedPill);
+      // Sync with Firebase in the background
+      _syncPillToFirebase(pill, sharedUserEmail);
+    } catch (e) {
+      print('Error marking pill as taken: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error marking pill as taken'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Sync pill to Firebase in background
+  Future<void> _syncPillToFirebase(
+      PillModel pill, String sharedUserEmail) async {
+    try {
+      await FirebaseManager.updatePill(pill);
+      print('Pill synced to Firebase successfully: ${pill.name}');
 
       // Check if notification was sent to guardian
       if (sharedUserEmail.isNotEmpty) {
@@ -196,29 +224,25 @@ class _HomeTabState extends State<HomeTab> {
       } else {
         print('No guardian email found. No notification will be sent.');
       }
-
-      _loadPills(); // Reload pills to update UI
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${pill.name} marked as taken'),
-          backgroundColor: Colors.green,
-        ),
-      );
     } catch (e) {
-      print('Error marking pill as taken: $e');
+      print('Error syncing pill to Firebase: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error marking pill as taken'),
-          backgroundColor: Colors.red,
+          content: Text(
+            'Warning: Changes may not be saved',
+            style: TextStyle(fontSize: 12),
+          ),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 2),
         ),
       );
     }
   }
 
   String _getTimeStatus(PillModel pill) {
-    // If pill is already taken, return taken status
-    if (pill.taken) {
+    final today = DateTime.now();
+    // If pill is already taken today, return taken status
+    if (pill.isTakenOnDate(today)) {
       return "taken";
     }
 
@@ -301,9 +325,10 @@ class _HomeTabState extends State<HomeTab> {
 
   @override
   Widget build(BuildContext context) {
-    var provider = Provider.of<MyProvider>(context);
+    final localizations = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final provider = Provider.of<MyProvider>(context);
 
     return SafeArea(
       child: Scaffold(
@@ -326,7 +351,7 @@ class _HomeTabState extends State<HomeTab> {
                               height: screenHeight * 0.07), // Larger icon
                           SizedBox(width: screenWidth * 0.03),
                           Text(
-                            "Amanak",
+                            localizations.home,
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium!
@@ -365,15 +390,23 @@ class _HomeTabState extends State<HomeTab> {
                                 ),
                                 SizedBox(height: screenHeight * 0.025),
                                 Text(
-                                  "Live \nLocation",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall!
-                                      .copyWith(
-                                        color: Color(0xFFA1A8B0),
-                                        fontSize:
-                                            screenWidth * 0.038, // Larger font
-                                      ),
+                                  localizations.liveTracking,
+                                  style: Localizations.localeOf(context)
+                                              .languageCode ==
+                                          'en'
+                                      ? GoogleFonts.albertSans(
+                                          color: Colors.black,
+                                          fontSize: screenWidth * 0.05,
+                                          fontWeight: FontWeight.w500,
+                                        )
+                                      : Theme.of(context)
+                                          .textTheme
+                                          .titleSmall!
+                                          .copyWith(
+                                            color: Colors.black,
+                                            fontSize: screenWidth * 0.05,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -389,15 +422,23 @@ class _HomeTabState extends State<HomeTab> {
                                 ),
                                 SizedBox(height: screenHeight * 0.025),
                                 Text(
-                                  "Calendar\n",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall!
-                                      .copyWith(
-                                        color: Color(0xFFA1A8B0),
-                                        fontSize:
-                                            screenWidth * 0.038, // Larger font
-                                      ),
+                                  localizations.medicines,
+                                  style: Localizations.localeOf(context)
+                                              .languageCode ==
+                                          'en'
+                                      ? GoogleFonts.albertSans(
+                                          color: Colors.black,
+                                          fontSize: screenWidth * 0.05,
+                                          fontWeight: FontWeight.w500,
+                                        )
+                                      : Theme.of(context)
+                                          .textTheme
+                                          .titleSmall!
+                                          .copyWith(
+                                            color: Colors.black,
+                                            fontSize: screenWidth * 0.05,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -414,15 +455,23 @@ class _HomeTabState extends State<HomeTab> {
                                 ),
                                 SizedBox(height: screenHeight * 0.025),
                                 Text(
-                                  "Nearest \nHospitals",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall!
-                                      .copyWith(
-                                        color: Color(0xFFA1A8B0),
-                                        fontSize:
-                                            screenWidth * 0.038, // Larger font
-                                      ),
+                                  localizations.nearestHospitals,
+                                  style: Localizations.localeOf(context)
+                                              .languageCode ==
+                                          'en'
+                                      ? GoogleFonts.albertSans(
+                                          color: Colors.black,
+                                          fontSize: screenWidth * 0.05,
+                                          fontWeight: FontWeight.w500,
+                                        )
+                                      : Theme.of(context)
+                                          .textTheme
+                                          .titleSmall!
+                                          .copyWith(
+                                            color: Colors.black,
+                                            fontSize: screenWidth * 0.05,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -444,15 +493,23 @@ class _HomeTabState extends State<HomeTab> {
                                 ),
                                 SizedBox(height: screenHeight * 0.025),
                                 Text(
-                                  "Messages",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall!
-                                      .copyWith(
-                                        color: Color(0xFFA1A8B0),
-                                        fontSize:
-                                            screenWidth * 0.038, // Larger font
-                                      ),
+                                  localizations.messages,
+                                  style: Localizations.localeOf(context)
+                                              .languageCode ==
+                                          'en'
+                                      ? GoogleFonts.albertSans(
+                                          color: Colors.black,
+                                          fontSize: screenWidth * 0.05,
+                                          fontWeight: FontWeight.w500,
+                                        )
+                                      : Theme.of(context)
+                                          .textTheme
+                                          .titleSmall!
+                                          .copyWith(
+                                            color: Colors.black,
+                                            fontSize: screenWidth * 0.05,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -470,15 +527,23 @@ class _HomeTabState extends State<HomeTab> {
                                 ),
                                 SizedBox(height: screenHeight * 0.025),
                                 Text(
-                                  "Pills",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall!
-                                      .copyWith(
-                                        color: Color(0xFFA1A8B0),
-                                        fontSize:
-                                            screenWidth * 0.038, // Larger font
-                                      ),
+                                  localizations.medicines,
+                                  style: Localizations.localeOf(context)
+                                              .languageCode ==
+                                          'en'
+                                      ? GoogleFonts.albertSans(
+                                          color: Colors.black,
+                                          fontSize: screenWidth * 0.05,
+                                          fontWeight: FontWeight.w500,
+                                        )
+                                      : Theme.of(context)
+                                          .textTheme
+                                          .titleSmall!
+                                          .copyWith(
+                                            color: Colors.black,
+                                            fontSize: screenWidth * 0.05,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -495,15 +560,23 @@ class _HomeTabState extends State<HomeTab> {
                                 ),
                                 SizedBox(height: screenHeight * 0.025),
                                 Text(
-                                  "Chatbot",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall!
-                                      .copyWith(
-                                        color: Color(0xFFA1A8B0),
-                                        fontSize:
-                                            screenWidth * 0.038, // Larger font
-                                      ),
+                                  localizations.chatbot,
+                                  style: Localizations.localeOf(context)
+                                              .languageCode ==
+                                          'en'
+                                      ? GoogleFonts.albertSans(
+                                          color: Colors.black,
+                                          fontSize: screenWidth * 0.05,
+                                          fontWeight: FontWeight.w500,
+                                        )
+                                      : Theme.of(context)
+                                          .textTheme
+                                          .titleSmall!
+                                          .copyWith(
+                                            color: Colors.black,
+                                            fontSize: screenWidth * 0.05,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -520,8 +593,8 @@ class _HomeTabState extends State<HomeTab> {
                     children: [
                       Text(
                         _isReadOnly
-                            ? "${_displayName}'s Pill Reminder"
-                            : "Pill Reminder",
+                            ? "${_displayName}'s ${localizations.pillReminder}"
+                            : localizations.pillReminder,
                         style:
                             Theme.of(context).textTheme.titleMedium!.copyWith(
                                   color: Colors.black,
@@ -531,7 +604,7 @@ class _HomeTabState extends State<HomeTab> {
                       GestureDetector(
                         onTap: () => provider.changeCalendarIndex(),
                         child: Text(
-                          "See all",
+                          localizations.seeAll,
                           style:
                               Theme.of(context).textTheme.bodyMedium!.copyWith(
                                     color: Theme.of(context).primaryColor,
@@ -551,7 +624,8 @@ class _HomeTabState extends State<HomeTab> {
                           color: Theme.of(context).primaryColor,
                         ))
                       : _todayPills.isEmpty
-                          ? _buildEmptyPillCard("No medications for today")
+                          ? _buildEmptyPillCard(
+                              localizations.noMedicinesForToday)
                           : Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -559,7 +633,7 @@ class _HomeTabState extends State<HomeTab> {
                                   padding:
                                       EdgeInsets.only(left: 8.0, bottom: 8.0),
                                   child: Text(
-                                    "Today",
+                                    localizations.today,
                                     style: TextStyle(
                                       fontSize:
                                           screenWidth * 0.045, // Larger font
@@ -570,7 +644,7 @@ class _HomeTabState extends State<HomeTab> {
                                 ),
                                 _todayPills.isEmpty
                                     ? _buildEmptyPillCard(
-                                        "No medications for today")
+                                        localizations.noMedicinesForToday)
                                     : Column(
                                         children: _todayPills
                                             .map((pill) => _buildPillCard(
@@ -629,8 +703,9 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildPillCard(PillModel pill, String status) {
-    // If pill is already taken, override the status
-    if (pill.taken) {
+    final today = DateTime.now();
+    // If pill is already taken today, override the status
+    if (pill.isTakenOnDate(today)) {
       status = "taken";
     } else if (pill.missed) {
       status = "missed";
@@ -672,6 +747,8 @@ class _HomeTabState extends State<HomeTab> {
         textColor = Color(0xFF015C92); // Dark blue
         statusIcon = Icons.medication;
     }
+
+    final takenDate = pill.getTakenDateForDate(today);
 
     return Container(
       margin: EdgeInsets.only(bottom: 8),
@@ -737,25 +814,29 @@ class _HomeTabState extends State<HomeTab> {
                         color: textColor.withOpacity(0.7),
                       ),
                       SizedBox(width: 4),
-                      Text(
-                        pill.getFormattedTime(), // Use the new formatted time method
-                        style: TextStyle(
-                          color: textColor.withOpacity(0.7),
-                          fontSize: 14, // Larger font
+                      Flexible(
+                        child: Text(
+                          pill.getFormattedTimes(), // Show all times
+                          style: TextStyle(
+                            color: textColor.withOpacity(0.7),
+                            fontSize: 14, // Larger font
+                          ),
+                          softWrap: true,
+                          overflow: TextOverflow.visible,
                         ),
                       ),
                     ],
                   ),
-                  if (pill.taken && pill.takenDate != null)
+                  if (takenDate != null)
                     Text(
-                      'Taken at: ${DateFormat('h:mm a').format(pill.takenDate!)}',
+                      'Taken at: ${DateFormat('h:mm a').format(takenDate)}',
                       style: TextStyle(
                         fontSize: 14, // Larger font
                         color: Colors.green[700],
                         fontStyle: FontStyle.italic,
                       ),
                     ),
-                  if (pill.missed && !pill.taken)
+                  if (pill.missed && !pill.isTakenOnDate(today))
                     Text(
                       'Missed!',
                       style: TextStyle(
@@ -798,8 +879,12 @@ class _HomeTabState extends State<HomeTab> {
                   // For guardians - show status icon instead of checkbox
                   padding: const EdgeInsets.only(right: 16.0),
                   child: Icon(
-                    pill.taken ? Icons.check_circle : Icons.pending_actions,
-                    color: pill.taken ? Colors.green[700] : Colors.orange,
+                    pill.isTakenOnDate(today)
+                        ? Icons.check_circle
+                        : Icons.pending_actions,
+                    color: pill.isTakenOnDate(today)
+                        ? Colors.green[700]
+                        : Colors.orange,
                     size: 28, // Larger icon
                   ),
                 )
@@ -809,7 +894,7 @@ class _HomeTabState extends State<HomeTab> {
                   child: Transform.scale(
                     scale: 1.3, // Make checkbox larger
                     child: Checkbox(
-                      value: pill.taken,
+                      value: pill.isTakenOnDate(today),
                       activeColor: Colors.green[700],
                       checkColor: Colors.white,
                       shape: RoundedRectangleBorder(

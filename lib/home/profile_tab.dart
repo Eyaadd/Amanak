@@ -7,6 +7,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../firebase/firebase_manager.dart';
 import '../widgets/logout_dialog.dart';
+import '../l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+import '../services/localization_service.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
@@ -97,25 +100,94 @@ class _ProfileTabState extends State<ProfileTab> {
     final controller = TextEditingController(text: currentValue);
     final result = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Edit $field'),
-        content: TextFormField(
-          controller: controller,
-          keyboardType: field == 'Age' || field == 'Height'
-              ? TextInputType.number
-              : TextInputType.text,
-          decoration: InputDecoration(hintText: 'Enter new $field'),
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+        insetPadding: EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+        child: Container(
+          width: 340,
+          padding: EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: BorderRadius.circular(24),
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: Text('Save'),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Edit $field',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: Colors.grey[600]),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: controller,
+                keyboardType: field == 'Age' || field == 'Height'
+                    ? TextInputType.number
+                    : TextInputType.text,
+                decoration: InputDecoration(
+                  hintText: 'Enter new $field',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide:
+                        BorderSide(color: Theme.of(context).primaryColor),
+                  ),
+                  prefixIcon: field == 'Name'
+                      ? Icon(Icons.person,
+                          color: Theme.of(context).primaryColor)
+                      : field == 'Age'
+                          ? Icon(Icons.cake,
+                              color: Theme.of(context).primaryColor)
+                          : Icon(Icons.height,
+                              color: Theme.of(context).primaryColor),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                ),
+              ),
+              SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: () => Navigator.pop(context, controller.text),
+                  child: Text(
+                    "Save",
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
     if (result != null && result.trim().isNotEmpty) {
@@ -173,6 +245,7 @@ class _ProfileTabState extends State<ProfileTab> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
@@ -256,7 +329,8 @@ class _ProfileTabState extends State<ProfileTab> {
                                       children: [
                                         _buildProfileOption(
                                             assetName: "emergencyic",
-                                            title: 'Emergency Contacts',
+                                            title:
+                                                localizations.emergencyContacts,
                                             onTap: () {
                                               setState(() {
                                                 showEmergencyContacts = true;
@@ -272,7 +346,7 @@ class _ProfileTabState extends State<ProfileTab> {
                                         ),
                                         _buildProfileOption(
                                           assetName: "editic",
-                                          title: 'Edit Information',
+                                          title: localizations.editInformation,
                                           onTap: () async {
                                             setState(() {
                                               _isLoading = true;
@@ -293,8 +367,135 @@ class _ProfileTabState extends State<ProfileTab> {
                                           indent: screenWidth * 0.025,
                                         ),
                                         _buildProfileOption(
+                                          assetName: "language",
+                                          title: localizations.language,
+                                          onTap: () async {
+                                            final localizationService = Provider
+                                                .of<LocalizationService>(
+                                                    context,
+                                                    listen: false);
+                                            await showDialog(
+                                              context: context,
+                                              builder: (context) => Dialog(
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                ),
+                                                child: Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 24,
+                                                      vertical: 28),
+                                                  child: Column(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Text(
+                                                        localizations.language,
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .titleLarge
+                                                            ?.copyWith(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color: Theme.of(
+                                                                      context)
+                                                                  .primaryColor,
+                                                            ),
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                      ),
+                                                      SizedBox(height: 24),
+                                                      ListTile(
+                                                        leading: Text('🇺🇸',
+                                                            style: TextStyle(
+                                                                fontSize: 32)),
+                                                        title: Text(
+                                                          localizations.english,
+                                                          style: TextStyle(
+                                                              fontSize: 20,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600),
+                                                        ),
+                                                        onTap: () {
+                                                          localizationService
+                                                              .changeLanguage(
+                                                                  'en');
+                                                          Navigator.pop(
+                                                              context);
+                                                        },
+                                                        contentPadding:
+                                                            EdgeInsets
+                                                                .symmetric(
+                                                                    horizontal:
+                                                                        8),
+                                                        shape: RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12)),
+                                                        hoverColor: Theme.of(
+                                                                context)
+                                                            .primaryColor
+                                                            .withOpacity(0.08),
+                                                      ),
+                                                      SizedBox(height: 12),
+                                                      ListTile(
+                                                        leading: Text('🇪🇬',
+                                                            style: TextStyle(
+                                                                fontSize: 32)),
+                                                        title: Text(
+                                                          localizations.arabic,
+                                                          style: TextStyle(
+                                                              fontSize: 20,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600),
+                                                        ),
+                                                        onTap: () {
+                                                          localizationService
+                                                              .changeLanguage(
+                                                                  'ar');
+                                                          Navigator.pop(
+                                                              context);
+                                                        },
+                                                        contentPadding:
+                                                            EdgeInsets
+                                                                .symmetric(
+                                                                    horizontal:
+                                                                        8),
+                                                        shape: RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12)),
+                                                        hoverColor: Theme.of(
+                                                                context)
+                                                            .primaryColor
+                                                            .withOpacity(0.08),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          screenWidth: screenWidth,
+                                        ),
+                                        Divider(
+                                          color: Color(0xFFE8F3F1),
+                                          thickness: 2,
+                                          endIndent: screenWidth * 0.025,
+                                          indent: screenWidth * 0.025,
+                                        ),
+                                        _buildProfileOption(
                                           assetName: "dangercircle",
-                                          title: 'Logout',
+                                          title: localizations.logout,
                                           textColor: Color(0xFFFF5C5C),
                                           onTap: () {
                                             showLogoutDialog(context);

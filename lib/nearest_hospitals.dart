@@ -64,7 +64,7 @@ class _NearestHospitalsState extends State<NearestHospitals> {
     } catch (e) {
       setState(() {
         _errorMessage =
-        'Failed to get location. Please check your location settings.';
+            'Failed to get location. Please check your location settings.';
       });
       print("Error fetching location: $e");
     } finally {
@@ -194,7 +194,7 @@ class _NearestHospitalsState extends State<NearestHospitals> {
       setState(() {
         _isLoading = false;
         _errorMessage =
-        'Error loading hospitals. Please check your internet connection.';
+            'Error loading hospitals. Please check your internet connection.';
       });
       print('Error fetching hospitals: $e');
     }
@@ -225,7 +225,7 @@ class _NearestHospitalsState extends State<NearestHospitals> {
           infoWindow: InfoWindow(
             title: hospital['name'],
             snippet:
-            '${hospital['distance'].toStringAsFixed(1)} km • ${hospital['address']}',
+                '${hospital['distance'].toStringAsFixed(1)} km • ${hospital['address']}',
           ),
           onTap: () => _showHospitalDetails(hospital),
         ),
@@ -238,11 +238,11 @@ class _NearestHospitalsState extends State<NearestHospitals> {
             markerId: MarkerId(hospital['place_id']),
             position: hospital['location'],
             icon:
-            BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
             infoWindow: InfoWindow(
               title: hospital['name'],
               snippet:
-              '${hospital['distance'].toStringAsFixed(1)} km • ${hospital['address']}',
+                  '${hospital['distance'].toStringAsFixed(1)} km • ${hospital['address']}',
             ),
             onTap: () => _showHospitalDetails(hospital),
           ),
@@ -263,7 +263,7 @@ class _NearestHospitalsState extends State<NearestHospitals> {
     const apiKey = 'AIzaSyBtPvYgEr-gpBs4FoN2ucSbzrqzsCg4nMs';
     String? nextPageToken;
     Set<String> existingPlaceIds =
-    _hospitals.map((h) => h['place_id'] as String).toSet();
+        _hospitals.map((h) => h['place_id'] as String).toSet();
 
     List<Map<String, dynamic>> newHospitals = List.from(_hospitals);
 
@@ -271,12 +271,12 @@ class _NearestHospitalsState extends State<NearestHospitals> {
       do {
         final url = Uri.parse(
             'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
-                '?location=$lat,$lng'
-                '&radius=$radius'
-                '&type=hospital'
-                '&keyword=hospital|medical center|clinic|emergency'
-                '&key=$apiKey'
-                '${nextPageToken != null ? '&pagetoken=$nextPageToken' : ''}');
+            '?location=$lat,$lng'
+            '&radius=$radius'
+            '&type=hospital'
+            '&keyword=hospital|medical center|clinic|emergency'
+            '&key=$apiKey'
+            '${nextPageToken != null ? '&pagetoken=$nextPageToken' : ''}');
 
         final response = await http.get(url);
         final data = json.decode(response.body);
@@ -388,7 +388,7 @@ class _NearestHospitalsState extends State<NearestHospitals> {
                       Text(
                         hospital['address'] ?? 'Address not available',
                         style:
-                        const TextStyle(fontSize: 16, color: Colors.grey),
+                            const TextStyle(fontSize: 16, color: Colors.grey),
                       ),
                       Text(
                         '${hospital['distance'].toStringAsFixed(1)} km away',
@@ -411,7 +411,7 @@ class _NearestHospitalsState extends State<NearestHospitals> {
                       ? Icons.check_circle
                       : Icons.access_time,
                   color:
-                  hospital['isOpen'] == true ? Colors.green : Colors.orange,
+                      hospital['isOpen'] == true ? Colors.green : Colors.orange,
                   size: 20,
                 ),
                 const SizedBox(width: 10),
@@ -555,210 +555,210 @@ class _NearestHospitalsState extends State<NearestHospitals> {
           Expanded(
             child: _isLoading
                 ? const Center(
-                child: CircularProgressIndicator(color: primaryBlue))
+                    child: CircularProgressIndicator(color: primaryBlue))
                 : _errorMessage != null
-                ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _errorMessage!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _fetchLocationAndHospitals,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryBlue,
-                    ),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            )
-                : Stack(
-              children: [
-                GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: _currentLocation!,
-                    zoom: _currentZoom,
-                  ),
-                  markers: _markers,
-                  onMapCreated: (controller) =>
-                      _controller.complete(controller),
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
-                ),
-                Positioned(
-                  right: 16,
-                  bottom: 280,
-                  child: Column(
-                    children: [
-                      FloatingActionButton(
-                        heroTag: "btn1",
-                        mini: true,
-                        backgroundColor: primaryBlue,
-                        onPressed: () =>
-                            _moveToLocation(_currentLocation!),
-                        child:
-                        const Icon(Icons.my_location, size: 20),
-                      ),
-                      const SizedBox(height: 8),
-                      FloatingActionButton(
-                        heroTag: "btn2",
-                        mini: true,
-                        backgroundColor: primaryBlue,
-                        onPressed: () => _zoomMap(true),
-                        child: const Icon(Icons.add, size: 20),
-                      ),
-                      const SizedBox(height: 8),
-                      FloatingActionButton(
-                        heroTag: "btn3",
-                        mini: true,
-                        backgroundColor: primaryBlue,
-                        onPressed: () => _zoomMap(false),
-                        child: const Icon(Icons.remove, size: 20),
-                      ),
-                      const SizedBox(height: 8),
-                      FloatingActionButton(
-                        heroTag: "btn4",
-                        mini: true,
-                        backgroundColor: primaryBlue,
-                        onPressed: _isRefreshing
-                            ? null
-                            : () {
-                          setState(() => _isRefreshing = true);
-                          _fetchLocationAndHospitals();
-                        },
-                        child: _isRefreshing
-                            ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                            : const Icon(Icons.refresh, size: 20),
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    height: 250,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(20)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, -5),
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _errorMessage!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _fetchLocationAndHospitals,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryBlue,
+                              ),
+                              child: const Text('Retry'),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: _filteredHospitals.isEmpty
-                        ? const Center(
-                      child: Text(
-                        'No hospitals found nearby',
-                        style: TextStyle(
-                            fontSize: 16, color: Colors.grey),
-                      ),
-                    )
-                        : ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8),
-                      itemCount: _filteredHospitals.length,
-                      itemBuilder: (context, index) {
-                        final hospital =
-                        _filteredHospitals[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                            BorderRadius.circular(12),
+                      )
+                    : Stack(
+                        children: [
+                          GoogleMap(
+                            initialCameraPosition: CameraPosition(
+                              target: _currentLocation!,
+                              zoom: _currentZoom,
+                            ),
+                            markers: _markers,
+                            onMapCreated: (controller) =>
+                                _controller.complete(controller),
+                            myLocationEnabled: true,
+                            myLocationButtonEnabled: false,
+                            zoomControlsEnabled: false,
                           ),
-                          child: InkWell(
-                            onTap: () =>
-                                _showHospitalDetails(hospital),
-                            borderRadius:
-                            BorderRadius.circular(12),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment:
-                                CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                          Icons.local_hospital,
-                                          color: primaryBlue,
-                                          size: 20),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          hospital['name'],
-                                          style:
-                                          const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight:
-                                            FontWeight.bold,
+                          Positioned(
+                            right: 16,
+                            bottom: 280,
+                            child: Column(
+                              children: [
+                                FloatingActionButton(
+                                  heroTag: "btn1",
+                                  mini: true,
+                                  backgroundColor: primaryBlue,
+                                  onPressed: () =>
+                                      _moveToLocation(_currentLocation!),
+                                  child:
+                                      const Icon(Icons.my_location, size: 20),
+                                ),
+                                const SizedBox(height: 8),
+                                FloatingActionButton(
+                                  heroTag: "btn2",
+                                  mini: true,
+                                  backgroundColor: primaryBlue,
+                                  onPressed: () => _zoomMap(true),
+                                  child: const Icon(Icons.add, size: 20),
+                                ),
+                                const SizedBox(height: 8),
+                                FloatingActionButton(
+                                  heroTag: "btn3",
+                                  mini: true,
+                                  backgroundColor: primaryBlue,
+                                  onPressed: () => _zoomMap(false),
+                                  child: const Icon(Icons.remove, size: 20),
+                                ),
+                                const SizedBox(height: 8),
+                                FloatingActionButton(
+                                  heroTag: "btn4",
+                                  mini: true,
+                                  backgroundColor: primaryBlue,
+                                  onPressed: _isRefreshing
+                                      ? null
+                                      : () {
+                                          setState(() => _isRefreshing = true);
+                                          _fetchLocationAndHospitals();
+                                        },
+                                  child: _isRefreshing
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
                                           ),
-                                        ),
-                                      ),
-                                      Text(
-                                        '${hospital['distance'].toStringAsFixed(1)} km',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey,
-                                          fontWeight:
-                                          FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                          Icons.location_on,
-                                          color: Colors.grey,
-                                          size: 16),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          hospital['address'] ??
-                                              '',
-                                          style:
-                                          const TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                        )
+                                      : const Icon(Icons.refresh, size: 20),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              height: 250,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(20)),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, -5),
                                   ),
                                 ],
                               ),
+                              child: _filteredHospitals.isEmpty
+                                  ? const Center(
+                                      child: Text(
+                                        'No hospitals found nearby',
+                                        style: TextStyle(
+                                            fontSize: 16, color: Colors.grey),
+                                      ),
+                                    )
+                                  : ListView.builder(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8),
+                                      itemCount: _filteredHospitals.length,
+                                      itemBuilder: (context, index) {
+                                        final hospital =
+                                            _filteredHospitals[index];
+                                        return Card(
+                                          margin: const EdgeInsets.symmetric(
+                                              horizontal: 16, vertical: 8),
+                                          elevation: 2,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: InkWell(
+                                            onTap: () =>
+                                                _showHospitalDetails(hospital),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(16),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      const Icon(
+                                                          Icons.local_hospital,
+                                                          color: primaryBlue,
+                                                          size: 20),
+                                                      const SizedBox(width: 8),
+                                                      Expanded(
+                                                        child: Text(
+                                                          hospital['name'],
+                                                          style:
+                                                              const TextStyle(
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        '${hospital['distance'].toStringAsFixed(1)} km',
+                                                        style: const TextStyle(
+                                                          fontSize: 14,
+                                                          color: Colors.grey,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Row(
+                                                    children: [
+                                                      const Icon(
+                                                          Icons.location_on,
+                                                          color: Colors.grey,
+                                                          size: 16),
+                                                      const SizedBox(width: 8),
+                                                      Expanded(
+                                                        child: Text(
+                                                          hospital['address'] ??
+                                                              '',
+                                                          style:
+                                                              const TextStyle(
+                                                            fontSize: 14,
+                                                            color: Colors.grey,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
                             ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
+                        ],
+                      ),
           ),
         ],
       ),

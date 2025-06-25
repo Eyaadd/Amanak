@@ -523,6 +523,9 @@ class _CalendarTabState extends State<CalendarTab> {
       itemCount: pillsForSelectedDay.length,
       itemBuilder: (context, index) {
         final pill = pillsForSelectedDay[index];
+        final isTaken = pill.isTakenOnDate(_selectedDay!);
+        final takenDate = pill.getTakenDateForDate(_selectedDay!);
+
         return Dismissible(
           key: Key("${pill.id}_$selectedDate"),
           background: Container(
@@ -629,7 +632,7 @@ class _CalendarTabState extends State<CalendarTab> {
                             Container(
                               padding: EdgeInsets.all(1.w),
                               decoration: BoxDecoration(
-                                color: pill.taken
+                                color: isTaken
                                     ? Colors.green[100]
                                     : (pill.missed
                                         ? Colors.red[100]
@@ -638,7 +641,7 @@ class _CalendarTabState extends State<CalendarTab> {
                               ),
                               child: Icon(
                                 Icons.access_time,
-                                color: pill.taken
+                                color: isTaken
                                     ? Colors.green[700]
                                     : (pill.missed
                                         ? Colors.red[700]
@@ -647,11 +650,15 @@ class _CalendarTabState extends State<CalendarTab> {
                               ),
                             ),
                             SizedBox(width: 1.w),
-                            Text(
-                              pill.getFormattedTime(),
-                              style: TextStyle(
-                                color: _getPillSubtitleColor(pill),
-                                fontSize: 13.sp,
+                            Flexible(
+                              child: Text(
+                                pill.getFormattedTimes(),
+                                style: TextStyle(
+                                  color: _getPillSubtitleColor(pill),
+                                  fontSize: 13.sp,
+                                ),
+                                softWrap: true,
+                                overflow: TextOverflow.visible,
                               ),
                             ),
                             if (pill.allowSnooze)
@@ -659,7 +666,7 @@ class _CalendarTabState extends State<CalendarTab> {
                                 padding: EdgeInsets.only(left: 2.w),
                                 child: Icon(
                                   Icons.snooze,
-                                  color: pill.taken
+                                  color: isTaken
                                       ? Colors.green[700]
                                       : (pill.missed
                                           ? Colors.red[700]
@@ -669,16 +676,16 @@ class _CalendarTabState extends State<CalendarTab> {
                               ),
                           ],
                         ),
-                        if (pill.taken && pill.takenDate != null)
+                        if (isTaken && takenDate != null)
                           Text(
-                            'Taken at: ${DateFormat('h:mm a').format(pill.takenDate!)}',
+                            'Taken at: ${DateFormat('h:mm a').format(takenDate)}',
                             style: TextStyle(
                               fontSize: 11.sp,
                               color: Colors.green[700],
                               fontStyle: FontStyle.italic,
                             ),
                           ),
-                        if (pill.missed && !pill.taken)
+                        if (pill.missed && !isTaken)
                           Text(
                             'Missed!',
                             style: TextStyle(
@@ -723,7 +730,7 @@ class _CalendarTabState extends State<CalendarTab> {
                     child: Transform.scale(
                       scale: 1.2,
                       child: Checkbox(
-                        value: pill.taken,
+                        value: isTaken,
                         activeColor: Colors.green[700],
                         checkColor: Colors.white,
                         shape: RoundedRectangleBorder(
@@ -743,7 +750,7 @@ class _CalendarTabState extends State<CalendarTab> {
                     padding: EdgeInsets.only(right: 4.w),
                     child: Icon(
                       _getPillStatusIcon(pill),
-                      color: pill.taken
+                      color: isTaken
                           ? Colors.green[700]
                           : (pill.missed ? Colors.red[700] : Colors.orange),
                       size: 6.w,
@@ -789,20 +796,16 @@ class _CalendarTabState extends State<CalendarTab> {
         return;
       }
 
-      // Update the pill with the new taken status
-      final updatedPill = pill.copyWith(
-        taken: isTaken,
-        takenDate: isTaken ? DateTime.now() : null,
-        missed: isTaken ? false : pill.missed, // Reset missed status if taken
-      );
+      // Update local state immediately for better performance
+      setState(() {
+        // Update the pill in the local _pills map
+        pill.markTakenOnDate(_selectedDay!, isTaken);
+        if (isTaken) {
+          pill.missed = false;
+        }
+      });
 
-      // Update in Firebase
-      await FirebaseManager.updatePill(updatedPill);
-
-      // Update local state
-      refreshData();
-
-      // Show success message
+      // Show immediate feedback
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -811,9 +814,12 @@ class _CalendarTabState extends State<CalendarTab> {
                 : '${pill.name} marked as not taken',
             style: TextStyle(fontSize: 14.sp),
           ),
-          duration: Duration(seconds: 2),
+          duration: Duration(seconds: 1),
         ),
       );
+
+      // Sync with Firebase in the background
+      _syncPillToFirebase(pill);
     } catch (e) {
       print('Error updating pill status: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -823,6 +829,27 @@ class _CalendarTabState extends State<CalendarTab> {
             style: TextStyle(fontSize: 14.sp),
           ),
           backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  // Sync pill to Firebase in background
+  Future<void> _syncPillToFirebase(PillModel pill) async {
+    try {
+      await FirebaseManager.updatePill(pill);
+      print('Pill synced to Firebase successfully: ${pill.name}');
+    } catch (e) {
+      print('Error syncing pill to Firebase: $e');
+      // Optionally show error message to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Warning: Changes may not be saved',
+            style: TextStyle(fontSize: 12.sp),
+          ),
+          backgroundColor: Colors.orange,
           duration: Duration(seconds: 2),
         ),
       );
@@ -878,7 +905,7 @@ class _CalendarTabState extends State<CalendarTab> {
 
   // Helper methods for pill card UI
   Color _getPillCardColor(PillModel pill) {
-    if (pill.taken) {
+    if (pill.isTakenOnDate(_selectedDay!)) {
       return Colors.green[50]!;
     } else if (pill.missed) {
       return Colors.red[50]!;
@@ -888,7 +915,7 @@ class _CalendarTabState extends State<CalendarTab> {
   }
 
   Color _getPillTextColor(PillModel pill) {
-    if (pill.taken) {
+    if (pill.isTakenOnDate(_selectedDay!)) {
       return Colors.green[700]!;
     } else if (pill.missed) {
       return Colors.red[700]!;
@@ -898,7 +925,7 @@ class _CalendarTabState extends State<CalendarTab> {
   }
 
   Color _getPillSubtitleColor(PillModel pill) {
-    if (pill.taken) {
+    if (pill.isTakenOnDate(_selectedDay!)) {
       return Colors.green[700]!.withAlpha(204); // 0.8 opacity
     } else if (pill.missed) {
       return Colors.red[700]!.withAlpha(204); // 0.8 opacity
@@ -908,7 +935,7 @@ class _CalendarTabState extends State<CalendarTab> {
   }
 
   IconData _getPillStatusIcon(PillModel pill) {
-    if (pill.taken) {
+    if (pill.isTakenOnDate(_selectedDay!)) {
       return Icons.check_circle;
     } else if (pill.missed) {
       return Icons.warning_rounded;
@@ -940,7 +967,7 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
   late int _timesPerDay;
   late int _duration;
   late DateTime _selectedDate;
-  late TimeOfDay _selectedTime;
+  late List<TimeOfDay> _selectedTimes;
   late bool _allowSnooze;
   late int _treatmentPeriod; // Total treatment period in days
 
@@ -957,10 +984,14 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
     _treatmentPeriod =
         existingPill?.duration ?? 7; // Initialize with duration if existing
     _selectedDate = existingPill?.dateTime ?? DateTime.now();
-    _selectedTime = existingPill != null
-        ? TimeOfDay(
-            hour: existingPill.alarmHour, minute: existingPill.alarmMinute)
-        : TimeOfDay.now();
+
+    // Initialize times - use existing pill times or default times
+    if (existingPill != null && existingPill.times.isNotEmpty) {
+      _selectedTimes = List.from(existingPill.times);
+    } else {
+      _selectedTimes = [TimeOfDay(hour: 8, minute: 0)];
+    }
+
     _allowSnooze = existingPill?.allowSnooze ?? true;
   }
 
@@ -972,17 +1003,45 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
     super.dispose();
   }
 
+  // Helper method to format time for display
+  String _formatTime(TimeOfDay time) {
+    final hour = time.hour;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final hour12 = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+    return '$hour12:$minute $period';
+  }
+
+  // Update times when times per day changes
+  void _updateTimesForCount(int count) {
+    setState(() {
+      if (count > _selectedTimes.length) {
+        // Add more times
+        while (_selectedTimes.length < count) {
+          // Add times with reasonable spacing (e.g., every 4 hours)
+          final lastTime = _selectedTimes.last;
+          final nextHour = (lastTime.hour + 4) % 24;
+          _selectedTimes
+              .add(TimeOfDay(hour: nextHour, minute: lastTime.minute));
+        }
+      } else if (count < _selectedTimes.length) {
+        // Remove excess times
+        _selectedTimes = _selectedTimes.take(count).toList();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final primaryColor = Color(0xFF015C92); // App's primary color
 
     return Padding(
       padding: EdgeInsets.all(4.w),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: MainAxisSize.min, // This is key!
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -1091,6 +1150,7 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                           onChanged: (newValue) {
                             setState(() {
                               _timesPerDay = newValue!;
+                              _updateTimesForCount(_timesPerDay);
                             });
                           },
                           underline: Container(),
@@ -1099,6 +1159,72 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                         ),
                       ],
                     ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 2.h),
+
+              // Multiple Time Pickers
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(3.w),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Reminder Times',
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    SizedBox(height: 1.h),
+                    ...List.generate(_timesPerDay, (index) {
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: 1.h),
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(Icons.access_time,
+                              size: 5.w, color: primaryColor),
+                          title: Text(
+                            'Time ${index + 1}',
+                            style: TextStyle(fontSize: 15.sp),
+                          ),
+                          subtitle: Text(
+                            _formatTime(_selectedTimes[index]),
+                            style: TextStyle(fontSize: 14.sp),
+                          ),
+                          trailing: Icon(Icons.edit, color: primaryColor),
+                          onTap: () async {
+                            final TimeOfDay? picked = await showTimePicker(
+                              context: context,
+                              initialTime: _selectedTimes[index],
+                              builder: (context, child) {
+                                return Theme(
+                                  data: Theme.of(context).copyWith(
+                                    colorScheme: ColorScheme.light(
+                                      primary: primaryColor,
+                                      onPrimary: Colors.white,
+                                      onSurface: Colors.black,
+                                    ),
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (picked != null &&
+                                picked != _selectedTimes[index]) {
+                              setState(() {
+                                _selectedTimes[index] = picked;
+                              });
+                            }
+                          },
+                        ),
+                      );
+                    }),
                   ],
                 ),
               ),
@@ -1207,53 +1333,6 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
               ),
               SizedBox(height: 2.h),
 
-              // Time picker
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(3.w),
-                ),
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading:
-                      Icon(Icons.access_time, size: 5.w, color: primaryColor),
-                  title: Text(
-                    'Reminder Time',
-                    style: TextStyle(fontSize: 15.sp),
-                  ),
-                  subtitle: Text(
-                    _selectedTime.format(context),
-                    style: TextStyle(fontSize: 14.sp),
-                  ),
-                  trailing: Icon(Icons.edit, color: primaryColor),
-                  onTap: () async {
-                    final TimeOfDay? picked = await showTimePicker(
-                      context: context,
-                      initialTime: _selectedTime,
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: ColorScheme.light(
-                              primary: primaryColor,
-                              onPrimary: Colors.white,
-                              onSurface: Colors.black,
-                            ),
-                          ),
-                          child: child!,
-                        );
-                      },
-                    );
-                    if (picked != null && picked != _selectedTime) {
-                      setState(() {
-                        _selectedTime = picked;
-                      });
-                    }
-                  },
-                ),
-              ),
-              SizedBox(height: 2.h),
-
               // Allow snooze
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
@@ -1263,17 +1342,16 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                 ),
                 child: SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Row(
-                    children: [
-                      Icon(Icons.notifications_active,
-                          size: 5.w, color: primaryColor),
-                      SizedBox(width: 3.w),
-                      Text(
-                        'Snooze Reminder (5 min before)',
-                        style: TextStyle(fontSize: 15.sp),
-                      ),
-                    ],
+                  isThreeLine: true,
+                  title: Text(
+                    'Snooze Reminder (5 min before)',
+                    style: TextStyle(fontSize: 15.sp),
+                    overflow: TextOverflow.visible,
+                    softWrap: true,
                   ),
+                  subtitle: SizedBox.shrink(),
+                  secondary: Icon(Icons.notifications_active,
+                      size: 5.w, color: primaryColor),
                   value: _allowSnooze,
                   activeColor: primaryColor,
                   onChanged: (value) {
@@ -1341,17 +1419,15 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                           name: _nameController.text,
                           dosage: _dosageController.text,
                           timesPerDay: _timesPerDay,
-                          duration:
-                              _treatmentPeriod, // Use treatment period as duration
+                          duration: _treatmentPeriod,
                           dateTime: DateTime(
                             _selectedDate.year,
                             _selectedDate.month,
                             _selectedDate.day,
-                            _selectedTime.hour,
-                            _selectedTime.minute,
+                            _selectedTimes.first.hour,
+                            _selectedTimes.first.minute,
                           ),
-                          alarmHour: _selectedTime.hour,
-                          alarmMinute: _selectedTime.minute,
+                          times: _selectedTimes,
                           allowSnooze: _allowSnooze,
                           note: _noteController.text,
                         );
