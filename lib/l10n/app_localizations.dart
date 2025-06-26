@@ -224,6 +224,12 @@ abstract class AppLocalizations {
   /// **'Messages'**
   String get messages;
 
+  /// No description provided for @calendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get calendar;
+
   /// No description provided for @medicine.
   ///
   /// In en, this message translates to:
@@ -281,7 +287,7 @@ abstract class AppLocalizations {
   /// No description provided for @liveTracking.
   ///
   /// In en, this message translates to:
-  /// **'Live Tracking'**
+  /// **'Live\nTracking'**
   String get liveTracking;
 
   /// No description provided for @location.
@@ -299,7 +305,7 @@ abstract class AppLocalizations {
   /// No description provided for @nearestHospitals.
   ///
   /// In en, this message translates to:
-  /// **'Nearest Hospitals'**
+  /// **'Nearest\nHospitals'**
   String get nearestHospitals;
 
   /// No description provided for @chatbot.

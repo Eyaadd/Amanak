@@ -27,6 +27,7 @@
   "search": "البحث",
   "notifications": "الإشعارات",
   "messages": "الرسائل",
+  "calendar": "التقويم",
   
   "@medicine": {},
   "medicine": "الدواء",
@@ -40,10 +41,10 @@
   "deleteMedicine": "حذف الدواء",
   
   "@tracking": {},
-  "liveTracking": "التتبع المباشر",
+  "liveTracking": "التتبع\nالمباشر",
   "location": "الموقع",
   "guardianLocation": "موقع الوصي",
-  "nearestHospitals": "أقرب المستشفيات",
+  "nearestHospitals": "أقرب\nالمستشفيات",
   
   "@chatbot": {},
   "chatbot": "المساعد الذكي",

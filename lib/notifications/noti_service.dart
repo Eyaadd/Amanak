@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
+import 'dart:convert';
 
 import 'package:amanak/firebase/firebase_manager.dart';
 import 'package:amanak/models/pill_model.dart';
@@ -15,6 +16,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:amanak/main.dart'; // Import for navigatorKey
+import 'package:http/http.dart' as http;
+// import 'package:dotenv/dotenv.dart';
 
 class NotiService {
   final FlutterLocalNotificationsPlugin notificationsPlugin =
@@ -612,7 +615,7 @@ class NotiService {
           id: PILL_TAKEN_NOTIFICATION_ID_PREFIX + pill.id.hashCode % 10000,
           title: "Medicine Taken",
           body: "Your shared user ${elderName} marked ${pill.name} as done.",
-          details: takenPillDetails(),
+          notificationDetails: takenPillDetails(),
         );
         print(
             'Sent local taken pill notification to guardian for ${pill.name}');
@@ -667,7 +670,7 @@ class NotiService {
           title: "Pill Missed Alert",
           body:
               "Your shared user ${elderName} missed their medicine: ${pill.name}.",
-          details: missedPillDetails(),
+          notificationDetails: missedPillDetails(),
         );
         print(
             'Sent local missed pill notification to guardian for ${pill.name}');
@@ -730,13 +733,60 @@ class NotiService {
     }
   }
 
+  // Store notification in Firestore
+  Future<void> _storeNotification({
+    required String title,
+    required String body,
+    String? type,
+    Map<String, dynamic>? data,
+  }) async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('notifications')
+          .add({
+        'title': title,
+        'message': body,
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
+        'type': type,
+        'data': data,
+      });
+
+      print('📝 Notification stored in Firestore');
+    } catch (e) {
+      print('❌ Error storing notification in Firestore: $e');
+    }
+  }
+
+  // After showing a notification, store it in Firestore
+  Future<void> _saveNotificationToFirestore(String? title, String? body) async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      await _storeNotification(
+        title: title ?? 'Notification',
+        body: body ?? '',
+      );
+    } catch (e) {
+      print('Error saving notification to Firestore: $e');
+    }
+  }
+
   // Show an immediate notification
   Future<void> showNotification({
     required int id,
-    required String title,
-    required String body,
-    required NotificationDetails details,
+    String? title,
+    String? body,
+    required NotificationDetails notificationDetails,
     String? payload,
+    String? type,
+    Map<String, dynamic>? data,
   }) async {
     if (!_isInitialized) await initNotification();
 
@@ -744,8 +794,16 @@ class NotiService {
       id,
       title,
       body,
-      details,
+      notificationDetails,
       payload: payload,
+    );
+
+    // Store notification in Firestore after showing it
+    await _storeNotification(
+      title: title ?? 'Notification',
+      body: body ?? '',
+      type: type,
+      data: data,
     );
   }
 
@@ -1115,6 +1173,9 @@ class NotiService {
             'Attempting to call Cloud Function: us-central1/sendNotification');
         final result = await callable.call(message);
         print('FCM notification sent via Cloud Functions: ${result.data}');
+
+        // Store notification in Firestore for the recipient
+        await _storeNotificationForUser(userId, title, body, data);
       } catch (functionError) {
         // Fall back to direct FCM (only works in development with Firebase Admin SDK)
         print('Cloud Function not available: $functionError');
@@ -1153,6 +1214,27 @@ class NotiService {
       }
     } catch (e) {
       print('Error sending FCM notification: $e');
+    }
+  }
+
+  // Store notification for a specific user
+  Future<void> _storeNotificationForUser(String userId, String title,
+      String body, Map<String, dynamic>? data) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('notifications')
+          .add({
+        'title': title,
+        'message': body,
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
+        'type': data != null ? data['type'] : null,
+        'data': data,
+      });
+    } catch (e) {
+      print('Error storing notification for user $userId: $e');
     }
   }
 }

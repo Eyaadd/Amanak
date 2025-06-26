@@ -40,7 +40,7 @@ class OnBoardingScreen extends StatelessWidget {
       dotsFlex: 2,
       dotsDecorator: const DotsDecorator(
         color: Color(0xFF707070),
-        activeColor: Color(0xFF00664F),
+        activeColor: Color(0xFF015C92),
       ),
       globalBackgroundColor: const Color(0xFFF4EEEE),
       showDoneButton: true,
@@ -54,7 +54,7 @@ class OnBoardingScreen extends StatelessWidget {
         style: GoogleFonts.poppins(
           fontSize: 16.0,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF00664F),
+          color: Color(0xFF015C92),
         ),
       ),
       showNextButton: true,
@@ -63,7 +63,7 @@ class OnBoardingScreen extends StatelessWidget {
         style: GoogleFonts.poppins(
           fontSize: 16.0,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF00664F),
+          color: Color(0xFF015C92),
         ),
       ),
       showBackButton: true,
@@ -72,7 +72,7 @@ class OnBoardingScreen extends StatelessWidget {
         style: GoogleFonts.poppins(
           fontSize: 16.0,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF00664F),
+          color: Color(0xFF015C92),
         ),
       ),
       pages: [

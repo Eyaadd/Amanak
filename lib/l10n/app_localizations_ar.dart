@@ -72,6 +72,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get messages => 'الرسائل';
 
   @override
+  String get calendar => 'التقويم';
+
+  @override
   String get medicine => 'الدواء';
 
   @override
@@ -99,7 +102,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deleteMedicine => 'حذف الدواء';
 
   @override
-  String get liveTracking => 'التتبع المباشر';
+  String get liveTracking => 'التتبع\nالمباشر';
 
   @override
   String get location => 'الموقع';
@@ -108,7 +111,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guardianLocation => 'موقع الوصي';
 
   @override
-  String get nearestHospitals => 'أقرب المستشفيات';
+  String get nearestHospitals => 'أقرب\nالمستشفيات';
 
   @override
   String get chatbot => 'المساعد الذكي';

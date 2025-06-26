@@ -31,6 +31,10 @@ import 'package:amanak/screens/language_selection_screen.dart';
 import 'package:amanak/home/messaging_tab.dart';
 import 'package:amanak/provider/fall_detection_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:amanak/provider/notification_provider.dart';
+import 'package:amanak/screens/notifications_screen.dart';
+import 'package:amanak/gaurdian_location.dart';
+import 'package:amanak/screens/simple_splash_screen.dart';
 
 const apiKey = "AIzaSyDLePMB53Q1Nud4ZG8a2XA9UUYuSLCrY6c";
 
@@ -150,7 +154,25 @@ void main() async {
   final localizationService = LocalizationService();
   await localizationService.initialize();
 
+  // Get SharedPreferences instance
   final prefs = await SharedPreferences.getInstance();
+
+  // Check if this is the first launch ever
+  final bool isFirstLaunch = !(prefs.containsKey('first_launch_completed'));
+  if (isFirstLaunch) {
+    // If it's the first launch, reset onboarding and language flags
+    await prefs.setBool('first_launch_completed', true);
+    await prefs.setBool('language_selected', false);
+    await prefs.setBool('onboarding_completed', false);
+    print('First app launch detected, resetting onboarding flow');
+  } else {
+    // If not the first launch, ensure we don't show onboarding screens for returning users
+    if (FirebaseAuth.instance.currentUser != null) {
+      await prefs.setBool('language_selected', true);
+      await prefs.setBool('onboarding_completed', true);
+    }
+  }
+
   final bool languageSelected = prefs.getBool('language_selected') ?? false;
   final bool onboardingCompleted =
       prefs.getBool('onboarding_completed') ?? false;
@@ -161,6 +183,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => MyProvider()),
         ChangeNotifierProvider(create: (context) => localizationService),
         ChangeNotifierProvider(create: (_) => FallDetectionProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: MyApp(
         languageSelected: languageSelected,
@@ -175,26 +198,14 @@ class MyApp extends StatelessWidget {
   final bool languageSelected;
   final bool onboardingCompleted;
 
-  MyApp(
-      {super.key,
-      required this.languageSelected,
-      required this.onboardingCompleted});
+  MyApp({
+    required this.languageSelected,
+    required this.onboardingCompleted,
+  });
 
   @override
   Widget build(BuildContext context) {
     final localizationService = Provider.of<LocalizationService>(context);
-    final bool isLoggedIn = FirebaseAuth.instance.currentUser != null;
-    String initialRoute;
-
-    if (!languageSelected) {
-      initialRoute = LanguageSelectionScreen.routeName;
-    } else if (!onboardingCompleted) {
-      initialRoute = OnBoardingScreen.routeName;
-    } else if (!isLoggedIn) {
-      initialRoute = LoginScreen.routeName;
-    } else {
-      initialRoute = HomeScreen.routeName;
-    }
 
     return ResponsiveSizer(
       builder: (context, orientation, screenType) {
@@ -202,39 +213,51 @@ class MyApp extends StatelessWidget {
           navigatorKey: navigatorKey, // Add global navigator key
           theme: lightTheme.themeData,
           debugShowCheckedModeBanner: false,
-          initialRoute: initialRoute,
-          locale: localizationService.currentLocale,
-          supportedLocales: LocalizationService.supportedLocales,
-          localizationsDelegates: [
+          localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
+          supportedLocales: const [
+            Locale('en'), // English
+            Locale('ar'), // Arabic
+          ],
+          locale: localizationService.currentLocale,
+          // Use the simple splash screen as the home widget
+          home: const SimpleSplashScreen(),
           routes: {
-            OnBoardingScreen.routeName: (context) => OnBoardingScreen(),
-            LoginScreen.routeName: (context) => LoginScreen(),
-            SignupScreen.routeName: (context) => SignupScreen(),
-            ChooseRoleScreen.routeName: (context) => ChooseRoleScreen(),
-            HomeScreen.routeName: (context) => HomeScreen(),
-            ChatBot.routeName: (context) => ChatBot(),
-            LiveTracking.routeName: (context) => LiveTracking(),
-            NearestHospitals.routeName: (context) => NearestHospitals(),
-            MedicineSearchScreen.routeName: (context) => MedicineSearchScreen(),
-            MedicineDetailScreen.routeName: (context) => MedicineDetailScreen(),
-            MessagingTab.routeName: (context) => MessagingTab(),
-            LanguageSelectionScreen.routeName: (context) =>
-                const LanguageSelectionScreen(),
+            HomeScreen.routeName: (_) => HomeScreen(),
+            MedicineSearchScreen.routeName: (_) => MedicineSearchScreen(),
+            MedicineDetailScreen.routeName: (_) => MedicineDetailScreen(),
+            LiveTracking.routeName: (_) => LiveTracking(),
+            NearestHospitals.routeName: (_) => NearestHospitals(),
+            LoginScreen.routeName: (_) => LoginScreen(),
+            OnBoardingScreen.routeName: (_) => OnBoardingScreen(),
+            LanguageSelectionScreen.routeName: (_) => LanguageSelectionScreen(),
+            SignupScreen.routeName: (_) => SignupScreen(),
+            ChooseRoleScreen.routeName: (_) => ChooseRoleScreen(),
+            ChatBot.routeName: (_) => ChatBot(),
+            GuardianLiveTracking.routeName: (_) => GuardianLiveTracking(),
+            NotificationsScreen.routeName: (_) => NotificationsScreen(),
           },
           onGenerateRoute: (settings) {
             // Handle deep linking for message notifications
             if (settings.name == '/messaging') {
-              // Extract the arguments
+              // Extract arguments
               final args = settings.arguments as Map<String, dynamic>?;
-              return MaterialPageRoute(
-                builder: (context) => MessagingTab(),
-                settings: settings,
-              );
+              if (args != null) {
+                final chatId = args['chatId'] as String?;
+                final senderId = args['senderId'] as String?;
+                final senderName = args['senderName'] as String?;
+
+                if (chatId != null && senderId != null) {
+                  return MaterialPageRoute(
+                    builder: (context) => MessagingTab(),
+                    settings: settings,
+                  );
+                }
+              }
             }
             return null;
           },

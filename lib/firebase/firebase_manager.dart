@@ -3,6 +3,7 @@ import 'package:amanak/models/pill_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:amanak/notifications/noti_service.dart';
+import 'package:flutter/material.dart' show TimeOfDay;
 
 class FirebaseManager {
   static CollectionReference<UserModel> getUsersCollection() {
@@ -232,16 +233,19 @@ class FirebaseManager {
     return snapshot.docs.map((doc) => doc.data()).toList();
   }
 
-  static Future<List<PillModel>> getPillsForDateRange(String userId, DateTime startDate, DateTime endDate) async {
+  static Future<List<PillModel>> getPillsForDateRange(
+      String userId, DateTime startDate, DateTime endDate) async {
     var collection = getPillsCollection(userId);
     var snapshot = await collection.get();
     var allPills = snapshot.docs.map((doc) => doc.data()).toList();
-    
+
     // Filter pills that fall within the date range
     return allPills.where((pill) {
-      final pillStartDate = DateTime(pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
+      final pillStartDate =
+          DateTime(pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
       final pillEndDate = pillStartDate.add(Duration(days: pill.duration));
-      return !pillStartDate.isAfter(endDate) && !pillEndDate.isBefore(startDate);
+      return !pillStartDate.isAfter(endDate) &&
+          !pillEndDate.isBefore(startDate);
     }).toList();
   }
 
@@ -321,13 +325,40 @@ class FirebaseManager {
           if (pill.isTakenOnDate(today) || pill.missed) continue;
 
           // Check if pill time has passed (more than 5 minutes ago)
-          for (final t in pill.times) {
+          for (final dynamic timeObj in pill.times) {
+            int hour = 8; // Default value
+            int minute = 0; // Default value
+
+            try {
+              // Try to get hour and minute based on the object type
+              if (timeObj is TimeOfDay) {
+                // If it's already a TimeOfDay object
+                hour = timeObj.hour;
+                minute = timeObj.minute;
+              } else {
+                // Try to access as a Map
+                final dynamic hourValue = timeObj['hour'];
+                final dynamic minuteValue = timeObj['minute'];
+
+                if (hourValue != null) {
+                  hour = hourValue is int ? hourValue : 8;
+                }
+
+                if (minuteValue != null) {
+                  minute = minuteValue is int ? minuteValue : 0;
+                }
+              }
+            } catch (e) {
+              print('Error parsing time object: $e');
+              // Use default values
+            }
+
             final pillTime = DateTime(
               now.year,
               now.month,
               now.day,
-              t['hour'] ?? 8,
-              t['minute'] ?? 0,
+              hour,
+              minute,
             );
             if (now.difference(pillTime).inMinutes > 5) {
               // Mark as missed in Firebase directly
@@ -346,14 +377,16 @@ class FirebaseManager {
                 if (guardianData != null) {
                   final guardianId = guardianData['id'] ?? '';
                   if (guardianId.isNotEmpty) {
-                    // Send notification directly to guardian
+                    // Show notification to elder
                     await notiService.showNotification(
                       id: NotiService.MISSED_NOTIFICATION_ID_PREFIX +
-                          pillId.hashCode % 10000,
-                      title: "Pill Missed Alert",
+                          // Use date hash to create unique ID
+                          pill.dateTime.hashCode % 10000,
+                      title: "Missed Medicine",
                       body:
-                          "Your shared user ${elderName} missed their medicine: ${pill.name}.",
-                      details: notiService.missedPillDetails(),
+                          "You missed taking: ${pill.name}. Please take it as soon as possible.",
+                      notificationDetails: notiService.missedPillDetails(),
+                      payload: "missed:${pill.id}:${today.toIso8601String()}",
                     );
                   }
                 }

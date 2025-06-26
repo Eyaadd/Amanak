@@ -21,6 +21,7 @@ import 'package:flutter/foundation.dart';
 import '../l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
+import 'package:amanak/widgets/notification_badge.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -350,9 +351,8 @@ class _HomeTabState extends State<HomeTab> {
                     children: [
                       Row(
                         children: [
-                          SvgPicture.asset("assets/svg/handshake.svg",
+                          Image.asset("assets/images/Amanaklogo2.png",
                               height: screenHeight * 0.07), // Larger icon
-                          SizedBox(width: screenWidth * 0.03),
                           Text(
                             localizations.home,
                             style: Theme.of(context)
@@ -365,8 +365,10 @@ class _HomeTabState extends State<HomeTab> {
                           ),
                         ],
                       ),
-                      SvgPicture.asset("assets/svg/notification.svg",
-                          height: screenHeight * 0.045), // Larger icon
+                      // Logo
+                      NotificationBadge(
+                        size: screenHeight * 0.045,
+                      ),
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.03),
@@ -382,6 +384,7 @@ class _HomeTabState extends State<HomeTab> {
                   Column(
                     children: [
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: Column(
@@ -401,6 +404,7 @@ class _HomeTabState extends State<HomeTab> {
                                           color: Colors.black,
                                           fontSize: screenWidth * 0.05,
                                           fontWeight: FontWeight.w500,
+                                          height: 1.1, // Tighter line height
                                         )
                                       : Theme.of(context)
                                           .textTheme
@@ -409,8 +413,10 @@ class _HomeTabState extends State<HomeTab> {
                                             color: Colors.black,
                                             fontSize: screenWidth * 0.05,
                                             fontWeight: FontWeight.w500,
+                                            height: 1.1, // Tighter line height
                                           ),
                                   textAlign: TextAlign.center,
+                                  maxLines: 2, // Allow up to 2 lines
                                 ),
                               ],
                             ),
@@ -425,7 +431,7 @@ class _HomeTabState extends State<HomeTab> {
                                 ),
                                 SizedBox(height: screenHeight * 0.025),
                                 Text(
-                                  localizations.medicines,
+                                  localizations.calendar,
                                   style: Localizations.localeOf(context)
                                               .languageCode ==
                                           'en'
@@ -433,6 +439,7 @@ class _HomeTabState extends State<HomeTab> {
                                           color: Colors.black,
                                           fontSize: screenWidth * 0.05,
                                           fontWeight: FontWeight.w500,
+                                          height: 1.1, // Tighter line height
                                         )
                                       : Theme.of(context)
                                           .textTheme
@@ -441,8 +448,10 @@ class _HomeTabState extends State<HomeTab> {
                                             color: Colors.black,
                                             fontSize: screenWidth * 0.05,
                                             fontWeight: FontWeight.w500,
+                                            height: 1.1, // Tighter line height
                                           ),
                                   textAlign: TextAlign.center,
+                                  maxLines: 2, // Allow up to 2 lines
                                 ),
                               ],
                             ),
@@ -466,6 +475,7 @@ class _HomeTabState extends State<HomeTab> {
                                           color: Colors.black,
                                           fontSize: screenWidth * 0.05,
                                           fontWeight: FontWeight.w500,
+                                          height: 1.1, // Tighter line height
                                         )
                                       : Theme.of(context)
                                           .textTheme
@@ -474,8 +484,10 @@ class _HomeTabState extends State<HomeTab> {
                                             color: Colors.black,
                                             fontSize: screenWidth * 0.05,
                                             fontWeight: FontWeight.w500,
+                                            height: 1.1, // Tighter line height
                                           ),
                                   textAlign: TextAlign.center,
+                                  maxLines: 2, // Allow up to 2 lines
                                 ),
                               ],
                             ),
@@ -525,7 +537,8 @@ class _HomeTabState extends State<HomeTab> {
                                 OverlayButton(
                                   assetName: "pills",
                                   onTap: () {
-                                    provider.changeCalendarIndex();
+                                    Navigator.pushNamed(context,
+                                        MedicineSearchScreen.routeName);
                                   },
                                 ),
                                 SizedBox(height: screenHeight * 0.025),

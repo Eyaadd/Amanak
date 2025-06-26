@@ -27,6 +27,7 @@
   "search": "Search",
   "notifications": "Notifications",
   "messages": "Messages",
+  "calendar": "Calendar",
   
   "@medicine": {},
   "medicine": "Medicine",
@@ -40,10 +41,10 @@
   "deleteMedicine": "Delete Medicine",
   
   "@tracking": {},
-  "liveTracking": "Live Tracking",
+  "liveTracking": "Live\nTracking",
   "location": "Location",
   "guardianLocation": "Guardian Location",
-  "nearestHospitals": "Nearest Hospitals",
+  "nearestHospitals": "Nearest\nHospitals",
   
   "@chatbot": {},
   "chatbot": "Chatbot",

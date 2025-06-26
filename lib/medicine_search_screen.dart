@@ -108,6 +108,12 @@ class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Theme.of(context).primaryColor
+                  ),
+                  borderRadius: BorderRadius.circular(30),
+                ),
                 hintText: 'Search for medicines...',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(

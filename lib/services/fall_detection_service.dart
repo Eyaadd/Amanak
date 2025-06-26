@@ -5,6 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:amanak/notifications/noti_service.dart';
+import 'package:amanak/firebase/firebase_manager.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -20,12 +23,14 @@ void callbackDispatcher() {
 }
 
 class FallDetectionService {
-  static const String API_URL = 'https://fall-detection-production-02fa.up.railway.app/predict/';
+  static const String API_URL =
+      'https://fall-detection-production-02fa.up.railway.app/predict/';
   static const String FALL_DETECTION_TASK = 'fall_detection_task';
   static const int SAMPLING_RATE = 50; // 50Hz
   static const int WINDOW_SIZE = 100; // 100 samples per window
-  static const Duration SAMPLING_INTERVAL = Duration(milliseconds: 20); // 1000ms/50Hz = 20ms
-  
+  static const Duration SAMPLING_INTERVAL =
+      Duration(milliseconds: 20); // 1000ms/50Hz = 20ms
+
   static List<Map<String, double>> _sensorBuffer = [];
   static StreamSubscription? _accelerometerSubscription;
   static StreamSubscription? _gyroscopeSubscription;
@@ -38,7 +43,8 @@ class FallDetectionService {
   static UserAccelerometerEvent? _lastAccelEvent;
   static GyroscopeEvent? _lastGyroEvent;
   static int _lastReadingTime = 0;
-  static const int SENSOR_SYNC_THRESHOLD = 100; // 100ms threshold for sensor synchronization
+  static const int SENSOR_SYNC_THRESHOLD =
+      100; // 100ms threshold for sensor synchronization
   static bool _gyroscopeAvailable = false;
   static int _gyroscopeReadingsCount = 0;
   static int _accelerometerReadingsCount = 0;
@@ -46,7 +52,7 @@ class FallDetectionService {
   // Initialize the service
   static Future<void> initialize() async {
     print('🚀 Initializing Fall Detection Service');
-    
+
     // Force reinitialization
     _isInitialized = false;
     _isMonitoring = false;
@@ -55,7 +61,7 @@ class FallDetectionService {
     try {
       // Check sensor availability
       print('📱 Checking sensor availability...');
-      
+
       bool hasGyroscope = false;
       try {
         print('🔄 Testing gyroscope stream...');
@@ -67,7 +73,8 @@ class FallDetectionService {
             throw TimeoutException('Gyroscope not responding');
           },
         )) {
-          print('✅ Received gyroscope event: x=${event.x}, y=${event.y}, z=${event.z}');
+          print(
+              '✅ Received gyroscope event: x=${event.x}, y=${event.y}, z=${event.z}');
           hasGyroscope = true;
           break;
         }
@@ -80,10 +87,7 @@ class FallDetectionService {
       print('📊 Gyroscope available: $hasGyroscope');
       _gyroscopeAvailable = hasGyroscope;
 
-      await Workmanager().initialize(
-        callbackDispatcher,
-        isInDebugMode: true
-      );
+      await Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
       print('✅ Workmanager initialized successfully');
       _isInitialized = true;
     } catch (e) {
@@ -103,7 +107,7 @@ class FallDetectionService {
   static Future<void> startMonitoring() async {
     if (_isMonitoring) return;
     print('🎯 Starting fall detection monitoring');
-    
+
     _isMonitoring = true;
     _sensorBuffer = [];
 
@@ -132,8 +136,9 @@ class FallDetectionService {
 
   static void _startSensorCollection() {
     print('📱 Setting up sensor listeners');
-    print('📊 Gyroscope status: ${_gyroscopeAvailable ? "Available" : "Not available"}');
-    
+    print(
+        '📊 Gyroscope status: ${_gyroscopeAvailable ? "Available" : "Not available"}');
+
     // Reset counters and buffers
     _sensorBuffer.clear();
     _lastAccelEvent = null;
@@ -141,13 +146,14 @@ class FallDetectionService {
     _lastReadingTime = 0;
     _gyroscopeReadingsCount = 0;
     _accelerometerReadingsCount = 0;
-    
+
     // Configure accelerometer to 50Hz if possible
     _accelerometerSubscription = userAccelerometerEvents.listen(
       (UserAccelerometerEvent event) {
         _accelerometerReadingsCount++;
         if (_accelerometerReadingsCount % 50 == 0) {
-          print('📊 Accelerometer reading #$_accelerometerReadingsCount: x=${event.x}, y=${event.y}, z=${event.z}');
+          print(
+              '📊 Accelerometer reading #$_accelerometerReadingsCount: x=${event.x}, y=${event.y}, z=${event.z}');
         }
         _lastAccelEvent = event;
         _tryAddSensorReading();
@@ -165,7 +171,8 @@ class FallDetectionService {
         (GyroscopeEvent event) {
           _gyroscopeReadingsCount++;
           if (_gyroscopeReadingsCount % 50 == 0) {
-            print('📊 Gyroscope reading #$_gyroscopeReadingsCount: x=${event.x}, y=${event.y}, z=${event.z}');
+            print(
+                '📊 Gyroscope reading #$_gyroscopeReadingsCount: x=${event.x}, y=${event.y}, z=${event.z}');
           }
           _lastGyroEvent = event;
           _tryAddSensorReading();
@@ -182,7 +189,8 @@ class FallDetectionService {
     }
 
     // Process data every 2 seconds
-    _processingTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
+    _processingTimer =
+        Timer.periodic(const Duration(seconds: 2), (timer) async {
       if (!_isMonitoring) {
         print('⚠️ Monitoring stopped, cancelling timer');
         timer.cancel();
@@ -198,7 +206,8 @@ class FallDetectionService {
         print('📊 Processing ${_sensorBuffer.length} sensor readings');
         await _processSensorData();
       } else {
-        print('⚠️ Not enough sensor data yet. Current buffer size: ${_sensorBuffer.length}');
+        print(
+            '⚠️ Not enough sensor data yet. Current buffer size: ${_sensorBuffer.length}');
       }
     });
 
@@ -211,7 +220,7 @@ class FallDetectionService {
     }
 
     final currentTime = DateTime.now().millisecondsSinceEpoch;
-    
+
     // Only add a reading if enough time has passed since the last one
     if (currentTime - _lastReadingTime >= SAMPLING_INTERVAL.inMilliseconds) {
       if (_sensorBuffer.length >= WINDOW_SIZE) {
@@ -219,9 +228,15 @@ class FallDetectionService {
       }
 
       // Use actual gyroscope values if available, otherwise use zeros
-      final gyroX = _gyroscopeAvailable && _lastGyroEvent != null ? _lastGyroEvent!.x : 0.0;
-      final gyroY = _gyroscopeAvailable && _lastGyroEvent != null ? _lastGyroEvent!.y : 0.0;
-      final gyroZ = _gyroscopeAvailable && _lastGyroEvent != null ? _lastGyroEvent!.z : 0.0;
+      final gyroX = _gyroscopeAvailable && _lastGyroEvent != null
+          ? _lastGyroEvent!.x
+          : 0.0;
+      final gyroY = _gyroscopeAvailable && _lastGyroEvent != null
+          ? _lastGyroEvent!.y
+          : 0.0;
+      final gyroZ = _gyroscopeAvailable && _lastGyroEvent != null
+          ? _lastGyroEvent!.z
+          : 0.0;
 
       final reading = {
         'ax': _lastAccelEvent!.x,
@@ -239,8 +254,10 @@ class FallDetectionService {
       // Log sensor values periodically
       if (_sensorBuffer.length % 50 == 0) {
         print('📊 Current sensor values:');
-        print('   Accelerometer: x=${_lastAccelEvent!.x}, y=${_lastAccelEvent!.y}, z=${_lastAccelEvent!.z}');
-        print('   Gyroscope: x=$gyroX, y=$gyroY, z=$gyroZ (Available: $_gyroscopeAvailable)');
+        print(
+            '   Accelerometer: x=${_lastAccelEvent!.x}, y=${_lastAccelEvent!.y}, z=${_lastAccelEvent!.z}');
+        print(
+            '   Gyroscope: x=$gyroX, y=$gyroY, z=$gyroZ (Available: $_gyroscopeAvailable)');
       }
     }
   }
@@ -249,7 +266,7 @@ class FallDetectionService {
   static Future<void> stopMonitoring() async {
     print('🛑 Stopping fall detection monitoring');
     _isMonitoring = false;
-    
+
     try {
       _accelerometerSubscription?.cancel();
       _gyroscopeSubscription?.cancel();
@@ -273,9 +290,8 @@ class FallDetectionService {
 
     try {
       // Take the last 100 readings
-      final dataToSend = _sensorBuffer.sublist(
-        _sensorBuffer.length - WINDOW_SIZE
-      );
+      final dataToSend =
+          _sensorBuffer.sublist(_sensorBuffer.length - WINDOW_SIZE);
 
       print('🔄 Sending data to fall detection API...');
       print('📊 Sample count: ${dataToSend.length}');
@@ -296,14 +312,16 @@ class FallDetectionService {
         http.Response? response;
 
         while (redirectCount < maxRedirects) {
-          response = await client.post(
+          response = await client
+              .post(
             Uri.parse(currentUrl),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
             body: body,
-          ).timeout(
+          )
+              .timeout(
             const Duration(seconds: 10),
             onTimeout: () {
               throw TimeoutException('API request timed out');
@@ -346,7 +364,8 @@ class FallDetectionService {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('last_activity', predictedClass);
             await prefs.setDouble('last_confidence', confidence);
-            await prefs.setInt('last_prediction_time', DateTime.now().millisecondsSinceEpoch);
+            await prefs.setInt(
+                'last_prediction_time', DateTime.now().millisecondsSinceEpoch);
 
             if (predictedClass.toLowerCase() == 'falling') {
               print('⚠️ FALL DETECTED!');
@@ -370,14 +389,74 @@ class FallDetectionService {
   }
 
   static Future<void> _sendFallDetectionNotification() async {
-    // Implement notification logic using your existing notification service
+    try {
+      print('📱 Sending fall detection notification...');
+
+      // Get current user
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        print('❌ No user logged in, cannot send fall notification');
+        return;
+      }
+
+      // Get notification service
+      final notiService = NotiService();
+      if (!notiService.isInitialized) {
+        await notiService.initNotification();
+      }
+
+      // Get user data to find guardian
+      final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
+      final userName = userData['name'] ?? 'Elder';
+      final sharedUserEmail = userData['sharedUsers'] ?? '';
+
+      // Show notification to the elder
+      await notiService.showNotification(
+        id: NotiService.LOCATION_NOTIFICATION_ID_PREFIX + 1,
+        title: "Fall Detected!",
+        body:
+            "The app has detected a fall. Are you okay? If yes, please dismiss this notification.",
+        notificationDetails: notiService.missedPillDetails(),
+        payload: "fall_detected:${currentUser.uid}",
+      );
+
+      // Notify guardian if needed
+      if (sharedUserEmail.isNotEmpty) {
+        print('📱 Notifying guardian about fall detection...');
+        final guardianData =
+            await FirebaseManager.getUserByEmail(sharedUserEmail);
+
+        if (guardianData != null) {
+          final guardianId = guardianData['id'] ?? '';
+          if (guardianId.isNotEmpty) {
+            // Send notification directly to guardian
+            await notiService.sendFcmNotification(
+              userId: guardianId,
+              title: "Fall Alert!",
+              body: "$userName may have fallen and might need assistance.",
+              data: {
+                'type': 'fall_alert',
+                'elderName': userName,
+                'elderId': currentUser.uid,
+              },
+            );
+          }
+        }
+      }
+
+      print('✅ Fall detection notifications sent successfully');
+    } catch (e) {
+      print('❌ Error sending fall detection notification: $e');
+      print('❌ Stack trace: ${StackTrace.current}');
+    }
   }
 
   static Future<Map<String, dynamic>> getLastPrediction() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final lastPredictionTime = prefs.getInt('last_prediction_time') ?? 0;
-      final timeSinceLastPrediction = DateTime.now().millisecondsSinceEpoch - lastPredictionTime;
+      final timeSinceLastPrediction =
+          DateTime.now().millisecondsSinceEpoch - lastPredictionTime;
 
       // If no prediction in last 5 seconds, consider it stale
       if (timeSinceLastPrediction > 5000) {
@@ -404,4 +483,4 @@ class FallDetectionService {
   }
 
   static bool get isMonitoring => _isMonitoring;
-} 
+}

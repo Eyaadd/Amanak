@@ -420,9 +420,8 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
 
-      // Navigate to language selection screen after login
-      Navigator.of(context)
-          .pushReplacementNamed(LanguageSelectionScreen.routeName);
+      // Navigate to home screen after login
+      Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message ?? 'Login failed')),

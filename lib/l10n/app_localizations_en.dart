@@ -72,6 +72,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messages => 'Messages';
 
   @override
+  String get calendar => 'Calendar';
+
+  @override
   String get medicine => 'Medicine';
 
   @override
@@ -99,7 +102,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteMedicine => 'Delete Medicine';
 
   @override
-  String get liveTracking => 'Live Tracking';
+  String get liveTracking => 'Live\nTracking';
 
   @override
   String get location => 'Location';
@@ -108,7 +111,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guardianLocation => 'Guardian Location';
 
   @override
-  String get nearestHospitals => 'Nearest Hospitals';
+  String get nearestHospitals => 'Nearest\nHospitals';
 
   @override
   String get chatbot => 'Chatbot';
