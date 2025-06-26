@@ -232,6 +232,19 @@ class FirebaseManager {
     return snapshot.docs.map((doc) => doc.data()).toList();
   }
 
+  static Future<List<PillModel>> getPillsForDateRange(String userId, DateTime startDate, DateTime endDate) async {
+    var collection = getPillsCollection(userId);
+    var snapshot = await collection.get();
+    var allPills = snapshot.docs.map((doc) => doc.data()).toList();
+    
+    // Filter pills that fall within the date range
+    return allPills.where((pill) {
+      final pillStartDate = DateTime(pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
+      final pillEndDate = pillStartDate.add(Duration(days: pill.duration));
+      return !pillStartDate.isAfter(endDate) && !pillEndDate.isBefore(startDate);
+    }).toList();
+  }
+
   // Helper method to find a user by email
   static Future<Map<String, String>?> getUserByEmail(String email) async {
     try {
@@ -308,45 +321,44 @@ class FirebaseManager {
           if (pill.isTakenOnDate(today) || pill.missed) continue;
 
           // Check if pill time has passed (more than 5 minutes ago)
-          final pillTime = DateTime(
-            now.year,
-            now.month,
-            now.day,
-            pill.alarmHour,
-            pill.alarmMinute,
-          );
-
-          if (now.difference(pillTime).inMinutes > 5) {
-            // Mark as missed in Firebase directly
-            await getPillsCollection(currentUser.uid)
-                .doc(pillId)
-                .update({'missed': true});
-
-            // Handle notifications
-            final notiService = NotiService();
-            await notiService.cancelPillNotifications(pillId);
-
-            // Get user data for notification
-            final elderName = userData['name'] ?? 'Elder';
-            final sharedUserEmail = userData['sharedUsers'] ?? '';
-
-            // Notify guardian if needed
-            if (sharedUserEmail.isNotEmpty) {
-              final guardianData = await getUserByEmail(sharedUserEmail);
-              if (guardianData != null) {
-                final guardianId = guardianData['id'] ?? '';
-                if (guardianId.isNotEmpty) {
-                  // Send notification directly to guardian
-                  await notiService.showNotification(
-                    id: NotiService.MISSED_NOTIFICATION_ID_PREFIX +
-                        pillId.hashCode % 10000,
-                    title: "Pill Missed Alert",
-                    body:
-                        "Your shared user ${elderName} missed their medicine: ${pill.name}.",
-                    details: notiService.missedPillDetails(),
-                  );
+          for (final t in pill.times) {
+            final pillTime = DateTime(
+              now.year,
+              now.month,
+              now.day,
+              t['hour'] ?? 8,
+              t['minute'] ?? 0,
+            );
+            if (now.difference(pillTime).inMinutes > 5) {
+              // Mark as missed in Firebase directly
+              await getPillsCollection(currentUser.uid)
+                  .doc(pillId)
+                  .update({'missed': true});
+              // Handle notifications
+              final notiService = NotiService();
+              await notiService.cancelPillNotifications(pillId);
+              // Get user data for notification
+              final elderName = userData['name'] ?? 'Elder';
+              final sharedUserEmail = userData['sharedUsers'] ?? '';
+              // Notify guardian if needed
+              if (sharedUserEmail.isNotEmpty) {
+                final guardianData = await getUserByEmail(sharedUserEmail);
+                if (guardianData != null) {
+                  final guardianId = guardianData['id'] ?? '';
+                  if (guardianId.isNotEmpty) {
+                    // Send notification directly to guardian
+                    await notiService.showNotification(
+                      id: NotiService.MISSED_NOTIFICATION_ID_PREFIX +
+                          pillId.hashCode % 10000,
+                      title: "Pill Missed Alert",
+                      body:
+                          "Your shared user ${elderName} missed their medicine: ${pill.name}.",
+                      details: notiService.missedPillDetails(),
+                    );
+                  }
                 }
               }
+              break; // Only need to mark as missed once
             }
           }
         }

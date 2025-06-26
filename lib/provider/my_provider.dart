@@ -1,20 +1,31 @@
 import 'package:flutter/cupertino.dart';
 
 class MyProvider extends ChangeNotifier {
-  int selectedIndexHome = 0;
-
-  changeProfileIndex() {
-    selectedIndexHome = 3;
-    notifyListeners();
+  int _selectedIndexHome = 0;
+  
+  int get selectedIndexHome => _selectedIndexHome;
+  
+  set selectedIndexHome(int value) {
+    if (_selectedIndexHome != value) {
+      _selectedIndexHome = value;
+      notifyListeners();
+    }
   }
 
-  changeCalendarIndex() {
+  void changeProfileIndex() {
+    selectedIndexHome = 4;
+  }
+
+  void changeCalendarIndex() {
     selectedIndexHome = 1;
-    notifyListeners();
   }
-  changeMessageIndex() {
+
+  void changeMessageIndex() {
     selectedIndexHome = 2;
-    notifyListeners();
+  }
+
+  void changeFallDetectionIndex() {
+    selectedIndexHome = 3;
   }
 
   String userID = "";
@@ -22,14 +33,14 @@ class MyProvider extends ChangeNotifier {
   String userName = "";
   String chosedRole = "";
 
-  setUserModel(String userId, String userName1, String userEmail1) {
+  void setUserModel(String userId, String userName1, String userEmail1) {
     userID = userId;
     userName = userName1;
     userEmail = userEmail1;
     notifyListeners();
   }
 
-  setRole(String role) {
+  void setRole(String role) {
     chosedRole = role;
     notifyListeners();
   }

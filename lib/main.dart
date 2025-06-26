@@ -29,6 +29,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'package:amanak/screens/language_selection_screen.dart';
 import 'package:amanak/home/messaging_tab.dart';
+import 'package:amanak/provider/fall_detection_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const apiKey = "AIzaSyDLePMB53Q1Nud4ZG8a2XA9UUYuSLCrY6c";
@@ -159,6 +160,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (context) => MyProvider()),
         ChangeNotifierProvider(create: (context) => localizationService),
+        ChangeNotifierProvider(create: (_) => FallDetectionProvider()),
       ],
       child: MyApp(
         languageSelected: languageSelected,
@@ -197,7 +199,7 @@ class MyApp extends StatelessWidget {
     return ResponsiveSizer(
       builder: (context, orientation, screenType) {
         return MaterialApp(
-          navigatorKey: navigatorKey,
+          navigatorKey: navigatorKey, // Add global navigator key
           theme: lightTheme.themeData,
           debugShowCheckedModeBanner: false,
           initialRoute: initialRoute,
@@ -225,7 +227,9 @@ class MyApp extends StatelessWidget {
                 const LanguageSelectionScreen(),
           },
           onGenerateRoute: (settings) {
+            // Handle deep linking for message notifications
             if (settings.name == '/messaging') {
+              // Extract the arguments
               final args = settings.arguments as Map<String, dynamic>?;
               return MaterialPageRoute(
                 builder: (context) => MessagingTab(),

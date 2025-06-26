@@ -3,6 +3,7 @@ import 'package:amanak/gaurdian_location.dart';
 import 'package:amanak/home/messaging_tab.dart';
 import 'package:amanak/nearest_hospitals.dart';
 import 'package:amanak/notifications/noti_service.dart';
+import 'package:amanak/provider/fall_detection_provider.dart';
 import 'package:amanak/widgets/overlay_button.dart';
 import 'package:amanak/widgets/pillsearchfield.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +20,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:responsive_sizer/responsive_sizer.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -59,6 +61,7 @@ class _HomeTabState extends State<HomeTab> {
         final userRole = userData['role'] ?? '';
         final sharedUserEmail = userData['sharedUsers'] ?? '';
 
+        print('👤 User Role: $userRole');
         _currentUserRole = userRole;
         _displayUserId = currentUserId;
         _displayName = userData['name'] ?? 'User';
