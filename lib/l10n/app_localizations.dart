@@ -703,6 +703,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please enter a valid email and password'**
   String get pleaseEnterValidEmailPassword;
+
+  /// No description provided for @chatbotGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'How Can I Help You Today?'**
+  String get chatbotGreeting;
 }
 
 class _AppLocalizationsDelegate

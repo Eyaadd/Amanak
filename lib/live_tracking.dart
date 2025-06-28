@@ -62,6 +62,8 @@ class _LiveTrackingState extends State<LiveTracking> {
       // Test if location services are enabled.
       serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
+        if (!mounted) return false;
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -76,6 +78,8 @@ class _LiveTrackingState extends State<LiveTracking> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
+          if (!mounted) return false;
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Location permissions are denied'),
@@ -87,6 +91,8 @@ class _LiveTrackingState extends State<LiveTracking> {
       }
 
       if (permission == LocationPermission.deniedForever) {
+        if (!mounted) return false;
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -100,6 +106,8 @@ class _LiveTrackingState extends State<LiveTracking> {
       return true;
     } catch (e) {
       print('Error handling location permission: $e');
+      if (!mounted) return false;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error handling location permission: $e'),
@@ -116,6 +124,8 @@ class _LiveTrackingState extends State<LiveTracking> {
       currentUser = FirebaseAuth.instance.currentUser;
 
       if (currentUser == null) {
+        if (!mounted) return;
+
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -128,6 +138,8 @@ class _LiveTrackingState extends State<LiveTracking> {
 
       // Handle location permissions
       _locationPermissionGranted = await _handleLocationPermission();
+      if (!mounted) return;
+
       if (!_locationPermissionGranted) {
         setState(() => _isLoading = false);
         return;
@@ -136,6 +148,8 @@ class _LiveTrackingState extends State<LiveTracking> {
       await _setupLocationTracking();
     } catch (e) {
       print('Error in initialization: $e');
+      if (!mounted) return;
+
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -154,6 +168,8 @@ class _LiveTrackingState extends State<LiveTracking> {
           .doc(currentUser!.uid)
           .get();
 
+      if (!mounted) return;
+
       if (!userDoc.exists) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -167,6 +183,8 @@ class _LiveTrackingState extends State<LiveTracking> {
 
       Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
       String? sharedEmail = userData['sharedUsers'] as String?;
+
+      if (!mounted) return;
 
       if (sharedEmail == null || sharedEmail.isEmpty) {
         setState(() => _isLoading = false);
@@ -186,6 +204,8 @@ class _LiveTrackingState extends State<LiveTracking> {
           .limit(1)
           .get();
 
+      if (!mounted) return;
+
       if (sharedUserQuery.docs.isEmpty) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -202,12 +222,16 @@ class _LiveTrackingState extends State<LiveTracking> {
       _startLocationUpdates();
       _listenToSharedUserLocation(sharedUserId, sharedEmail);
 
+      if (!mounted) return;
+
       setState(() {
         sharedUserEmail = sharedEmail;
         _isLoading = false;
       });
     } catch (e) {
       print('Error in setup: $e');
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error setting up location tracking: $e'),
@@ -224,9 +248,18 @@ class _LiveTrackingState extends State<LiveTracking> {
       try {
         if (!_locationPermissionGranted) return;
 
+        // Check if widget is still mounted before proceeding
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+
         Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
         );
+
+        // Check again if widget is still mounted
+        if (!mounted) return;
 
         setState(() {
           _currentPosition = position;
@@ -245,12 +278,18 @@ class _LiveTrackingState extends State<LiveTracking> {
         // Update current location name
         currentLocationName =
             await _getLocationName(position.latitude, position.longitude);
-        if (mounted) setState(() {});
+
+        // Check again if widget is still mounted
+        if (!mounted) return;
+
+        setState(() {});
 
         print(
             'Your location updated - Lat: ${position.latitude}, Lon: ${position.longitude}');
       } catch (e) {
         print('Error updating location: $e');
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error updating location: $e'),
@@ -267,12 +306,20 @@ class _LiveTrackingState extends State<LiveTracking> {
         .doc(sharedUserId)
         .snapshots()
         .listen((snapshot) async {
+      // Check if widget is still mounted
+      if (!mounted) {
+        _locationSubscription?.cancel();
+        return;
+      }
+
       if (snapshot.exists) {
         Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
         double? lat = data['latitude']?.toDouble();
         double? lng = data['longitude']?.toDouble();
 
         if (lat != null && lng != null) {
+          if (!mounted) return;
+
           setState(() {
             sharedUserLat = lat;
             sharedUserLng = lng;
@@ -280,7 +327,11 @@ class _LiveTrackingState extends State<LiveTracking> {
 
           // Update shared location name
           sharedLocationName = await _getLocationName(lat, lng);
-          if (mounted) setState(() {});
+
+          // Check again if widget is still mounted
+          if (!mounted) return;
+
+          setState(() {});
 
           print('Shared user location updated - Lat: $lat, Lon: $lng');
         }
@@ -347,6 +398,8 @@ class _LiveTrackingState extends State<LiveTracking> {
           ),
         );
 
+        if (!mounted) return;
+
         setState(() {
           zoomClose = newZoom;
         });
@@ -405,6 +458,8 @@ class _LiveTrackingState extends State<LiveTracking> {
   Future<void> _openDirections() async {
     try {
       if (_currentPosition == null) {
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Your location is not available yet. Please wait.'),
@@ -415,6 +470,8 @@ class _LiveTrackingState extends State<LiveTracking> {
       }
 
       if (sharedUserLat == null || sharedUserLng == null) {
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Shared user location is not available yet.'),
@@ -496,14 +553,14 @@ class _LiveTrackingState extends State<LiveTracking> {
     } catch (e, stackTrace) {
       print('Error opening directions: $e');
       print('Stack trace: $stackTrace');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -528,6 +585,8 @@ class _LiveTrackingState extends State<LiveTracking> {
       await _navigateToLocation(
           _currentPosition!.latitude, _currentPosition!.longitude);
     } else {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Your location is not available yet. Please wait.'),
@@ -541,6 +600,8 @@ class _LiveTrackingState extends State<LiveTracking> {
     if (sharedUserLat != null && sharedUserLng != null) {
       await _navigateToLocation(sharedUserLat!, sharedUserLng!);
     } else {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Shared user location is not available yet.'),

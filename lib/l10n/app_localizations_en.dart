@@ -318,4 +318,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pleaseEnterValidEmailPassword =>
       'Please enter a valid email and password';
+
+  @override
+  String get chatbotGreeting => 'How Can I Help You Today?';
 }

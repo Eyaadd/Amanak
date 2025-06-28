@@ -317,4 +317,7 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get pleaseEnterValidEmailPassword =>
       'يرجى إدخال بريد إلكتروني وكلمة مرور صالحين';
+
+  @override
+  String get chatbotGreeting => 'ازاي اقدر اساعدك انهاردة ؟';
 }

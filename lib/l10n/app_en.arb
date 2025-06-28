@@ -121,5 +121,6 @@
   "termsOfService": "Terms of Service",
   "and": "and",
   "privacyPolicy": "Privacy Policy",
-  "pleaseEnterValidEmailPassword": "Please enter a valid email and password"
+  "pleaseEnterValidEmailPassword": "Please enter a valid email and password",
+  "chatbotGreeting": "How Can I Help You Today?"
 } 
