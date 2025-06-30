@@ -30,7 +30,7 @@ class _LiveTrackingState extends State<LiveTracking> {
   final double _maxZoom = 20.0;
   final Completer<GoogleMapController> _controller = Completer();
   StreamSubscription<DocumentSnapshot>? _locationSubscription;
-  Timer? _locationTimer;
+  StreamSubscription<Position>? _positionStreamSubscription;
   String currentLocationName = 'Loading location...';
   String sharedLocationName = 'Loading shared location...';
   User? currentUser;
@@ -50,7 +50,7 @@ class _LiveTrackingState extends State<LiveTracking> {
   @override
   void dispose() {
     _locationSubscription?.cancel();
-    _locationTimer?.cancel();
+    _positionStreamSubscription?.cancel();
     super.dispose();
   }
 
@@ -219,15 +219,24 @@ class _LiveTrackingState extends State<LiveTracking> {
 
       // Start tracking both current and shared user locations
       String sharedUserId = sharedUserQuery.docs.first.id;
-      _startLocationUpdates();
-      _listenToSharedUserLocation(sharedUserId, sharedEmail);
-
-      if (!mounted) return;
-
       setState(() {
         sharedUserEmail = sharedEmail;
-        _isLoading = false;
       });
+
+      try {
+        await Future.wait([
+          _startLocationUpdates(),
+          _listenToSharedUserLocation(sharedUserId, sharedEmail),
+        ]).timeout(const Duration(seconds: 10));
+      } on TimeoutException {
+        print(
+            "Couldn't fetch both locations within 10 seconds. Displaying available data.");
+      } catch (e) {
+        print("Error waiting for initial location updates: $e");
+      }
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
     } catch (e) {
       print('Error in setup: $e');
       if (!mounted) return;
@@ -242,103 +251,66 @@ class _LiveTrackingState extends State<LiveTracking> {
     }
   }
 
-  void _startLocationUpdates() {
-    _locationTimer?.cancel(); // Cancel any existing timer
-    _locationTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
-      try {
-        if (!_locationPermissionGranted) return;
-
-        // Check if widget is still mounted before proceeding
-        if (!mounted) {
-          timer.cancel();
-          return;
+  Future<void> _startLocationUpdates() {
+    final completer = Completer<void>();
+    _positionStreamSubscription?.cancel();
+    const LocationSettings locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10,
+    );
+    _positionStreamSubscription =
+        Geolocator.getPositionStream(locationSettings: locationSettings).listen(
+            (Position position) {
+      if (mounted) {
+        if (!completer.isCompleted) {
+          completer.complete();
         }
-
-        Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-        );
-
-        // Check again if widget is still mounted
-        if (!mounted) return;
-
         setState(() {
           _currentPosition = position;
         });
-
-        // Update current user's location in Firestore
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(currentUser!.uid)
-            .set({
-          'latitude': position.latitude,
-          'longitude': position.longitude,
-          'lastLocationUpdate': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-
-        // Update current location name
-        currentLocationName =
-            await _getLocationName(position.latitude, position.longitude);
-
-        // Check again if widget is still mounted
-        if (!mounted) return;
-
-        setState(() {});
-
-        print(
-            'Your location updated - Lat: ${position.latitude}, Lon: ${position.longitude}');
-      } catch (e) {
-        print('Error updating location: $e');
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error updating location: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _updateCurrentLocationInFirestore(position);
+        _updateLocationName(position.latitude, position.longitude, true);
+      }
+    }, onError: (e) {
+      if (!completer.isCompleted) {
+        completer.completeError(e);
       }
     });
+    return completer.future;
   }
 
-  void _listenToSharedUserLocation(String sharedUserId, String email) {
+  Future<void> _listenToSharedUserLocation(
+      String sharedUserId, String sharedEmail) {
+    final completer = Completer<void>();
     _locationSubscription = FirebaseFirestore.instance
         .collection('users')
         .doc(sharedUserId)
         .snapshots()
-        .listen((snapshot) async {
-      // Check if widget is still mounted
-      if (!mounted) {
-        _locationSubscription?.cancel();
-        return;
-      }
-
-      if (snapshot.exists) {
-        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-        double? lat = data['latitude']?.toDouble();
-        double? lng = data['longitude']?.toDouble();
-
+        .listen((DocumentSnapshot snapshot) {
+      if (snapshot.exists && snapshot.data() != null) {
+        final data = snapshot.data() as Map<String, dynamic>;
+        final lat = data['latitude'] as double?;
+        final lng = data['longitude'] as double?;
         if (lat != null && lng != null) {
-          if (!mounted) return;
-
-          setState(() {
-            sharedUserLat = lat;
-            sharedUserLng = lng;
-          });
-
-          // Update shared location name
-          sharedLocationName = await _getLocationName(lat, lng);
-
-          // Check again if widget is still mounted
-          if (!mounted) return;
-
-          setState(() {});
-
-          print('Shared user location updated - Lat: $lat, Lon: $lng');
+          if (mounted) {
+            if (!completer.isCompleted) {
+              completer.complete();
+            }
+            setState(() {
+              sharedUserLat = lat;
+              sharedUserLng = lng;
+            });
+            _updateLocationName(lat, lng, false);
+            _animateToSharedUserLocation(lat, lng);
+          }
         }
       }
     }, onError: (e) {
-      print('Error listening to shared location updates: $e');
+      if (!completer.isCompleted) {
+        completer.completeError(e);
+      }
     });
+    return completer.future;
   }
 
   Future<String> _getLocationName(double lat, double lng) async {
@@ -360,6 +332,42 @@ class _LiveTrackingState extends State<LiveTracking> {
       print("Error getting location name: $e");
       return 'Error getting location';
     }
+  }
+
+  Future<void> _updateCurrentLocationInFirestore(Position position) async {
+    if (currentUser != null) {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser!.uid)
+          .set({
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+        'lastLocationUpdate': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+  }
+
+  Future<void> _updateLocationName(
+      double lat, double lng, bool isCurrentUser) async {
+    final locationName = await _getLocationName(lat, lng);
+    if (mounted) {
+      setState(() {
+        if (isCurrentUser) {
+          currentLocationName = locationName;
+        } else {
+          sharedLocationName = locationName;
+        }
+      });
+    }
+  }
+
+  void _animateToSharedUserLocation(double lat, double lng) async {
+    final GoogleMapController controller = await _controller.future;
+    controller.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(target: LatLng(lat, lng), zoom: zoomClose),
+      ),
+    );
   }
 
   void _zoomMap(bool zoomIn) async {

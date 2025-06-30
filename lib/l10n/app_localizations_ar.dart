@@ -114,7 +114,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nearestHospitals => 'أقرب\nالمستشفيات';
 
   @override
-  String get chatbot => 'المساعد\\nالذكي';
+  String get chatbot => 'المساعد الذكي';
 
   @override
   String get askQuestion => 'اطرح سؤالاً...';
