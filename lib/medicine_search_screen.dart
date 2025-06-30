@@ -3,6 +3,7 @@ import 'package:amanak/models/medicine_json_model.dart';
 import 'package:amanak/models/medicine_search_result.dart';
 import 'package:amanak/services/medicines_json_service.dart';
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
 class MedicineSearchScreen extends StatefulWidget {
   static const String routeName = "MedicineSearchScreen";
@@ -94,19 +95,23 @@ class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medicine Search'),
+        title: Text(localizations.medicineSearchTitle,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
+        elevation: 2,
       ),
       body: Column(
         children: [
           // Search Bar
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20.0),
             child: TextField(
               controller: _searchController,
+              style: const TextStyle(fontSize: 20),
               decoration: InputDecoration(
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(
@@ -114,13 +119,15 @@ class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
                   ),
                   borderRadius: BorderRadius.circular(30),
                 ),
-                hintText: 'Search for medicines...',
-                prefixIcon: const Icon(Icons.search),
+                hintText: localizations.medicineSearchHint,
+                hintStyle: const TextStyle(fontSize: 20, color: Colors.grey),
+                prefixIcon: const Icon(Icons.search, size: 28),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
                 suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
+                  icon: const Icon(Icons.clear, size: 26),
                   onPressed: () {
                     _searchController.clear();
                     setState(() {
@@ -149,10 +156,10 @@ class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
                     ? Center(
                         child: Text(
                           _searchController.text.isEmpty
-                              ? 'Enter a medicine name to search'
-                              : 'No medicines found',
-                          style:
-                              const TextStyle(fontSize: 16, color: Colors.grey),
+                              ? localizations.medicineSearchEmpty
+                              : localizations.medicineSearchNotFound,
+                          style: const TextStyle(fontSize: 22, color: Colors.grey, fontWeight: FontWeight.w600),
+                          textAlign: TextAlign.center,
                         ),
                       )
                     : ListView.builder(
@@ -177,9 +184,9 @@ class MedicineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: () {
           // Navigate to the detail screen with the medicine key
@@ -189,9 +196,9 @@ class MedicineCard extends StatelessWidget {
             arguments: result.id,
           );
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(22.0),
           child: Column(
             crossAxisAlignment: result.isArabic
                 ? CrossAxisAlignment.end
@@ -201,12 +208,12 @@ class MedicineCard extends StatelessWidget {
               Text(
                 result.name,
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: result.isArabic ? TextAlign.right : TextAlign.left,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
 
               // Description Preview
               if (result.description.isNotEmpty)
@@ -216,7 +223,7 @@ class MedicineCard extends StatelessWidget {
                   child: Text(
                     result.description,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 18,
                       color: Colors.grey[700],
                     ),
                     maxLines: 2,

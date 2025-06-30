@@ -24,7 +24,7 @@ void callbackDispatcher() {
 
 class FallDetectionService {
   static const String API_URL =
-      'https://fall-detection-production-02fa.up.railway.app/predict/';
+      'https://fall-detection-production.up.railway.app/predict/';
   static const String FALL_DETECTION_TASK = 'fall_detection_task';
   static const int SAMPLING_RATE = 50; // 50Hz
   static const int WINDOW_SIZE = 100; // 100 samples per window

@@ -114,7 +114,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nearestHospitals => 'أقرب\nالمستشفيات';
 
   @override
-  String get chatbot => 'المساعد الذكي';
+  String get chatbot => 'المساعد\\nالذكي';
 
   @override
   String get askQuestion => 'اطرح سؤالاً...';
@@ -320,4 +320,64 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatbotGreeting => 'ازاي اقدر اساعدك انهاردة ؟';
+
+  @override
+  String get yourGuardian => 'وصيك:';
+
+  @override
+  String get yourCareReceiver => 'مستلم رعايتك:';
+
+  @override
+  String get medicineSearchTitle => 'البحث عن الأدوية';
+
+  @override
+  String get medicineSearchHint => 'ابحث عن الأدوية...';
+
+  @override
+  String get medicineSearchEmpty => 'أدخل اسم الدواء للبحث';
+
+  @override
+  String get medicineSearchNotFound => 'لم يتم العثور على أدوية';
+
+  @override
+  String get medicineDetailDescription => 'الوصف';
+
+  @override
+  String get medicineDetailUses => 'الاستخدامات';
+
+  @override
+  String get medicineDetailContraindications => 'موانع الاستعمال';
+
+  @override
+  String get medicineDetailPrecautions => 'الاحتياطات';
+
+  @override
+  String get medicineDetailInteractions => 'التفاعلات';
+
+  @override
+  String get medicineDetailDosage => 'الجرعة';
+
+  @override
+  String get medicineDetailDosageForms => 'أشكال الجرعة';
+
+  @override
+  String get medicineDetailStorage => 'التخزين';
+
+  @override
+  String get medicineDetailUsageInstructions => 'تعليمات الاستخدام';
+
+  @override
+  String get medicineDetailSideEffects => 'الآثار الجانبية';
+
+  @override
+  String get medicineDetailEnglishName => 'الاسم الإنجليزي';
+
+  @override
+  String get medicineDetailArabicName => 'الاسم العربي';
+
+  @override
+  String get medicineDetailNotFound => 'لم يتم العثور على الدواء';
+
+  @override
+  String get medicineDetailTitle => 'تفاصيل الدواء';
 }

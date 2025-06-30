@@ -289,6 +289,10 @@ class _MessagingTabState extends State<MessagingTab>
         title: Text(_chatPartnerName ?? localizations.messages),
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(18)),
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.refresh),
@@ -352,34 +356,88 @@ class _MessagingTabState extends State<MessagingTab>
   }
 
   Widget _buildMessageBubble(ChatMessage message) {
-    return Align(
-      alignment: message.isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: message.isMe ? Colors.blue : Colors.grey[300],
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              message.text,
-              style: TextStyle(
-                color: message.isMe ? Colors.white : Colors.black,
-              ),
+    final isMe = message.isMe;
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      child: Row(
+        mainAxisAlignment:
+            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (!isMe) ...[
+            CircleAvatar(
+              radius: 14,
+              backgroundColor: Colors.grey[300],
+              child: Icon(Icons.person, size: 16, color: Colors.grey[700]),
             ),
-            const SizedBox(height: 4),
-            Text(
-              _formatTime(message.time),
-              style: TextStyle(
-                fontSize: 12,
-                color: message.isMe ? Colors.white70 : Colors.black54,
-              ),
+            SizedBox(width: 6),
+          ],
+          Flexible(
+            child: Stack(
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isMe ? Theme.of(context).primaryColor : Colors.grey[200],
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(18),
+                      topRight: Radius.circular(18),
+                      bottomLeft: Radius.circular(isMe ? 18 : 0),
+                      bottomRight: Radius.circular(isMe ? 0 : 18),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.07),
+                        blurRadius: 6,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        message.text,
+                        style: TextStyle(
+                          color: isMe ? Colors.white : Colors.black87,
+                          fontSize: 16,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        _formatTime(message.time),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isMe ? Colors.white70 : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Bubble tail
+                Positioned(
+                  bottom: 0,
+                  left: isMe ? null : 0,
+                  right: isMe ? 0 : null,
+                  child: CustomPaint(
+                    painter: BubbleTailPainter(
+                      color: isMe ? Theme.of(context).primaryColor : Colors.grey[200]!,
+                      isMe: isMe,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isMe) ...[
+            SizedBox(width: 6),
+            CircleAvatar(
+              radius: 14,
+              backgroundColor: Theme.of(context).primaryColor,
+              child: Icon(Icons.person, size: 16, color: Colors.white),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -387,14 +445,14 @@ class _MessagingTabState extends State<MessagingTab>
   Widget _buildMessageInput() {
     final localizations = AppLocalizations.of(context)!;
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.grey[100],
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withOpacity(0.15),
             spreadRadius: 1,
-            blurRadius: 3,
+            blurRadius: 4,
             offset: const Offset(0, -1),
           ),
         ],
@@ -402,18 +460,33 @@ class _MessagingTabState extends State<MessagingTab>
       child: Row(
         children: [
           Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: InputDecoration(
-                hintText: localizations.askQuestion,
-                border: InputBorder.none,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.grey[300]!),
               ),
-              maxLines: null,
+              child: TextField(
+                controller: _messageController,
+                decoration: InputDecoration(
+                  hintText: localizations.askQuestion,
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                maxLines: null,
+              ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.send),
-            onPressed: _sendMessage,
+          SizedBox(width: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor,
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: Icon(Icons.send, color: Colors.white),
+              onPressed: _sendMessage,
+            ),
           ),
         ],
       ),
@@ -435,4 +508,30 @@ class ChatMessage {
     required this.isMe,
     required this.time,
   });
+}
+
+class BubbleTailPainter extends CustomPainter {
+  final Color color;
+  final bool isMe;
+  BubbleTailPainter({required this.color, required this.isMe});
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+    final path = Path();
+    if (isMe) {
+      path.moveTo(0, 0);
+      path.lineTo(10, 0);
+      path.lineTo(0, 10);
+      path.close();
+      canvas.drawPath(path, paint);
+    } else {
+      path.moveTo(10, 0);
+      path.lineTo(0, 0);
+      path.lineTo(10, 10);
+      path.close();
+      canvas.drawPath(path, paint);
+    }
+  }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

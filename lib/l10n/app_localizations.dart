@@ -709,6 +709,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'How Can I Help You Today?'**
   String get chatbotGreeting;
+
+  /// No description provided for @yourGuardian.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Guardian:'**
+  String get yourGuardian;
+
+  /// No description provided for @yourCareReceiver.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Care Receiver:'**
+  String get yourCareReceiver;
+
+  /// No description provided for @medicineSearchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Medicine Search'**
+  String get medicineSearchTitle;
+
+  /// No description provided for @medicineSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for medicines...'**
+  String get medicineSearchHint;
+
+  /// No description provided for @medicineSearchEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a medicine name to search'**
+  String get medicineSearchEmpty;
+
+  /// No description provided for @medicineSearchNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No medicines found'**
+  String get medicineSearchNotFound;
+
+  /// No description provided for @medicineDetailDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get medicineDetailDescription;
+
+  /// No description provided for @medicineDetailUses.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses'**
+  String get medicineDetailUses;
+
+  /// No description provided for @medicineDetailContraindications.
+  ///
+  /// In en, this message translates to:
+  /// **'Contraindications'**
+  String get medicineDetailContraindications;
+
+  /// No description provided for @medicineDetailPrecautions.
+  ///
+  /// In en, this message translates to:
+  /// **'Precautions'**
+  String get medicineDetailPrecautions;
+
+  /// No description provided for @medicineDetailInteractions.
+  ///
+  /// In en, this message translates to:
+  /// **'Interactions'**
+  String get medicineDetailInteractions;
+
+  /// No description provided for @medicineDetailDosage.
+  ///
+  /// In en, this message translates to:
+  /// **'Dosage'**
+  String get medicineDetailDosage;
+
+  /// No description provided for @medicineDetailDosageForms.
+  ///
+  /// In en, this message translates to:
+  /// **'Dosage Forms'**
+  String get medicineDetailDosageForms;
+
+  /// No description provided for @medicineDetailStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get medicineDetailStorage;
+
+  /// No description provided for @medicineDetailUsageInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage Instructions'**
+  String get medicineDetailUsageInstructions;
+
+  /// No description provided for @medicineDetailSideEffects.
+  ///
+  /// In en, this message translates to:
+  /// **'Side Effects'**
+  String get medicineDetailSideEffects;
+
+  /// No description provided for @medicineDetailEnglishName.
+  ///
+  /// In en, this message translates to:
+  /// **'English Name'**
+  String get medicineDetailEnglishName;
+
+  /// No description provided for @medicineDetailArabicName.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic Name'**
+  String get medicineDetailArabicName;
+
+  /// No description provided for @medicineDetailNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Medicine not found'**
+  String get medicineDetailNotFound;
+
+  /// No description provided for @medicineDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Medicine Details'**
+  String get medicineDetailTitle;
 }
 
 class _AppLocalizationsDelegate

@@ -71,7 +71,7 @@ class _HomeTabState extends State<HomeTab> {
             sharedUserEmail.isNotEmpty) {
           // If guardian, find the elder user's ID by their email
           final elderData =
-              await FirebaseManager.getUserByEmail(sharedUserEmail);
+          await FirebaseManager.getUserByEmail(sharedUserEmail);
           if (elderData != null) {
             _displayUserId = elderData['id'] ?? '';
             if (_displayUserId.isNotEmpty) {
@@ -143,7 +143,7 @@ class _HomeTabState extends State<HomeTab> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content:
-              Text('Guardian view is read-only. Cannot mark pills as taken.'),
+          Text('Guardian view is read-only. Cannot mark pills as taken.'),
         ),
       );
       return;
@@ -218,7 +218,7 @@ class _HomeTabState extends State<HomeTab> {
 
         // Get guardian details for verification
         final guardianData =
-            await FirebaseManager.getUserByEmail(sharedUserEmail);
+        await FirebaseManager.getUserByEmail(sharedUserEmail);
         if (guardianData != null) {
           final guardianId = guardianData['id'] ?? '';
           print('Guardian ID: $guardianId');
@@ -359,9 +359,9 @@ class _HomeTabState extends State<HomeTab> {
                                 .textTheme
                                 .titleMedium!
                                 .copyWith(
-                                  color: Colors.black,
-                                  fontSize: screenWidth * 0.06, // Larger font
-                                ),
+                              color: Colors.black,
+                              fontSize: screenWidth * 0.06, // Larger font
+                            ),
                           ),
                         ],
                       ),
@@ -398,23 +398,23 @@ class _HomeTabState extends State<HomeTab> {
                                 Text(
                                   localizations.liveTracking,
                                   style: Localizations.localeOf(context)
-                                              .languageCode ==
-                                          'en'
+                                      .languageCode ==
+                                      'en'
                                       ? GoogleFonts.albertSans(
-                                          color: Colors.black,
-                                          fontSize: screenWidth * 0.05,
-                                          fontWeight: FontWeight.w500,
-                                          height: 1.1, // Tighter line height
-                                        )
+                                    color: Colors.black,
+                                    fontSize: screenWidth * 0.05,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.1, // Tighter line height
+                                  )
                                       : Theme.of(context)
-                                          .textTheme
-                                          .titleSmall!
-                                          .copyWith(
-                                            color: Colors.black,
-                                            fontSize: screenWidth * 0.05,
-                                            fontWeight: FontWeight.w500,
-                                            height: 1.1, // Tighter line height
-                                          ),
+                                      .textTheme
+                                      .titleSmall!
+                                      .copyWith(
+                                    color: Colors.black,
+                                    fontSize: screenWidth * 0.05,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.1, // Tighter line height
+                                  ),
                                   textAlign: TextAlign.center,
                                   maxLines: 2, // Allow up to 2 lines
                                 ),
@@ -433,23 +433,23 @@ class _HomeTabState extends State<HomeTab> {
                                 Text(
                                   localizations.calendar,
                                   style: Localizations.localeOf(context)
-                                              .languageCode ==
-                                          'en'
+                                      .languageCode ==
+                                      'en'
                                       ? GoogleFonts.albertSans(
-                                          color: Colors.black,
-                                          fontSize: screenWidth * 0.05,
-                                          fontWeight: FontWeight.w500,
-                                          height: 1.1, // Tighter line height
-                                        )
+                                    color: Colors.black,
+                                    fontSize: screenWidth * 0.05,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.1, // Tighter line height
+                                  )
                                       : Theme.of(context)
-                                          .textTheme
-                                          .titleSmall!
-                                          .copyWith(
-                                            color: Colors.black,
-                                            fontSize: screenWidth * 0.05,
-                                            fontWeight: FontWeight.w500,
-                                            height: 1.1, // Tighter line height
-                                          ),
+                                      .textTheme
+                                      .titleSmall!
+                                      .copyWith(
+                                    color: Colors.black,
+                                    fontSize: screenWidth * 0.05,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.1, // Tighter line height
+                                  ),
                                   textAlign: TextAlign.center,
                                   maxLines: 2, // Allow up to 2 lines
                                 ),
@@ -469,23 +469,23 @@ class _HomeTabState extends State<HomeTab> {
                                 Text(
                                   localizations.nearestHospitals,
                                   style: Localizations.localeOf(context)
-                                              .languageCode ==
-                                          'en'
+                                      .languageCode ==
+                                      'en'
                                       ? GoogleFonts.albertSans(
-                                          color: Colors.black,
-                                          fontSize: screenWidth * 0.05,
-                                          fontWeight: FontWeight.w500,
-                                          height: 1.1, // Tighter line height
-                                        )
+                                    color: Colors.black,
+                                    fontSize: screenWidth * 0.05,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.1, // Tighter line height
+                                  )
                                       : Theme.of(context)
-                                          .textTheme
-                                          .titleSmall!
-                                          .copyWith(
-                                            color: Colors.black,
-                                            fontSize: screenWidth * 0.05,
-                                            fontWeight: FontWeight.w500,
-                                            height: 1.1, // Tighter line height
-                                          ),
+                                      .textTheme
+                                      .titleSmall!
+                                      .copyWith(
+                                    color: Colors.black,
+                                    fontSize: screenWidth * 0.05,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.1, // Tighter line height
+                                  ),
                                   textAlign: TextAlign.center,
                                   maxLines: 2, // Allow up to 2 lines
                                 ),
@@ -496,6 +496,7 @@ class _HomeTabState extends State<HomeTab> {
                       ),
                       SizedBox(height: screenHeight * 0.03),
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: Column(
@@ -510,21 +511,21 @@ class _HomeTabState extends State<HomeTab> {
                                 Text(
                                   localizations.messages,
                                   style: Localizations.localeOf(context)
-                                              .languageCode ==
-                                          'en'
+                                      .languageCode ==
+                                      'en'
                                       ? GoogleFonts.albertSans(
-                                          color: Colors.black,
-                                          fontSize: screenWidth * 0.05,
-                                          fontWeight: FontWeight.w500,
-                                        )
+                                    color: Colors.black,
+                                    fontSize: screenWidth * 0.05,
+                                    fontWeight: FontWeight.w500,
+                                  )
                                       : Theme.of(context)
-                                          .textTheme
-                                          .titleSmall!
-                                          .copyWith(
-                                            color: Colors.black,
-                                            fontSize: screenWidth * 0.05,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                      .textTheme
+                                      .titleSmall!
+                                      .copyWith(
+                                    color: Colors.black,
+                                    fontSize: screenWidth * 0.05,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -545,21 +546,21 @@ class _HomeTabState extends State<HomeTab> {
                                 Text(
                                   localizations.medicines,
                                   style: Localizations.localeOf(context)
-                                              .languageCode ==
-                                          'en'
+                                      .languageCode ==
+                                      'en'
                                       ? GoogleFonts.albertSans(
-                                          color: Colors.black,
-                                          fontSize: screenWidth * 0.05,
-                                          fontWeight: FontWeight.w500,
-                                        )
+                                    color: Colors.black,
+                                    fontSize: screenWidth * 0.05,
+                                    fontWeight: FontWeight.w500,
+                                  )
                                       : Theme.of(context)
-                                          .textTheme
-                                          .titleSmall!
-                                          .copyWith(
-                                            color: Colors.black,
-                                            fontSize: screenWidth * 0.05,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                      .textTheme
+                                      .titleSmall!
+                                      .copyWith(
+                                    color: Colors.black,
+                                    fontSize: screenWidth * 0.05,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -578,21 +579,21 @@ class _HomeTabState extends State<HomeTab> {
                                 Text(
                                   localizations.chatbot,
                                   style: Localizations.localeOf(context)
-                                              .languageCode ==
-                                          'en'
+                                      .languageCode ==
+                                      'en'
                                       ? GoogleFonts.albertSans(
-                                          color: Colors.black,
-                                          fontSize: screenWidth * 0.05,
-                                          fontWeight: FontWeight.w500,
-                                        )
+                                    color: Colors.black,
+                                    fontSize: screenWidth * 0.05,
+                                    fontWeight: FontWeight.w500,
+                                  )
                                       : Theme.of(context)
-                                          .textTheme
-                                          .titleSmall!
-                                          .copyWith(
-                                            color: Colors.black,
-                                            fontSize: screenWidth * 0.05,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                      .textTheme
+                                      .titleSmall!
+                                      .copyWith(
+                                    color: Colors.black,
+                                    fontSize: screenWidth * 0.05,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -612,21 +613,21 @@ class _HomeTabState extends State<HomeTab> {
                             ? "${_displayName}'s ${localizations.pillReminder}"
                             : localizations.pillReminder,
                         style:
-                            Theme.of(context).textTheme.titleMedium!.copyWith(
-                                  color: Colors.black,
-                                  fontSize: screenWidth * 0.055, // Larger font
-                                ),
+                        Theme.of(context).textTheme.titleMedium!.copyWith(
+                          color: Colors.black,
+                          fontSize: screenWidth * 0.055, // Larger font
+                        ),
                       ),
                       GestureDetector(
                         onTap: () => provider.changeCalendarIndex(),
                         child: Text(
                           localizations.seeAll,
                           style:
-                              Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                    color: Theme.of(context).primaryColor,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: screenWidth * 0.04, // Larger font
-                                  ),
+                          Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.w500,
+                            fontSize: screenWidth * 0.04, // Larger font
+                          ),
                         ),
                       ),
                     ],
@@ -636,39 +637,39 @@ class _HomeTabState extends State<HomeTab> {
                   // Today's Pills
                   _isLoading
                       ? Center(
-                          child: CircularProgressIndicator(
-                          color: Theme.of(context).primaryColor,
-                        ))
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).primaryColor,
+                      ))
                       : _todayPills.isEmpty
+                      ? _buildEmptyPillCard(
+                      localizations.noMedicinesForToday)
+                      : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding:
+                        EdgeInsets.only(left: 8.0, bottom: 8.0),
+                        child: Text(
+                          localizations.today,
+                          style: TextStyle(
+                            fontSize:
+                            screenWidth * 0.045, // Larger font
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ),
+                      _todayPills.isEmpty
                           ? _buildEmptyPillCard(
-                              localizations.noMedicinesForToday)
+                          localizations.noMedicinesForToday)
                           : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding:
-                                      EdgeInsets.only(left: 8.0, bottom: 8.0),
-                                  child: Text(
-                                    localizations.today,
-                                    style: TextStyle(
-                                      fontSize:
-                                          screenWidth * 0.045, // Larger font
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey[700],
-                                    ),
-                                  ),
-                                ),
-                                _todayPills.isEmpty
-                                    ? _buildEmptyPillCard(
-                                        localizations.noMedicinesForToday)
-                                    : Column(
-                                        children: _todayPills
-                                            .map((pill) => _buildPillCard(
-                                                pill, _getTimeStatus(pill)))
-                                            .toList(),
-                                      ),
-                              ],
-                            ),
+                        children: _todayPills
+                            .map((pill) => _buildPillCard(
+                            pill, _getTimeStatus(pill)))
+                            .toList(),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -678,20 +679,20 @@ class _HomeTabState extends State<HomeTab> {
         // Add a test button for notifications in debug mode
         persistentFooterButtons: kDebugMode
             ? [
-                ElevatedButton(
-                  onPressed: () async {
-                    final notiService = NotiService();
-                    await notiService.testNotification();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Test notification sent'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                  child: Text('Test Notifications'),
+          ElevatedButton(
+            onPressed: () async {
+              final notiService = NotiService();
+              await notiService.testNotification();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Test notification sent'),
+                  duration: Duration(seconds: 2),
                 ),
-              ]
+              );
+            },
+            child: Text('Test Notifications'),
+          ),
+        ]
             : null,
       ),
     );
@@ -892,38 +893,38 @@ class _HomeTabState extends State<HomeTab> {
           // Add checkbox for elder or status icon for guardian
           _isReadOnly
               ? Padding(
-                  // For guardians - show status icon instead of checkbox
-                  padding: const EdgeInsets.only(right: 16.0),
-                  child: Icon(
-                    pill.isTakenOnDate(today)
-                        ? Icons.check_circle
-                        : Icons.pending_actions,
-                    color: pill.isTakenOnDate(today)
-                        ? Colors.green[700]
-                        : Colors.orange,
-                    size: 28, // Larger icon
-                  ),
-                )
+            // For guardians - show status icon instead of checkbox
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Icon(
+              pill.isTakenOnDate(today)
+                  ? Icons.check_circle
+                  : Icons.pending_actions,
+              color: pill.isTakenOnDate(today)
+                  ? Colors.green[700]
+                  : Colors.orange,
+              size: 28, // Larger icon
+            ),
+          )
               : Padding(
-                  // For elders - show checkbox to mark pills as taken
-                  padding: const EdgeInsets.only(right: 16.0),
-                  child: Transform.scale(
-                    scale: 1.3, // Make checkbox larger
-                    child: Checkbox(
-                      value: pill.isTakenOnDate(today),
-                      activeColor: Colors.green[700],
-                      checkColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      onChanged: (bool? value) {
-                        if (value != null && value) {
-                          _markPillAsTaken(pill);
-                        }
-                      },
-                    ),
-                  ),
+            // For elders - show checkbox to mark pills as taken
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Transform.scale(
+              scale: 1.3, // Make checkbox larger
+              child: Checkbox(
+                value: pill.isTakenOnDate(today),
+                activeColor: Colors.green[700],
+                checkColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
                 ),
+                onChanged: (bool? value) {
+                  if (value != null && value) {
+                    _markPillAsTaken(pill);
+                  }
+                },
+              ),
+            ),
+          ),
         ],
       ),
     );
