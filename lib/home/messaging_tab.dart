@@ -354,22 +354,22 @@ class _MessagingTabState extends State<MessagingTab>
       return Center(child: Text('No messages yet'));
     }
     List<Widget> messageWidgets = [];
+    DateTime? lastDate;
+    // Iterate from oldest to newest
     for (int i = 0; i < messages.length; i++) {
-      final msg = messages[messages.length - 1 - i];
-      final prevMsg = i > 0 ? messages[messages.length - i] : null;
-      final showDate = prevMsg == null ||
-          msg.time.year != prevMsg.time.year ||
-          msg.time.month != prevMsg.time.month ||
-          msg.time.day != prevMsg.time.day;
-      if (showDate) {
+      final msg = messages[i];
+      final msgDate = DateTime(msg.time.year, msg.time.month, msg.time.day);
+      if (lastDate == null || msgDate != lastDate) {
         messageWidgets.add(_buildDateSeparator(msg.time));
+        lastDate = msgDate;
       }
       messageWidgets.add(_buildSimpleMessageBubble(msg));
     }
     return ListView(
-      reverse: true,
+      reverse: true, // Newest at bottom
       padding: EdgeInsets.only(top: 12, bottom: 8),
-      children: messageWidgets,
+      children: messageWidgets.reversed
+          .toList(), // Reverse widgets for correct display
     );
   }
 
