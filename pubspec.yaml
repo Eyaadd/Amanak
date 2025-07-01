@@ -57,6 +57,9 @@ dependencies:
   workmanager: ^0.7.0
   shared_preferences: ^2.5.3
   speech_to_text: ^7.1.0
+  # OCR and image dependencies
+  image_picker: ^1.0.7
+  http_parser: ^4.0.2
 
 
 dev_dependencies:
