@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:amanak/notifications/noti_service.dart';
 import 'package:amanak/firebase/firebase_manager.dart';
 import '../l10n/app_localizations.dart';
+import 'dart:math';
 
 class MessagingTab extends StatefulWidget {
   static const routeName = "Messaging";
@@ -270,12 +271,13 @@ class _MessagingTabState extends State<MessagingTab>
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     if (_currentUserEmail == null) {
       return Scaffold(
         appBar: AppBar(
           title: Text(localizations.messages),
-          backgroundColor: Theme.of(context).primaryColor,
+          backgroundColor: theme.primaryColor,
           foregroundColor: Colors.white,
         ),
         body: Center(
@@ -286,8 +288,9 @@ class _MessagingTabState extends State<MessagingTab>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_chatPartnerName ?? localizations.messages),
-        backgroundColor: Theme.of(context).primaryColor,
+        title: Text(_chatPartnerName ?? localizations.messages,
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+        backgroundColor: theme.primaryColor,
         foregroundColor: Colors.white,
         elevation: 2,
         shape: RoundedRectangleBorder(
@@ -300,157 +303,170 @@ class _MessagingTabState extends State<MessagingTab>
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _messagesStream == null
-                ? Center(
-                    child: Text(localizations.loading),
-                  )
-                : StreamBuilder<QuerySnapshot>(
-                    stream: _messagesStream,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return Center(
-                          child: Text(localizations.error),
-                        );
-                      }
-
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
-
-                      final messages = snapshot.data?.docs ?? [];
-                      final chatMessages = messages.map((doc) {
-                        final data = doc.data() as Map<String, dynamic>;
-                        return ChatMessage(
-                          text: data['text'] ?? '',
-                          isMe: data['senderEmail'] == _currentUserEmail,
-                          time: (data['timestamp'] as Timestamp?)?.toDate() ??
-                              DateTime.now(),
-                        );
-                      }).toList();
-
-                      // Sort messages by time
-                      chatMessages.sort((a, b) => a.time.compareTo(b.time));
-
-                      return ListView.builder(
-                        reverse: true,
-                        padding: EdgeInsets.all(8),
-                        itemCount: chatMessages.length,
-                        itemBuilder: (context, index) {
-                          final message =
-                              chatMessages[chatMessages.length - 1 - index];
-                          return _buildMessageBubble(message);
-                        },
-                      );
-                    },
-                  ),
-          ),
-          _buildMessageInput(),
-        ],
+      body: Container(
+        color: Colors.white,
+        child: Column(
+          children: [
+            Expanded(
+              child: _messagesStream == null
+                  ? Center(child: Text(localizations.loading))
+                  : StreamBuilder<QuerySnapshot>(
+                      stream: _messagesStream,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Center(child: Text(localizations.error));
+                        }
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        }
+                        final messages = snapshot.data?.docs ?? [];
+                        final chatMessages = messages
+                            .map((doc) {
+                              final data = doc.data() as Map<String, dynamic>;
+                              final ts = data['timestamp'] as Timestamp?;
+                              if (ts == null)
+                                return null; // Skip messages without a timestamp
+                              final localTime = ts.toDate().toLocal();
+                              return ChatMessage(
+                                text: data['text'] ?? '',
+                                isMe: data['senderEmail'] == _currentUserEmail,
+                                time: localTime,
+                              );
+                            })
+                            .whereType<ChatMessage>()
+                            .toList();
+                        // Sort messages by time
+                        chatMessages.sort((a, b) => a.time.compareTo(b.time));
+                        return _buildSimpleMessageList(chatMessages);
+                      },
+                    ),
+            ),
+            _buildSimpleMessageInput(),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage message) {
+  Widget _buildSimpleMessageList(List<ChatMessage> messages) {
+    if (messages.isEmpty) {
+      return Center(child: Text('No messages yet'));
+    }
+    List<Widget> messageWidgets = [];
+    for (int i = 0; i < messages.length; i++) {
+      final msg = messages[messages.length - 1 - i];
+      final prevMsg = i > 0 ? messages[messages.length - i] : null;
+      final showDate = prevMsg == null ||
+          msg.time.year != prevMsg.time.year ||
+          msg.time.month != prevMsg.time.month ||
+          msg.time.day != prevMsg.time.day;
+      if (showDate) {
+        messageWidgets.add(_buildDateSeparator(msg.time));
+      }
+      messageWidgets.add(_buildSimpleMessageBubble(msg));
+    }
+    return ListView(
+      reverse: true,
+      padding: EdgeInsets.only(top: 12, bottom: 8),
+      children: messageWidgets,
+    );
+  }
+
+  Widget _buildSimpleMessageBubble(ChatMessage message) {
     final isMe = message.isMe;
+    final theme = Theme.of(context);
+    final avatar = _buildAvatar(isMe ? _currentUserName : _chatPartnerName);
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      margin: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
       child: Row(
         mainAxisAlignment:
             isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
-            CircleAvatar(
-              radius: 14,
-              backgroundColor: Colors.grey[300],
-              child: Icon(Icons.person, size: 16, color: Colors.grey[700]),
-            ),
+            avatar,
             SizedBox(width: 6),
           ],
           Flexible(
-            child: Stack(
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isMe ? Theme.of(context).primaryColor : Colors.grey[200],
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(18),
-                      topRight: Radius.circular(18),
-                      bottomLeft: Radius.circular(isMe ? 18 : 0),
-                      bottomRight: Radius.circular(isMe ? 0 : 18),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.07),
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        message.text,
-                        style: TextStyle(
-                          color: isMe ? Colors.white : Colors.black87,
-                          fontSize: 16,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        _formatTime(message.time),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isMe ? Colors.white70 : Colors.black54,
-                        ),
-                      ),
-                    ],
-                  ),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: isMe ? theme.primaryColor : Colors.grey[200],
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                  bottomLeft: Radius.circular(isMe ? 16 : 0),
+                  bottomRight: Radius.circular(isMe ? 0 : 16),
                 ),
-                // Bubble tail
-                Positioned(
-                  bottom: 0,
-                  left: isMe ? null : 0,
-                  right: isMe ? 0 : null,
-                  child: CustomPaint(
-                    painter: BubbleTailPainter(
-                      color: isMe ? Theme.of(context).primaryColor : Colors.grey[200]!,
-                      isMe: isMe,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    message.text,
+                    style: TextStyle(
+                      color: isMe ? Colors.white : Colors.black87,
+                      fontSize: 15,
                     ),
                   ),
-                ),
-              ],
+                  SizedBox(height: 4),
+                  Text(
+                    _formatTime(message.time),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isMe ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           if (isMe) ...[
             SizedBox(width: 6),
-            CircleAvatar(
-              radius: 14,
-              backgroundColor: Theme.of(context).primaryColor,
-              child: Icon(Icons.person, size: 16, color: Colors.white),
-            ),
+            avatar,
           ],
         ],
       ),
     );
   }
 
-  Widget _buildMessageInput() {
+  Widget _buildAvatar(String? name) {
+    if (name == null || name.isEmpty) {
+      return CircleAvatar(
+        radius: 16,
+        backgroundColor: Colors.grey[300],
+        child: Icon(Icons.person, color: Colors.grey[700], size: 16),
+      );
+    }
+    final initials = name
+        .trim()
+        .split(' ')
+        .map((e) => e.isNotEmpty ? e[0] : '')
+        .take(2)
+        .join()
+        .toUpperCase();
+    final color =
+        Colors.primaries[(name.hashCode.abs()) % Colors.primaries.length];
+    return CircleAvatar(
+      radius: 16,
+      backgroundColor: color.withOpacity(0.8),
+      child: Text(initials,
+          style: TextStyle(
+              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+    );
+  }
+
+  Widget _buildSimpleMessageInput() {
     final localizations = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.15),
+            color: Colors.grey.withOpacity(0.10),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, -1),
@@ -462,8 +478,8 @@ class _MessagingTabState extends State<MessagingTab>
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.grey[300]!),
               ),
               child: TextField(
@@ -471,21 +487,24 @@ class _MessagingTabState extends State<MessagingTab>
                 decoration: InputDecoration(
                   hintText: localizations.askQuestion,
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 ),
                 maxLines: null,
+                style: TextStyle(fontSize: 15),
               ),
             ),
           ),
           SizedBox(width: 8),
           Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor,
+              color: theme.primaryColor,
               shape: BoxShape.circle,
             ),
             child: IconButton(
               icon: Icon(Icons.send, color: Colors.white),
               onPressed: _sendMessage,
+              splashRadius: 22,
             ),
           ),
         ],
@@ -495,6 +514,37 @@ class _MessagingTabState extends State<MessagingTab>
 
   String _formatTime(DateTime time) {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildDateSeparator(DateTime date) {
+    final now = DateTime.now();
+    final dateOnly = DateTime(date.year, date.month, date.day);
+    final nowOnly = DateTime(now.year, now.month, now.day);
+    String label;
+    if (dateOnly == nowOnly) {
+      label = AppLocalizations.of(context)!.today;
+    } else if (nowOnly.difference(dateOnly).inDays == 1) {
+      label = 'Yesterday';
+    } else {
+      label = '${date.day}/${date.month}/${date.year}';
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(label,
+                style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -532,6 +582,7 @@ class BubbleTailPainter extends CustomPainter {
       canvas.drawPath(path, paint);
     }
   }
+
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
