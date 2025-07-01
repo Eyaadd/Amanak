@@ -36,6 +36,7 @@ class _LiveTrackingState extends State<LiveTracking> {
   User? currentUser;
   bool _isLoading = true;
   String? sharedUserEmail;
+  String? sharedUserName;
   Position? _currentPosition;
   double? sharedUserLat;
   double? sharedUserLng;
@@ -219,8 +220,11 @@ class _LiveTrackingState extends State<LiveTracking> {
 
       // Start tracking both current and shared user locations
       String sharedUserId = sharedUserQuery.docs.first.id;
+      final sharedUserData =
+          sharedUserQuery.docs.first.data() as Map<String, dynamic>;
       setState(() {
         sharedUserEmail = sharedEmail;
+        sharedUserName = sharedUserData['name'] ?? sharedEmail;
       });
 
       try {
@@ -251,9 +255,23 @@ class _LiveTrackingState extends State<LiveTracking> {
     }
   }
 
-  Future<void> _startLocationUpdates() {
+  Future<void> _startLocationUpdates() async {
     final completer = Completer<void>();
     _positionStreamSubscription?.cancel();
+
+    // Try to get last known position first
+    Position? lastKnown = await Geolocator.getLastKnownPosition();
+    if (lastKnown != null && mounted) {
+      setState(() {
+        _currentPosition = lastKnown;
+      });
+      _updateCurrentLocationInFirestore(lastKnown);
+      _updateLocationName(lastKnown.latitude, lastKnown.longitude, true);
+      if (!completer.isCompleted) {
+        completer.complete();
+      }
+    }
+
     const LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high,
       distanceFilter: 10,
@@ -262,14 +280,14 @@ class _LiveTrackingState extends State<LiveTracking> {
         Geolocator.getPositionStream(locationSettings: locationSettings).listen(
             (Position position) {
       if (mounted) {
-        if (!completer.isCompleted) {
-          completer.complete();
-        }
         setState(() {
           _currentPosition = position;
         });
         _updateCurrentLocationInFirestore(position);
         _updateLocationName(position.latitude, position.longitude, true);
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
       }
     }, onError: (e) {
       if (!completer.isCompleted) {
@@ -669,8 +687,8 @@ class _LiveTrackingState extends State<LiveTracking> {
                                 BitmapDescriptor.hueBlue,
                               ),
                               infoWindow: InfoWindow(
-                                title: 'Shared User Location',
-                                snippet: sharedUserEmail,
+                                title: sharedUserName ?? '',
+                                snippet: '',
                               ),
                               onTap: () => _navigateToSharedUserLocation(),
                             ),
