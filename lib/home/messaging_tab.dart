@@ -7,6 +7,7 @@ import 'package:amanak/provider/my_provider.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import 'dart:math';
+import 'package:amanak/services/encryption_service.dart';
 
 class MessagingTab extends StatefulWidget {
   static const routeName = "Messaging";
@@ -22,6 +23,7 @@ class _MessagingTabState extends State<MessagingTab>
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final NotiService _notiService = NotiService();
+  final EncryptionService _encryptionService = EncryptionService();
   String? _currentUserEmail;
   String? _currentUserId;
   String? _currentUserName;
@@ -44,6 +46,9 @@ class _MessagingTabState extends State<MessagingTab>
 
   // Keep track of the last tab index
   int _lastTabIndex = -1;
+
+  // Map to store decrypted messages to avoid repeated decryption
+  final Map<String, String> _decryptedMessages = {};
 
   @override
   void initState() {
@@ -150,6 +155,10 @@ class _MessagingTabState extends State<MessagingTab>
       if (_messagesStream == null && _guardianEmail != null) {
         // Set up messages stream
         final chatId = _getChatId();
+
+        // Initialize encryption for this chat
+        await _encryptionService.initializeEncryption(chatId);
+
         _setupMessageStream(chatId);
       }
     } catch (e) {
@@ -229,6 +238,7 @@ class _MessagingTabState extends State<MessagingTab>
 
       // Only send notification if the user is not actively viewing the chat
       if (_currentUserId != null && !_isActive) {
+        // For notifications, we use the decrypted message
         await _notiService.sendFcmNotification(
           userId: _currentUserId!,
           title: "New Message",
@@ -266,12 +276,17 @@ class _MessagingTabState extends State<MessagingTab>
 
     try {
       final chatId = _getChatId();
+
+      // Encrypt the message before sending
+      final encryptedText =
+          await _encryptionService.encryptMessage(messageText, chatId);
+
       await _firestore
           .collection('chats')
           .doc(chatId)
           .collection('messages')
           .add({
-        'text': messageText,
+        'text': encryptedText,
         'senderEmail': _currentUserEmail,
         'timestamp': FieldValue.serverTimestamp(),
       });
@@ -337,24 +352,23 @@ class _MessagingTabState extends State<MessagingTab>
                           return Center(child: CircularProgressIndicator());
                         }
                         final messages = snapshot.data?.docs ?? [];
-                        final chatMessages = messages
-                            .map((doc) {
-                              final data = doc.data() as Map<String, dynamic>;
-                              final ts = data['timestamp'] as Timestamp?;
-                              if (ts == null)
-                                return null; // Skip messages without a timestamp
-                              final localTime = ts.toDate().toLocal();
-                              return ChatMessage(
-                                text: data['text'] ?? '',
-                                isMe: data['senderEmail'] == _currentUserEmail,
-                                time: localTime,
-                              );
-                            })
-                            .whereType<ChatMessage>()
-                            .toList();
-                        // Sort messages by time
-                        chatMessages.sort((a, b) => a.time.compareTo(b.time));
-                        return _buildSimpleMessageList(chatMessages);
+
+                        return FutureBuilder<List<ChatMessage>>(
+                            future: _processMessages(messages),
+                            builder: (context, messagesSnapshot) {
+                              if (messagesSnapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Center(
+                                    child: CircularProgressIndicator());
+                              }
+
+                              final chatMessages = messagesSnapshot.data ?? [];
+
+                              // Sort messages by time
+                              chatMessages
+                                  .sort((a, b) => a.time.compareTo(b.time));
+                              return _buildSimpleMessageList(chatMessages);
+                            });
                       },
                     ),
             ),
@@ -363,6 +377,35 @@ class _MessagingTabState extends State<MessagingTab>
         ),
       ),
     );
+  }
+
+  // Process messages to decrypt them
+  Future<List<ChatMessage>> _processMessages(
+      List<QueryDocumentSnapshot> docs) async {
+    final chatId = _getChatId();
+    final List<ChatMessage> result = [];
+
+    for (final doc in docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      final ts = data['timestamp'] as Timestamp?;
+
+      if (ts == null) continue; // Skip messages without a timestamp
+
+      final localTime = ts.toDate().toLocal();
+      final encryptedText = data['text'] ?? '';
+
+      // Decrypt the message
+      final decryptedText =
+          await _encryptionService.decryptMessage(encryptedText, chatId);
+
+      result.add(ChatMessage(
+        text: decryptedText,
+        isMe: data['senderEmail'] == _currentUserEmail,
+        time: localTime,
+      ));
+    }
+
+    return result;
   }
 
   Widget _buildSimpleMessageList(List<ChatMessage> messages) {
@@ -576,6 +619,30 @@ class _MessagingTabState extends State<MessagingTab>
 
       // Debug
       print('Messaging tab active status updated: $_isActive');
+    }
+  }
+
+  // Helper method to decrypt a message, with caching
+  Future<String> _getDecryptedMessage(
+      String messageId, String encryptedText) async {
+    // Check if we already decrypted this message
+    if (_decryptedMessages.containsKey(messageId)) {
+      return _decryptedMessages[messageId]!;
+    }
+
+    // If not, decrypt it
+    try {
+      final chatId = _getChatId();
+      final decryptedText =
+          await _encryptionService.decryptMessage(encryptedText, chatId);
+
+      // Cache the decrypted message
+      _decryptedMessages[messageId] = decryptedText;
+
+      return decryptedText;
+    } catch (e) {
+      print('Error decrypting message: $e');
+      return encryptedText; // Return original text if decryption fails
     }
   }
 }

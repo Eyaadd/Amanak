@@ -17,6 +17,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:amanak/main.dart'; // Import for navigatorKey
 import 'package:http/http.dart' as http;
+import 'package:amanak/services/encryption_service.dart';
 // import 'package:dotenv/dotenv.dart';
 
 class NotiService {
@@ -29,6 +30,9 @@ class NotiService {
 
   // Track if the app is in foreground
   bool _isInForeground = false;
+
+  // Add encryption service
+  final EncryptionService _encryptionService = EncryptionService();
 
   // Singleton pattern
   factory NotiService() {
@@ -1118,6 +1122,9 @@ class NotiService {
       }
 
       if (notification != null) {
+        // Note: For FCM notifications, the message should already be decrypted
+        // before being sent to FCM, as we don't want to send encrypted text to
+        // the FCM servers. This is handled in the messaging tab.
         notificationsPlugin.show(
           message.hashCode,
           notification.title,
@@ -1159,12 +1166,16 @@ class NotiService {
         return;
       }
 
+      // For message notifications, we send the decrypted text in the notification
+      // but store the encrypted text in Firestore
+      String notificationBody = body;
+
       // Prepare notification payload
       final message = {
         'token': fcmToken,
         'notification': {
           'title': title,
-          'body': body,
+          'body': notificationBody, // Already decrypted in messaging_tab.dart
         },
         'data': data ?? {},
       };
@@ -1193,7 +1204,7 @@ class NotiService {
           await notificationsPlugin.show(
             MESSAGE_NOTIFICATION_ID_PREFIX + userId.hashCode % 10000,
             title,
-            body,
+            notificationBody, // Already decrypted
             messageDetails(),
             payload:
                 'message:${data['chatId'] ?? ''}:${data['senderId'] ?? ''}:${data['senderName'] ?? ''}',
@@ -1210,7 +1221,8 @@ class NotiService {
             .add({
           'userId': userId,
           'title': title,
-          'body': body,
+          'body':
+              body, // Store the original body (which is already decrypted in messaging_tab.dart)
           'data': data,
           'timestamp': FieldValue.serverTimestamp(),
           'delivered': false,
