@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:amanak/models/medicine_json_model.dart';
 import 'package:amanak/models/medicine_search_result.dart';
 
@@ -14,6 +15,67 @@ class MedicinesJsonService {
   List<MedicineJson> _medicines = [];
   bool _isInitialized = false;
 
+  // Cache for search results to avoid repeated filtering
+  final Map<String, List<Medicine>> _searchCache = {};
+  final Map<String, List<MedicineSearchResult>> _detailedSearchCache = {};
+
+  // Static methods for use with compute function
+  static List<MedicineJson> _parseMedicinesJson(String jsonString) {
+    final List<dynamic> jsonData = json.decode(jsonString);
+    return jsonData.map((item) => MedicineJson.fromJson(item)).toList();
+  }
+
+  static List<Medicine> _filterMedicines(Map<String, dynamic> params) {
+    final List<MedicineJson> medicines = params['medicines'];
+    final String query = params['query'];
+    final lowercaseQuery = query.toLowerCase();
+
+    return medicines
+        .where((medicine) {
+          return medicine.enName.toLowerCase().contains(lowercaseQuery) ||
+              medicine.arName.toLowerCase().contains(lowercaseQuery);
+        })
+        .map((medicine) => medicine.toMedicine())
+        .toList();
+  }
+
+  static List<MedicineSearchResult> _filterMedicinesWithDetails(
+      Map<String, dynamic> params) {
+    final List<MedicineJson> medicines = params['medicines'];
+    final String query = params['query'];
+    final lowercaseQuery = query.toLowerCase();
+
+    return medicines.where((medicine) {
+      return medicine.enName.toLowerCase().contains(lowercaseQuery) ||
+          medicine.arName.toLowerCase().contains(lowercaseQuery);
+    }).map((medicine) {
+      String description = medicine.description;
+
+      // Truncate description if needed
+      if (description.length > 100) {
+        description = description.substring(0, 100) + '...';
+      }
+
+      // Check if text is Arabic
+      bool isArabic = _isArabicText(description);
+
+      return MedicineSearchResult(
+        id: medicine.key,
+        name: medicine.enName,
+        description: description,
+        isArabic: isArabic,
+      );
+    }).toList();
+  }
+
+  static bool _isArabicText(String text) {
+    // Simple check for Arabic characters in the first 10 characters
+    final arabicRegex = RegExp(
+        r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]');
+    final sample = text.length > 10 ? text.substring(0, 10) : text;
+    return arabicRegex.hasMatch(sample);
+  }
+
   // Load all medicines from JSON file
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -22,10 +84,9 @@ class MedicinesJsonService {
       // Load the JSON file content
       final String jsonString =
           await rootBundle.loadString('medical_products_full.json');
-      final List<dynamic> jsonData = json.decode(jsonString);
 
-      // Parse JSON data into MedicineJson objects
-      _medicines = jsonData.map((item) => MedicineJson.fromJson(item)).toList();
+      // Parse JSON data in a separate isolate
+      _medicines = await compute(_parseMedicinesJson, jsonString);
       _isInitialized = true;
 
       print('Loaded ${_medicines.length} medicines from JSON file');
@@ -51,16 +112,25 @@ class MedicinesJsonService {
 
     await ensureInitialized();
 
-    final lowercaseQuery = query.toLowerCase();
+    // Check cache first
+    final cacheKey = query.toLowerCase();
+    if (_searchCache.containsKey(cacheKey)) {
+      return _searchCache[cacheKey]!;
+    }
 
-    // Filter medicines that match the query
-    final results = _medicines.where((medicine) {
-      return medicine.enName.toLowerCase().contains(lowercaseQuery) ||
-          medicine.arName.toLowerCase().contains(lowercaseQuery);
-    }).toList();
+    // Process search in a separate isolate
+    final results = await compute(_filterMedicines, {
+      'medicines': _medicines,
+      'query': query,
+    });
 
-    // Convert to old Medicine model for backward compatibility
-    return results.map((medicine) => medicine.toMedicine()).toList();
+    // Cache the results (limit cache size)
+    if (_searchCache.length > 100) {
+      _searchCache.remove(_searchCache.keys.first); // Remove oldest entry
+    }
+    _searchCache[cacheKey] = results;
+
+    return results;
   }
 
   // Search medicines with descriptions for the search screen
@@ -72,42 +142,26 @@ class MedicinesJsonService {
 
     await ensureInitialized();
 
-    final lowercaseQuery = query.toLowerCase();
+    // Check cache first
+    final cacheKey = query.toLowerCase();
+    if (_detailedSearchCache.containsKey(cacheKey)) {
+      return _detailedSearchCache[cacheKey]!;
+    }
 
-    // Filter medicines that match the query
-    final results = _medicines.where((medicine) {
-      return medicine.enName.toLowerCase().contains(lowercaseQuery) ||
-          medicine.arName.toLowerCase().contains(lowercaseQuery);
-    }).toList();
+    // Process search in a separate isolate
+    final results = await compute(_filterMedicinesWithDetails, {
+      'medicines': _medicines,
+      'query': query,
+    });
 
-    // Convert to MedicineSearchResult with descriptions
-    return results.map((medicine) {
-      String description = medicine.description;
+    // Cache the results (limit cache size)
+    if (_detailedSearchCache.length > 100) {
+      _detailedSearchCache
+          .remove(_detailedSearchCache.keys.first); // Remove oldest entry
+    }
+    _detailedSearchCache[cacheKey] = results;
 
-      // Truncate description if needed
-      if (description.length > 100) {
-        description = description.substring(0, 100) + '...';
-      }
-
-      // Check if text is Arabic
-      bool isArabic = _isArabicText(description);
-
-      return MedicineSearchResult(
-        id: medicine.key,
-        name: medicine.enName,
-        description: description,
-        isArabic: isArabic,
-      );
-    }).toList();
-  }
-
-  // Helper method to check if text is Arabic
-  bool _isArabicText(String text) {
-    // Simple check for Arabic characters in the first 10 characters
-    final arabicRegex = RegExp(
-        r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]');
-    final sample = text.length > 10 ? text.substring(0, 10) : text;
-    return arabicRegex.hasMatch(sample);
+    return results;
   }
 
   // Get all medicines (limited for performance)
@@ -141,5 +195,12 @@ class MedicinesJsonService {
         return null;
       }
     }
+  }
+
+  // Clear search caches (call this when memory is low)
+  void clearCaches() {
+    _searchCache.clear();
+    _detailedSearchCache.clear();
+    print('Medicine search caches cleared');
   }
 }

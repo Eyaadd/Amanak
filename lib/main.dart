@@ -91,7 +91,7 @@ void main() async {
   // Set up background notification handler
   FlutterLocalNotificationsPlugin().initialize(
     const InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      android: AndroidInitializationSettings('notification_icon'),
       iOS: DarwinInitializationSettings(),
     ),
     onDidReceiveNotificationResponse: notificationTapBackground,

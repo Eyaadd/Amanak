@@ -161,7 +161,7 @@ class NotiService {
 
     // Prepare Android initialization settings
     const initSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('notification_icon');
 
     // Prepare iOS initialization settings
     const initSettingsIOS = DarwinInitializationSettings(
@@ -350,6 +350,7 @@ class NotiService {
         priority: Priority.high,
         // Use default sound if custom sound is not available
         playSound: true,
+        icon: 'notification_icon',
       ),
       iOS: DarwinNotificationDetails(
         presentAlert: true,
@@ -371,6 +372,7 @@ class NotiService {
         // Use default sound if custom sound is not available
         playSound: true,
         color: Colors.red,
+        icon: 'notification_icon',
       ),
       iOS: DarwinNotificationDetails(
         presentAlert: true,
@@ -392,6 +394,7 @@ class NotiService {
         // Use default sound if custom sound is not available
         playSound: true,
         color: Colors.green,
+        icon: 'notification_icon',
       ),
       iOS: DarwinNotificationDetails(
         presentAlert: true,
@@ -411,6 +414,7 @@ class NotiService {
         importance: Importance.high,
         priority: Priority.high,
         playSound: true,
+        icon: 'notification_icon',
         styleInformation: BigTextStyleInformation(
             ''), // Allow for longer text in notification
       ),
@@ -854,6 +858,7 @@ class NotiService {
                         'This channel is used for important notifications.',
                     importance: Importance.high,
                     priority: Priority.high,
+                    icon: 'notification_icon',
                   ),
                   iOS: const DarwinNotificationDetails(),
                 ),
@@ -1106,7 +1111,7 @@ class NotiService {
                 'This channel is used for important notifications.',
             importance: Importance.high,
             priority: Priority.high,
-            icon: android?.smallIcon,
+            icon: 'notification_icon',
           ),
           iOS: const DarwinNotificationDetails(),
         );

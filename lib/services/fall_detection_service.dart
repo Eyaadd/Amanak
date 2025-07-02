@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'dart:isolate';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:workmanager/workmanager.dart';
@@ -49,6 +51,11 @@ class FallDetectionService {
   static int _gyroscopeReadingsCount = 0;
   static int _accelerometerReadingsCount = 0;
 
+  // Variables for isolate communication
+  static Isolate? _processingIsolate;
+  static ReceivePort? _receivePort;
+  static SendPort? _sendPort;
+
   // Initialize the service
   static Future<void> initialize() async {
     print('🚀 Initializing Fall Detection Service');
@@ -89,10 +96,177 @@ class FallDetectionService {
 
       await Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
       print('✅ Workmanager initialized successfully');
+
+      // Start data processing isolate
+      await _startProcessingIsolate();
+
       _isInitialized = true;
     } catch (e) {
       print('❌ Error initializing service: $e');
       print('❌ Stack trace: ${StackTrace.current}');
+    }
+  }
+
+  // Start the processing isolate
+  static Future<void> _startProcessingIsolate() async {
+    if (_processingIsolate != null) {
+      await _stopProcessingIsolate();
+    }
+
+    try {
+      // Create a receive port for communication
+      _receivePort = ReceivePort();
+
+      // Create the isolate
+      _processingIsolate = await Isolate.spawn(
+        _isolateEntryPoint,
+        _receivePort!.sendPort,
+      );
+
+      // Listen for messages from the isolate
+      _receivePort!.listen((message) {
+        if (message is SendPort) {
+          // Store the isolate's SendPort for communication
+          _sendPort = message;
+          print('✅ Processing isolate ready to receive data');
+        } else if (message is Map<String, dynamic>) {
+          // Handle prediction result from isolate
+          _handlePredictionResult(message);
+        } else {
+          print('📊 Message from isolate: $message');
+        }
+      });
+
+      print('✅ Processing isolate started successfully');
+    } catch (e) {
+      print('❌ Error starting processing isolate: $e');
+      print('❌ Stack trace: ${StackTrace.current}');
+    }
+  }
+
+  // Stop the processing isolate
+  static Future<void> _stopProcessingIsolate() async {
+    if (_processingIsolate != null) {
+      _processingIsolate!.kill(priority: Isolate.immediate);
+      _processingIsolate = null;
+    }
+
+    _receivePort?.close();
+    _receivePort = null;
+    _sendPort = null;
+  }
+
+  // Isolate entry point
+  @pragma('vm:entry-point')
+  static void _isolateEntryPoint(SendPort sendPort) {
+    // Create a receive port for this isolate
+    final receivePort = ReceivePort();
+
+    // Send the receive port's send port back to the main isolate
+    sendPort.send(receivePort.sendPort);
+
+    // Listen for messages from the main isolate
+    receivePort.listen((message) async {
+      if (message is List<Map<String, double>>) {
+        // Process sensor data
+        try {
+          final result = await _processDataInIsolate(message);
+          sendPort.send(result);
+        } catch (e) {
+          sendPort.send({'error': e.toString()});
+        }
+      } else if (message == 'shutdown') {
+        Isolate.exit();
+      }
+    });
+  }
+
+  // Process data in isolate
+  static Future<Map<String, dynamic>> _processDataInIsolate(
+      List<Map<String, double>> data) async {
+    try {
+      print('🔄 Processing data in isolate...');
+      print('📊 Sample count: ${data.length}');
+
+      // Create the request body
+      final body = jsonEncode({
+        'sensor_data': data,
+      });
+
+      // Create a client
+      final client = http.Client();
+      try {
+        var response = await client
+            .post(
+          Uri.parse(API_URL),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: body,
+        )
+            .timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            throw TimeoutException('API request timed out');
+          },
+        );
+
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          if (response.body.isNotEmpty) {
+            final result = jsonDecode(response.body);
+            return {
+              'success': true,
+              'predicted_class': result['predicted_class'],
+              'confidence': result['confidence'],
+              'timestamp': DateTime.now().millisecondsSinceEpoch,
+            };
+          } else {
+            return {'error': 'Empty response body'};
+          }
+        } else {
+          return {
+            'error': 'API Error: Status ${response.statusCode}',
+            'body': response.body,
+          };
+        }
+      } finally {
+        client.close();
+      }
+    } catch (e) {
+      print('❌ Error processing data in isolate: $e');
+      return {'error': e.toString()};
+    }
+  }
+
+  // Handle prediction result from isolate
+  static Future<void> _handlePredictionResult(
+      Map<String, dynamic> result) async {
+    try {
+      if (result.containsKey('success') && result['success'] == true) {
+        final predictedClass = result['predicted_class'] as String;
+        final confidence = (result['confidence'] as num).toDouble();
+        final timestamp = result['timestamp'] as int;
+
+        print('🎯 Prediction Result:');
+        print('   - Activity: $predictedClass');
+        print('   - Confidence: ${(confidence * 100).toStringAsFixed(1)}%');
+
+        // Save prediction result
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('last_activity', predictedClass);
+        await prefs.setDouble('last_confidence', confidence);
+        await prefs.setInt('last_prediction_time', timestamp);
+
+        if (predictedClass.toLowerCase() == 'falling') {
+          print('⚠️ FALL DETECTED!');
+          await _sendFallDetectionNotification();
+        }
+      } else if (result.containsKey('error')) {
+        print('❌ Error from processing isolate: ${result['error']}');
+      }
+    } catch (e) {
+      print('❌ Error handling prediction result: $e');
     }
   }
 
@@ -110,6 +284,11 @@ class FallDetectionService {
 
     _isMonitoring = true;
     _sensorBuffer = [];
+
+    // Make sure the processing isolate is running
+    if (_processingIsolate == null || _sendPort == null) {
+      await _startProcessingIsolate();
+    }
 
     try {
       // Start collecting sensor data
@@ -188,7 +367,7 @@ class FallDetectionService {
       print('⚠️ Gyroscope not available, using zeros for rotation values');
     }
 
-    // Process data every 2 seconds
+    // Process data every 2 seconds - reduced from the original implementation
     _processingTimer =
         Timer.periodic(const Duration(seconds: 2), (timer) async {
       if (!_isMonitoring) {
@@ -197,21 +376,33 @@ class FallDetectionService {
         return;
       }
 
-      print('📊 Sensor stats:');
-      print('   - Accelerometer readings: $_accelerometerReadingsCount');
-      print('   - Gyroscope readings: $_gyroscopeReadingsCount');
-      print('   - Buffer size: ${_sensorBuffer.length}');
-
       if (_sensorBuffer.length >= WINDOW_SIZE) {
-        print('📊 Processing ${_sensorBuffer.length} sensor readings');
-        await _processSensorData();
-      } else {
-        print(
-            '⚠️ Not enough sensor data yet. Current buffer size: ${_sensorBuffer.length}');
+        // Send data to isolate for processing instead of processing here
+        await _sendDataToIsolate();
       }
     });
 
     print('✅ Sensor listeners and processing timer set up successfully');
+  }
+
+  // Send data to isolate for processing
+  static Future<void> _sendDataToIsolate() async {
+    if (_sendPort == null || _sensorBuffer.length < WINDOW_SIZE) {
+      return;
+    }
+
+    try {
+      // Take a copy of the buffer to avoid modification during processing
+      final dataToSend = List<Map<String, double>>.from(
+          _sensorBuffer.sublist(_sensorBuffer.length - WINDOW_SIZE));
+
+      // Send the data to the isolate
+      _sendPort!.send(dataToSend);
+
+      print('📊 Sent ${dataToSend.length} readings to processing isolate');
+    } catch (e) {
+      print('❌ Error sending data to isolate: $e');
+    }
   }
 
   static void _tryAddSensorReading() {
@@ -251,8 +442,8 @@ class FallDetectionService {
       _sensorBuffer.add(reading);
       _lastReadingTime = currentTime;
 
-      // Log sensor values periodically
-      if (_sensorBuffer.length % 50 == 0) {
+      // Log sensor values periodically - reduced logging frequency
+      if (_sensorBuffer.length % 100 == 0) {
         print('📊 Current sensor values:');
         print(
             '   Accelerometer: x=${_lastAccelEvent!.x}, y=${_lastAccelEvent!.y}, z=${_lastAccelEvent!.z}');
@@ -277,6 +468,9 @@ class FallDetectionService {
       _lastReadingTime = 0;
       _client.close(); // Close the HTTP client
 
+      // Stop the processing isolate
+      await _stopProcessingIsolate();
+
       await Workmanager().cancelAll();
       print('✅ Fall detection monitoring stopped successfully');
     } catch (e) {
@@ -284,109 +478,7 @@ class FallDetectionService {
     }
   }
 
-  // Process sensor data and send to API
-  static Future<void> _processSensorData() async {
-    if (!_isMonitoring || _sensorBuffer.length < WINDOW_SIZE) return;
-
-    try {
-      // Take the last 100 readings
-      final dataToSend =
-          _sensorBuffer.sublist(_sensorBuffer.length - WINDOW_SIZE);
-
-      print('🔄 Sending data to fall detection API...');
-      print('📊 Sample count: ${dataToSend.length}');
-      print('📍 First reading: ${dataToSend.first}');
-      print('📍 Last reading: ${dataToSend.last}');
-
-      // Create the request body
-      final body = jsonEncode({
-        'sensor_data': dataToSend,
-      });
-
-      // Create a client that follows redirects
-      final client = http.Client();
-      try {
-        var currentUrl = API_URL;
-        var maxRedirects = 5;
-        var redirectCount = 0;
-        http.Response? response;
-
-        while (redirectCount < maxRedirects) {
-          response = await client
-              .post(
-            Uri.parse(currentUrl),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: body,
-          )
-              .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              throw TimeoutException('API request timed out');
-            },
-          );
-
-          print('📡 API Response Status: ${response.statusCode}');
-          print('📡 API Response Headers: ${response.headers}');
-
-          if (response.statusCode >= 200 && response.statusCode < 300) {
-            break;
-          } else if (response.statusCode >= 300 && response.statusCode < 400) {
-            final location = response.headers['location'];
-            if (location == null) {
-              throw Exception('Redirect location not found');
-            }
-            currentUrl = location;
-            redirectCount++;
-            print('🔄 Following redirect to: $currentUrl');
-          } else {
-            throw Exception('API Error: Status ${response.statusCode}');
-          }
-        }
-
-        if (response == null || redirectCount >= maxRedirects) {
-          throw Exception('Too many redirects');
-        }
-
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          if (response.body.isNotEmpty) {
-            final data = jsonDecode(response.body);
-            final predictedClass = data['predicted_class'] as String;
-            final confidence = (data['confidence'] as num).toDouble();
-
-            print('🎯 Prediction Result:');
-            print('   - Activity: $predictedClass');
-            print('   - Confidence: ${(confidence * 100).toStringAsFixed(1)}%');
-
-            // Save prediction result
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('last_activity', predictedClass);
-            await prefs.setDouble('last_confidence', confidence);
-            await prefs.setInt(
-                'last_prediction_time', DateTime.now().millisecondsSinceEpoch);
-
-            if (predictedClass.toLowerCase() == 'falling') {
-              print('⚠️ FALL DETECTED!');
-              await _sendFallDetectionNotification();
-            }
-          } else {
-            print('⚠️ API returned empty response body');
-          }
-        } else {
-          print('❌ API Error: Status ${response.statusCode}');
-          print('❌ Error Response: ${response.body}');
-          print('❌ Response Headers: ${response.headers}');
-        }
-      } finally {
-        client.close();
-      }
-    } catch (e) {
-      print('❌ Error processing sensor data: $e');
-      print('❌ Stack trace: ${StackTrace.current}');
-    }
-  }
+  // The original _processSensorData method is replaced by _sendDataToIsolate and _isolateEntryPoint
 
   static Future<void> _sendFallDetectionNotification() async {
     try {
