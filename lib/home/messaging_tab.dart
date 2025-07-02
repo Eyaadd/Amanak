@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:amanak/notifications/noti_service.dart';
 import 'package:amanak/firebase/firebase_manager.dart';
+import 'package:amanak/provider/my_provider.dart';
+import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import 'dart:math';
 
@@ -40,11 +42,14 @@ class _MessagingTabState extends State<MessagingTab>
   // Track if the messaging tab is currently active
   bool _isActive = false;
 
+  // Keep track of the last tab index
+  int _lastTabIndex = -1;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _isActive = true; // Mark as active when opened
+    // Don't mark as active immediately - will be updated in didChangeDependencies
     _initializeChat();
 
     // Check for any pending message notifications
@@ -68,6 +73,17 @@ class _MessagingTabState extends State<MessagingTab>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    // Update active status based on current selected tab
+    final provider = Provider.of<MyProvider>(context);
+
+    // Check if tab index has changed
+    if (_lastTabIndex != provider.selectedIndexHome) {
+      _lastTabIndex = provider.selectedIndexHome;
+      _isActive =
+          _lastTabIndex == 2; // Check if messaging tab (index 2) is selected
+      print('Tab changed. Messaging tab active: $_isActive');
+    }
 
     // Check for arguments passed via navigation
     final args =
@@ -545,6 +561,22 @@ class _MessagingTabState extends State<MessagingTab>
         ],
       ),
     );
+  }
+
+  // Update active status when tab changes
+  void _updateActiveStatus() {
+    final provider = Provider.of<MyProvider>(context, listen: false);
+    final isMessagingTabSelected = provider.selectedIndexHome == 2;
+
+    // Only update if changed
+    if (_isActive != isMessagingTabSelected) {
+      setState(() {
+        _isActive = isMessagingTabSelected;
+      });
+
+      // Debug
+      print('Messaging tab active status updated: $_isActive');
+    }
   }
 }
 
