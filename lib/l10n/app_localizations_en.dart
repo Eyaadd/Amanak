@@ -321,4 +321,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatbotGreeting => 'How Can I Help You Today?';
+
+  @override
+  String get yourGuardian => 'Your Guardian:';
+
+  @override
+  String get yourCareReceiver => 'Your Care Receiver:';
+
+  @override
+  String get medicineSearchTitle => 'Medicine Search';
+
+  @override
+  String get medicineSearchHint => 'Search for medicines...';
+
+  @override
+  String get medicineSearchEmpty => 'Enter a medicine name to search';
+
+  @override
+  String get medicineSearchNotFound => 'No medicines found';
+
+  @override
+  String get medicineDetailDescription => 'Description';
+
+  @override
+  String get medicineDetailUses => 'Uses';
+
+  @override
+  String get medicineDetailContraindications => 'Contraindications';
+
+  @override
+  String get medicineDetailPrecautions => 'Precautions';
+
+  @override
+  String get medicineDetailInteractions => 'Interactions';
+
+  @override
+  String get medicineDetailDosage => 'Dosage';
+
+  @override
+  String get medicineDetailDosageForms => 'Dosage Forms';
+
+  @override
+  String get medicineDetailStorage => 'Storage';
+
+  @override
+  String get medicineDetailUsageInstructions => 'Usage Instructions';
+
+  @override
+  String get medicineDetailSideEffects => 'Side Effects';
+
+  @override
+  String get medicineDetailEnglishName => 'English Name';
+
+  @override
+  String get medicineDetailArabicName => 'Arabic Name';
+
+  @override
+  String get medicineDetailNotFound => 'Medicine not found';
+
+  @override
+  String get medicineDetailTitle => 'Medicine Details';
 }

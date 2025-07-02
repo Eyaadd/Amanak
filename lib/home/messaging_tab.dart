@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:amanak/notifications/noti_service.dart';
 import 'package:amanak/firebase/firebase_manager.dart';
 import '../l10n/app_localizations.dart';
+import 'dart:math';
 
 class MessagingTab extends StatefulWidget {
   static const routeName = "Messaging";
@@ -270,12 +271,13 @@ class _MessagingTabState extends State<MessagingTab>
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     if (_currentUserEmail == null) {
       return Scaffold(
         appBar: AppBar(
           title: Text(localizations.messages),
-          backgroundColor: Theme.of(context).primaryColor,
+          backgroundColor: theme.primaryColor,
           foregroundColor: Colors.white,
         ),
         body: Center(
@@ -286,9 +288,14 @@ class _MessagingTabState extends State<MessagingTab>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_chatPartnerName ?? localizations.messages),
-        backgroundColor: Theme.of(context).primaryColor,
+        title: Text(_chatPartnerName ?? localizations.messages,
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+        backgroundColor: theme.primaryColor,
         foregroundColor: Colors.white,
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(18)),
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.refresh),
@@ -296,105 +303,172 @@ class _MessagingTabState extends State<MessagingTab>
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _messagesStream == null
-                ? Center(
-                    child: Text(localizations.loading),
-                  )
-                : StreamBuilder<QuerySnapshot>(
-                    stream: _messagesStream,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return Center(
-                          child: Text(localizations.error),
-                        );
-                      }
-
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
-
-                      final messages = snapshot.data?.docs ?? [];
-                      final chatMessages = messages.map((doc) {
-                        final data = doc.data() as Map<String, dynamic>;
-                        return ChatMessage(
-                          text: data['text'] ?? '',
-                          isMe: data['senderEmail'] == _currentUserEmail,
-                          time: (data['timestamp'] as Timestamp?)?.toDate() ??
-                              DateTime.now(),
-                        );
-                      }).toList();
-
-                      // Sort messages by time
-                      chatMessages.sort((a, b) => a.time.compareTo(b.time));
-
-                      return ListView.builder(
-                        reverse: true,
-                        padding: EdgeInsets.all(8),
-                        itemCount: chatMessages.length,
-                        itemBuilder: (context, index) {
-                          final message =
-                              chatMessages[chatMessages.length - 1 - index];
-                          return _buildMessageBubble(message);
-                        },
-                      );
-                    },
-                  ),
-          ),
-          _buildMessageInput(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageBubble(ChatMessage message) {
-    return Align(
-      alignment: message.isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: message.isMe ? Colors.blue : Colors.grey[300],
-          borderRadius: BorderRadius.circular(20),
-        ),
+      body: Container(
+        color: Colors.white,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              message.text,
-              style: TextStyle(
-                color: message.isMe ? Colors.white : Colors.black,
-              ),
+            Expanded(
+              child: _messagesStream == null
+                  ? Center(child: Text(localizations.loading))
+                  : StreamBuilder<QuerySnapshot>(
+                      stream: _messagesStream,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Center(child: Text(localizations.error));
+                        }
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        }
+                        final messages = snapshot.data?.docs ?? [];
+                        final chatMessages = messages
+                            .map((doc) {
+                              final data = doc.data() as Map<String, dynamic>;
+                              final ts = data['timestamp'] as Timestamp?;
+                              if (ts == null)
+                                return null; // Skip messages without a timestamp
+                              final localTime = ts.toDate().toLocal();
+                              return ChatMessage(
+                                text: data['text'] ?? '',
+                                isMe: data['senderEmail'] == _currentUserEmail,
+                                time: localTime,
+                              );
+                            })
+                            .whereType<ChatMessage>()
+                            .toList();
+                        // Sort messages by time
+                        chatMessages.sort((a, b) => a.time.compareTo(b.time));
+                        return _buildSimpleMessageList(chatMessages);
+                      },
+                    ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              _formatTime(message.time),
-              style: TextStyle(
-                fontSize: 12,
-                color: message.isMe ? Colors.white70 : Colors.black54,
-              ),
-            ),
+            _buildSimpleMessageInput(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMessageInput() {
-    final localizations = AppLocalizations.of(context)!;
+  Widget _buildSimpleMessageList(List<ChatMessage> messages) {
+    if (messages.isEmpty) {
+      return Center(child: Text('No messages yet'));
+    }
+    List<Widget> messageWidgets = [];
+    DateTime? lastDate;
+    // Iterate from oldest to newest
+    for (int i = 0; i < messages.length; i++) {
+      final msg = messages[i];
+      final msgDate = DateTime(msg.time.year, msg.time.month, msg.time.day);
+      if (lastDate == null || msgDate != lastDate) {
+        messageWidgets.add(_buildDateSeparator(msg.time));
+        lastDate = msgDate;
+      }
+      messageWidgets.add(_buildSimpleMessageBubble(msg));
+    }
+    return ListView(
+      reverse: true, // Newest at bottom
+      padding: EdgeInsets.only(top: 12, bottom: 8),
+      children: messageWidgets.reversed
+          .toList(), // Reverse widgets for correct display
+    );
+  }
+
+  Widget _buildSimpleMessageBubble(ChatMessage message) {
+    final isMe = message.isMe;
+    final theme = Theme.of(context);
+    final avatar = _buildAvatar(isMe ? _currentUserName : _chatPartnerName);
     return Container(
-      padding: const EdgeInsets.all(8),
+      margin: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+      child: Row(
+        mainAxisAlignment:
+            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (!isMe) ...[
+            avatar,
+            SizedBox(width: 6),
+          ],
+          Flexible(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: isMe ? theme.primaryColor : Colors.grey[200],
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                  bottomLeft: Radius.circular(isMe ? 16 : 0),
+                  bottomRight: Radius.circular(isMe ? 0 : 16),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    message.text,
+                    style: TextStyle(
+                      color: isMe ? Colors.white : Colors.black87,
+                      fontSize: 15,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    _formatTime(message.time),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isMe ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isMe) ...[
+            SizedBox(width: 6),
+            avatar,
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar(String? name) {
+    if (name == null || name.isEmpty) {
+      return CircleAvatar(
+        radius: 16,
+        backgroundColor: Colors.grey[300],
+        child: Icon(Icons.person, color: Colors.grey[700], size: 16),
+      );
+    }
+    final initials = name
+        .trim()
+        .split(' ')
+        .map((e) => e.isNotEmpty ? e[0] : '')
+        .take(2)
+        .join()
+        .toUpperCase();
+    final color =
+        Colors.primaries[(name.hashCode.abs()) % Colors.primaries.length];
+    return CircleAvatar(
+      radius: 16,
+      backgroundColor: color.withOpacity(0.8),
+      child: Text(initials,
+          style: TextStyle(
+              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+    );
+  }
+
+  Widget _buildSimpleMessageInput() {
+    final localizations = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withOpacity(0.10),
             spreadRadius: 1,
-            blurRadius: 3,
+            blurRadius: 4,
             offset: const Offset(0, -1),
           ),
         ],
@@ -402,18 +476,36 @@ class _MessagingTabState extends State<MessagingTab>
       child: Row(
         children: [
           Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: InputDecoration(
-                hintText: localizations.askQuestion,
-                border: InputBorder.none,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey[300]!),
               ),
-              maxLines: null,
+              child: TextField(
+                controller: _messageController,
+                decoration: InputDecoration(
+                  hintText: localizations.askQuestion,
+                  border: InputBorder.none,
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                ),
+                maxLines: null,
+                style: TextStyle(fontSize: 15),
+              ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.send),
-            onPressed: _sendMessage,
+          SizedBox(width: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: theme.primaryColor,
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: Icon(Icons.send, color: Colors.white),
+              onPressed: _sendMessage,
+              splashRadius: 22,
+            ),
           ),
         ],
       ),
@@ -422,6 +514,37 @@ class _MessagingTabState extends State<MessagingTab>
 
   String _formatTime(DateTime time) {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildDateSeparator(DateTime date) {
+    final now = DateTime.now();
+    final dateOnly = DateTime(date.year, date.month, date.day);
+    final nowOnly = DateTime(now.year, now.month, now.day);
+    String label;
+    if (dateOnly == nowOnly) {
+      label = AppLocalizations.of(context)!.today;
+    } else if (nowOnly.difference(dateOnly).inDays == 1) {
+      label = 'Yesterday';
+    } else {
+      label = '${date.day}/${date.month}/${date.year}';
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(label,
+                style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -435,4 +558,31 @@ class ChatMessage {
     required this.isMe,
     required this.time,
   });
+}
+
+class BubbleTailPainter extends CustomPainter {
+  final Color color;
+  final bool isMe;
+  BubbleTailPainter({required this.color, required this.isMe});
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+    final path = Path();
+    if (isMe) {
+      path.moveTo(0, 0);
+      path.lineTo(10, 0);
+      path.lineTo(0, 10);
+      path.close();
+      canvas.drawPath(path, paint);
+    } else {
+      path.moveTo(10, 0);
+      path.lineTo(0, 0);
+      path.lineTo(10, 10);
+      path.close();
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

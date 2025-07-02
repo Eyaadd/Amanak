@@ -271,7 +271,7 @@ class _ProfileTabState extends State<ProfileTab> {
                           screenWidth, screenHeight)
                       : showEditInformation
                           ? _buildEditInformationInterface(
-                              screenWidth, screenHeight)
+                              screenWidth, screenHeight, localizations)
                           : SingleChildScrollView(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -312,7 +312,7 @@ class _ProfileTabState extends State<ProfileTab> {
                                       ],
                                     ),
                                   ),
-                                  SizedBox(height: screenHeight * 0.108),
+                                  SizedBox(height: screenHeight * 0.05),
                                   Container(
                                     width: double.infinity,
                                     height: screenHeight * 0.5378,
@@ -760,7 +760,7 @@ class _ProfileTabState extends State<ProfileTab> {
   }
 
   Widget _buildEditInformationInterface(
-      double screenWidth, double screenHeight) {
+      double screenWidth, double screenHeight, AppLocalizations localizations) {
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -827,6 +827,20 @@ class _ProfileTabState extends State<ProfileTab> {
                         thickness: 2,
                         endIndent: screenWidth * 0.025,
                         indent: screenWidth * 0.025),
+                    Padding(
+                      padding:
+                          EdgeInsets.only(left: screenWidth * 0.02, bottom: 4),
+                      child: Text(
+                        userRole.toLowerCase() == 'guardian'
+                            ? localizations.yourCareReceiver
+                            : localizations.yourGuardian,
+                        style: GoogleFonts.albertSans(
+                          fontWeight: FontWeight.bold,
+                          fontSize: screenWidth * 0.042,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                    ),
                     _buildProfileOption(
                       assetName: "shareduser",
                       title: sharedUsers == '' ? "Shared Users" : sharedUsers,
