@@ -107,23 +107,51 @@ class _CalendarTabState extends State<CalendarTab> {
           final startDate = DateTime(
               pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
 
-          if (groupedPills[startDate] == null) {
-            groupedPills[startDate] = [];
-          }
-          groupedPills[startDate]!.add(pill);
+          // For each time in the pill, create a separate entry
+          for (int i = 0; i < pill.times.length; i++) {
+            // Create a copy of the pill with a single time
+            final timeOfDay = pill.times[i];
+            final singleTimePill = pill.copyWith(
+              times: [timeOfDay],
+              timesPerDay: 1, // Set to 1 since we're showing one time per card
+            );
 
-          // Mark all days in the duration with the pill
-          for (int i = 1; i < pill.duration; i++) {
-            final nextDate = startDate.add(Duration(days: i));
-            final nextDateKey =
-                DateTime(nextDate.year, nextDate.month, nextDate.day);
-
-            if (groupedPills[nextDateKey] == null) {
-              groupedPills[nextDateKey] = [];
+            if (groupedPills[startDate] == null) {
+              groupedPills[startDate] = [];
             }
-            groupedPills[nextDateKey]!.add(pill);
+            groupedPills[startDate]!.add(singleTimePill);
+
+            // Mark all days in the duration with the pill
+            for (int j = 1; j < pill.duration; j++) {
+              final nextDate = startDate.add(Duration(days: j));
+              final nextDateKey =
+                  DateTime(nextDate.year, nextDate.month, nextDate.day);
+
+              if (groupedPills[nextDateKey] == null) {
+                groupedPills[nextDateKey] = [];
+              }
+              groupedPills[nextDateKey]!.add(singleTimePill);
+            }
           }
         }
+
+        // Sort pills for each day by time
+        groupedPills.forEach((date, pills) {
+          pills.sort((a, b) {
+            if (a.times.isEmpty || b.times.isEmpty) return 0;
+
+            final aTime = a.times.first;
+            final bTime = b.times.first;
+
+            // Compare hours first
+            if (aTime.hour != bTime.hour) {
+              return aTime.hour.compareTo(bTime.hour);
+            }
+
+            // If hours are the same, compare minutes
+            return aTime.minute.compareTo(bTime.minute);
+          });
+        });
 
         setState(() {
           _pills = groupedPills;
@@ -140,6 +168,25 @@ class _CalendarTabState extends State<CalendarTab> {
         _isLoading = false;
       });
     }
+  }
+
+  // Helper method to get the time key for a specific pill dose
+  String _getTimeKeyForPill(PillModel pill) {
+    if (pill.times.isEmpty) return "";
+
+    final time = pill.times.first;
+    final dateStr =
+        '${_selectedDay!.year}-${_selectedDay!.month}-${_selectedDay!.day}';
+    return '$dateStr-${time.hour}-${time.minute}';
+  }
+
+  // Helper method to format time
+  String _formatTime(TimeOfDay time) {
+    final hour =
+        time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $period';
   }
 
   void _showAddPillDialog() {
@@ -856,8 +903,9 @@ class _CalendarTabState extends State<CalendarTab> {
       itemCount: pillsForSelectedDay.length,
       itemBuilder: (context, index) {
         final pill = pillsForSelectedDay[index];
-        final isTaken = pill.isTakenOnDate(_selectedDay!);
-        final takenDate = pill.getTakenDateForDate(_selectedDay!);
+        final isTaken = pill.takenDates.containsKey(_getTimeKeyForPill(pill));
+        final takenDate = pill.takenDates[_getTimeKeyForPill(pill)];
+        final formattedTime = _formatTime(pill.times.first);
 
         return Dismissible(
           key: Key("${pill.id}_$selectedDate"),
@@ -923,57 +971,72 @@ class _CalendarTabState extends State<CalendarTab> {
           child: Container(
             margin: EdgeInsets.only(bottom: 2.w),
             decoration: BoxDecoration(
-              color: _getPillCardColor(pill),
+              color: _getPillCardColor(pill, isTaken),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: ListTile(
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.h),
-                    leading: Container(
-                      padding: EdgeInsets.all(2.w),
-                      child: Icon(
-                        _getPillStatusIcon(pill),
-                        color: _getPillTextColor(pill),
-                        size: 6.w,
-                      ),
-                    ),
-                    title: Text(
-                      pill.name,
-                      style: TextStyle(
-                        color: _getPillTextColor(pill),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15.sp,
-                      ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '${pill.dosage} - ${pill.timesPerDay} Times per day',
-                          style: TextStyle(
-                            color: _getPillSubtitleColor(pill),
-                            fontSize: 13.sp,
-                          ),
+                ListTile(
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.h),
+                  leading: Container(
+                    padding: EdgeInsets.all(2.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
                         ),
-                        SizedBox(height: 0.5.h),
-                        Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(1.w),
-                              decoration: BoxDecoration(
-                                color: isTaken
-                                    ? Colors.green[100]
-                                    : (pill.missed
-                                        ? Colors.red[100]
-                                        : Colors.white30),
-                                shape: BoxShape.circle,
-                              ),
+                      ],
+                    ),
+                    child: Icon(
+                      _getPillStatusIcon(pill, isTaken),
+                      color: _getPillTextColor(pill, isTaken),
+                      size: 6.w,
+                    ),
+                  ),
+                  title: Text(
+                    pill.name,
+                    style: TextStyle(
+                      color: _getPillTextColor(pill, isTaken),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15.sp,
+                    ),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pill.dosage,
+                        style: TextStyle(
+                          color: _getPillSubtitleColor(pill, isTaken),
+                          fontSize: 13.sp,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 4.w,
+                            color: _getPillSubtitleColor(pill, isTaken),
+                          ),
+                          SizedBox(width: 2.w),
+                          Text(
+                            formattedTime,
+                            style: TextStyle(
+                              color: _getPillSubtitleColor(pill, isTaken),
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (pill.allowSnooze)
+                            Padding(
+                              padding: EdgeInsets.only(left: 2.w),
                               child: Icon(
-                                Icons.access_time,
+                                Icons.snooze,
                                 color: isTaken
                                     ? Colors.green[700]
                                     : (pill.missed
@@ -982,84 +1045,58 @@ class _CalendarTabState extends State<CalendarTab> {
                                 size: 4.w,
                               ),
                             ),
-                            SizedBox(width: 1.w),
-                            Flexible(
-                              child: Text(
-                                pill.getFormattedTimes(),
-                                style: TextStyle(
-                                  color: _getPillSubtitleColor(pill),
-                                  fontSize: 13.sp,
-                                ),
-                                softWrap: true,
-                                overflow: TextOverflow.visible,
-                              ),
-                            ),
-                            if (pill.allowSnooze)
-                              Padding(
-                                padding: EdgeInsets.only(left: 2.w),
-                                child: Icon(
-                                  Icons.snooze,
-                                  color: isTaken
-                                      ? Colors.green[700]
-                                      : (pill.missed
-                                          ? Colors.red[700]
-                                          : Colors.white),
-                                  size: 4.w,
-                                ),
-                              ),
-                          ],
+                        ],
+                      ),
+                      if (isTaken && takenDate != null)
+                        Text(
+                          'Taken at: ${DateFormat('h:mm a').format(takenDate)}',
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: Colors.green[700],
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
-                        if (isTaken && takenDate != null)
-                          Text(
-                            'Taken at: ${DateFormat('h:mm a').format(takenDate)}',
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              color: Colors.green[700],
-                              fontStyle: FontStyle.italic,
-                            ),
+                      if (pill.missed && !isTaken)
+                        Text(
+                          'Missed!',
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: Colors.red[700],
+                            fontWeight: FontWeight.bold,
+                            fontStyle: FontStyle.italic,
                           ),
-                        if (pill.missed && !isTaken)
-                          Text(
-                            'Missed!',
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              color: Colors.red[700],
-                              fontWeight: FontWeight.bold,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                      ],
-                    ),
-                    trailing: !_isReadOnly
-                        ? IconButton(
-                            icon: Icon(
-                              Icons.edit,
-                              color: _getPillTextColor(pill),
-                              size: 5.w,
-                            ),
-                            onPressed: () {
-                              // Only allow editing from the start date
-                              final startDate = DateTime(pill.dateTime.year,
-                                  pill.dateTime.month, pill.dateTime.day);
-
-                              if (startDate.isAtSameMomentAs(selectedDate)) {
-                                _showEditPillDialog(pill);
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(
-                                          'Edit from the start date (${DateFormat('MMM d').format(startDate)})')),
-                                );
-                              }
-                            },
-                          )
-                        : null,
+                        ),
+                    ],
                   ),
+                  trailing: !_isReadOnly
+                      ? IconButton(
+                          icon: Icon(
+                            Icons.edit,
+                            color: _getPillTextColor(pill, isTaken),
+                            size: 5.w,
+                          ),
+                          onPressed: () {
+                            // Only allow editing from the start date
+                            final startDate = DateTime(pill.dateTime.year,
+                                pill.dateTime.month, pill.dateTime.day);
+
+                            if (startDate.isAtSameMomentAs(selectedDate)) {
+                              _showEditPillDialog(pill);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'Edit from the start date (${DateFormat('MMM d').format(startDate)})')),
+                              );
+                            }
+                          },
+                        )
+                      : null,
                 ),
                 // Add checkbox to mark as taken - only for elders
                 if (!_isReadOnly)
                   Padding(
-                    padding: EdgeInsets.only(right: 4.w),
+                    padding: EdgeInsets.only(right: 4.w, bottom: 2.w),
                     child: Transform.scale(
                       scale: 1.2,
                       child: Checkbox(
@@ -1080,9 +1117,9 @@ class _CalendarTabState extends State<CalendarTab> {
                 // For guardians, just show if pill was taken or not
                 if (_isReadOnly)
                   Padding(
-                    padding: EdgeInsets.only(right: 4.w),
+                    padding: EdgeInsets.only(right: 4.w, bottom: 2.w),
                     child: Icon(
-                      _getPillStatusIcon(pill),
+                      isTaken ? Icons.check_circle : Icons.pending_actions,
                       color: isTaken
                           ? Colors.green[700]
                           : (pill.missed ? Colors.red[700] : Colors.orange),
@@ -1129,13 +1166,43 @@ class _CalendarTabState extends State<CalendarTab> {
         return;
       }
 
+      // Get the original pill from Firebase
+      final pillsList = await FirebaseManager.getPills();
+      final originalPill = pillsList.firstWhere((p) => p.id == pill.id);
+
+      // Get the time key for this specific dose
+      final timeKey = _getTimeKeyForPill(pill);
+
+      // Create a copy of the original pill with updated taken status for this time
+      final updatedPill = originalPill.copyWith();
+
+      if (isTaken) {
+        updatedPill.markTimeTaken(timeKey, DateTime.now());
+        updatedPill.missed = false;
+      } else {
+        updatedPill.markTimeNotTaken(timeKey);
+      }
+
       // Update local state immediately for better performance
       setState(() {
-        // Update the pill in the local _pills map
-        pill.markTakenOnDate(_selectedDay!, isTaken);
-        if (isTaken) {
-          pill.missed = false;
-        }
+        // Update all instances of this pill in the pills map
+        _pills.forEach((date, pills) {
+          for (int i = 0; i < pills.length; i++) {
+            if (pills[i].id == pill.id) {
+              // Check if this is the specific time we're marking as taken
+              if (_getTimeKeyForPill(pills[i]) == timeKey) {
+                // Update the taken status for this specific time
+                pills[i] = pills[i].copyWith(
+                  takenDates: isTaken
+                      ? {...pills[i].takenDates, timeKey: DateTime.now()}
+                      : {...pills[i].takenDates}
+                    ..remove(timeKey),
+                  missed: isTaken ? false : pills[i].missed,
+                );
+              }
+            }
+          }
+        });
       });
 
       // Show immediate feedback
@@ -1143,8 +1210,8 @@ class _CalendarTabState extends State<CalendarTab> {
         SnackBar(
           content: Text(
             isTaken
-                ? '${pill.name} marked as taken'
-                : '${pill.name} marked as not taken',
+                ? '${pill.name} marked as taken for ${_formatTime(pill.times.first)}'
+                : '${pill.name} marked as not taken for ${_formatTime(pill.times.first)}',
             style: TextStyle(fontSize: 14.sp),
           ),
           duration: Duration(seconds: 1),
@@ -1152,7 +1219,7 @@ class _CalendarTabState extends State<CalendarTab> {
       );
 
       // Sync with Firebase in the background
-      _syncPillToFirebase(pill);
+      _syncPillToFirebase(updatedPill);
     } catch (e) {
       print('Error updating pill status: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1237,8 +1304,8 @@ class _CalendarTabState extends State<CalendarTab> {
   }
 
   // Helper methods for pill card UI
-  Color _getPillCardColor(PillModel pill) {
-    if (pill.isTakenOnDate(_selectedDay!)) {
+  Color _getPillCardColor(PillModel pill, bool isTaken) {
+    if (isTaken) {
       return Colors.green[50]!;
     } else if (pill.missed) {
       return Colors.red[50]!;
@@ -1247,8 +1314,8 @@ class _CalendarTabState extends State<CalendarTab> {
     }
   }
 
-  Color _getPillTextColor(PillModel pill) {
-    if (pill.isTakenOnDate(_selectedDay!)) {
+  Color _getPillTextColor(PillModel pill, bool isTaken) {
+    if (isTaken) {
       return Colors.green[700]!;
     } else if (pill.missed) {
       return Colors.red[700]!;
@@ -1257,8 +1324,8 @@ class _CalendarTabState extends State<CalendarTab> {
     }
   }
 
-  Color _getPillSubtitleColor(PillModel pill) {
-    if (pill.isTakenOnDate(_selectedDay!)) {
+  Color _getPillSubtitleColor(PillModel pill, bool isTaken) {
+    if (isTaken) {
       return Colors.green[700]!.withAlpha(204); // 0.8 opacity
     } else if (pill.missed) {
       return Colors.red[700]!.withAlpha(204); // 0.8 opacity
@@ -1267,8 +1334,8 @@ class _CalendarTabState extends State<CalendarTab> {
     }
   }
 
-  IconData _getPillStatusIcon(PillModel pill) {
-    if (pill.isTakenOnDate(_selectedDay!)) {
+  IconData _getPillStatusIcon(PillModel pill, bool isTaken) {
+    if (isTaken) {
       return Icons.check_circle;
     } else if (pill.missed) {
       return Icons.warning_rounded;

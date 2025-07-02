@@ -324,6 +324,17 @@ class FirebaseManager {
           // Skip if already taken today or already marked as missed
           if (pill.isTakenOnDate(today) || pill.missed) continue;
 
+          // Check if the pill is scheduled for today or a past date
+          final pillStartDate = DateTime(
+              pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
+
+          // Skip pills scheduled for future dates - they can't be missed yet
+          if (pillStartDate.isAfter(today)) continue;
+
+          // Only check pills that are within their treatment period
+          final daysSinceStart = today.difference(pillStartDate).inDays;
+          if (daysSinceStart < 0 || daysSinceStart >= pill.duration) continue;
+
           // Check if pill time has passed (more than 5 minutes ago)
           for (final dynamic timeObj in pill.times) {
             int hour = 8; // Default value

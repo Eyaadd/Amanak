@@ -49,18 +49,18 @@ class PillModel {
 
   PillModel.fromJson(Map<String, dynamic> json, String id)
       : this(
-    id: id,
-    name: json['name'] ?? "",
-    dosage: json['dosage'] ?? "",
-    timesPerDay: json['timesPerDay'] ?? 1,
-    duration: json['duration'] ?? 1,
-    dateTime: (json['dateTime'] as Timestamp).toDate(),
-    times: _parseTimes(json['times'], json),
-    allowSnooze: json['allowSnooze'] ?? true,
-    note: json['note'] ?? "",
-    takenDates: _parseTakenDates(json['takenDates'], json),
-    missed: json['missed'] ?? false,
-  );
+          id: id,
+          name: json['name'] ?? "",
+          dosage: json['dosage'] ?? "",
+          timesPerDay: json['timesPerDay'] ?? 1,
+          duration: json['duration'] ?? 1,
+          dateTime: (json['dateTime'] as Timestamp).toDate(),
+          times: _parseTimes(json['times'], json),
+          allowSnooze: json['allowSnooze'] ?? true,
+          note: json['note'] ?? "",
+          takenDates: _parseTakenDates(json['takenDates'], json),
+          missed: json['missed'] ?? false,
+        );
 
   Map<String, dynamic> toJson() {
     return {
@@ -71,14 +71,14 @@ class PillModel {
       'dateTime': Timestamp.fromDate(dateTime),
       'times': times
           .map((time) => {
-        'hour': time.hour,
-        'minute': time.minute,
-      })
+                'hour': time.hour,
+                'minute': time.minute,
+              })
           .toList(),
       'allowSnooze': allowSnooze,
       'note': note,
       'takenDates': takenDates.map(
-            (key, value) => MapEntry(key, Timestamp.fromDate(value)),
+        (key, value) => MapEntry(key, Timestamp.fromDate(value)),
       ),
       'missed': missed,
     };
@@ -133,6 +133,16 @@ class PillModel {
     } else {
       takenDates.remove(dateStr);
     }
+  }
+
+  // Helper method to mark a specific time as taken
+  void markTimeTaken(String timeKey, DateTime takenTime) {
+    takenDates[timeKey] = takenTime;
+  }
+
+  // Helper method to mark a specific time as not taken
+  void markTimeNotTaken(String timeKey) {
+    takenDates.remove(timeKey);
   }
 
   // Schedule notifications for this pill

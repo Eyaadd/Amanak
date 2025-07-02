@@ -162,9 +162,32 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
 
       // Check if the pill should be taken today
       if (daysSinceStart >= 0 && daysSinceStart < pill.duration) {
-        todayPills.add(pill);
+        // Instead of adding the pill once, add it once for each dosage time
+        for (int i = 0; i < pill.times.length; i++) {
+          // Create a copy of the pill with a single time
+          final timeOfDay = pill.times[i];
+          final singleTimePill = pill.copyWith(
+            times: [timeOfDay],
+            timesPerDay: 1, // Set to 1 since we're showing one time per card
+          );
+          todayPills.add(singleTimePill);
+        }
       }
     }
+
+    // Sort pills by time
+    todayPills.sort((a, b) {
+      final aTime = a.times.first;
+      final bTime = b.times.first;
+
+      // Compare hours first
+      if (aTime.hour != bTime.hour) {
+        return aTime.hour.compareTo(bTime.hour);
+      }
+
+      // If hours are the same, compare minutes
+      return aTime.minute.compareTo(bTime.minute);
+    });
 
     return todayPills;
   }
@@ -208,19 +231,34 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
         return;
       }
 
-      // Create a copy of the pill to avoid UI lag when updating
-      final updatedPill = pill.copyWith();
-      final today = DateTime.now();
-      updatedPill.markTakenOnDate(today, true);
-      updatedPill.missed = false;
+      // Get the original pill from Firebase
+      final pillsList = await FirebaseManager.getPills();
+      final originalPill = pillsList.firstWhere((p) => p.id == pill.id);
+
+      // Get the time key for this specific dose
+      final timeKey = _getTimeKeyForPill(pill);
+
+      // Create a copy of the original pill with updated taken status for this time
+      final updatedPill = originalPill.copyWith();
+      updatedPill.markTimeTaken(timeKey, DateTime.now());
 
       // Update local state immediately for better performance
       if (mounted) {
         setState(() {
-          // Replace the old pill with the updated one
-          final index = _todayPills.indexWhere((p) => p.id == pill.id);
-          if (index >= 0) {
-            _todayPills[index] = updatedPill;
+          // Update all instances of this pill in today's pills list
+          for (int i = 0; i < _todayPills.length; i++) {
+            if (_todayPills[i].id == pill.id) {
+              // Check if this is the specific time we're marking as taken
+              if (_getTimeKeyForPill(_todayPills[i]) == timeKey) {
+                // Replace with the single-time pill that's marked as taken
+                _todayPills[i] = pill.copyWith(
+                  takenDates: {
+                    ...pill.takenDates,
+                    timeKey: DateTime.now(),
+                  },
+                );
+              }
+            }
           }
         });
       }
@@ -228,7 +266,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       // Show immediate feedback
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${pill.name} marked as taken'),
+          content: Text(
+              '${pill.name} marked as taken for ${_formatTime(pill.times.first)}'),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 1),
         ),
@@ -245,6 +284,25 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
         ),
       );
     }
+  }
+
+  // Helper method to get the time key for a specific pill dose
+  String _getTimeKeyForPill(PillModel pill) {
+    if (pill.times.isEmpty) return "";
+
+    final time = pill.times.first;
+    final today = DateTime.now();
+    final dateStr = '${today.year}-${today.month}-${today.day}';
+    return '$dateStr-${time.hour}-${time.minute}';
+  }
+
+  // Helper method to format time
+  String _formatTime(TimeOfDay time) {
+    final hour =
+        time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $period';
   }
 
   // Sync pill to Firebase in background using compute
@@ -294,9 +352,13 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   }
 
   String _getTimeStatus(PillModel pill) {
+    if (pill.times.isEmpty) return "upcoming";
+
     final today = DateTime.now();
-    // If pill is already taken today, return taken status
-    if (pill.isTakenOnDate(today)) {
+    final timeKey = _getTimeKeyForPill(pill);
+
+    // If this specific dose is already taken today, return taken status
+    if (pill.takenDates.containsKey(timeKey)) {
       return "taken";
     }
 
@@ -306,12 +368,25 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     }
 
     final now = DateTime.now();
+    final time = pill.times.first;
+
+    // Check if the pill is scheduled for a future date
+    final pillStartDate =
+        DateTime(pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
+    final todayDate = DateTime(now.year, now.month, now.day);
+
+    // If pill is scheduled for a future date, it's always upcoming
+    if (pillStartDate.isAfter(todayDate)) {
+      return "upcoming";
+    }
+
+    // For pills scheduled for today, check the specific time
     final pillTime = DateTime(
       now.year,
       now.month,
       now.day,
-      pill.alarmHour,
-      pill.alarmMinute,
+      time.hour,
+      time.minute,
     );
 
     // If pill time is more than 5 minutes ago and not taken, mark as overdue/missed
@@ -321,7 +396,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
 
     // If pill time is within last 5 minutes or next 30 minutes, mark as due now
     if (now.difference(pillTime).inMinutes <= 5 &&
-        now.difference(pillTime).inMinutes >= 0) {
+        now.difference(pillTime).inMinutes >= -30) {
       return "due-now";
     }
 
@@ -568,8 +643,10 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   // Optimized pill card with const where possible
   Widget _buildPillCard(PillModel pill, String status) {
     final today = DateTime.now();
-    // If pill is already taken today, override the status
-    if (pill.isTakenOnDate(today)) {
+    final timeKey = _getTimeKeyForPill(pill);
+
+    // If this specific dose is already taken today, override the status
+    if (pill.takenDates.containsKey(timeKey)) {
       status = "taken";
     } else if (pill.missed) {
       status = "missed";
@@ -579,7 +656,13 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     final cardColor = _getCardColor(status);
     final textColor = _getTextColor(status);
     final statusIcon = _getStatusIcon(status);
-    final takenDate = pill.getTakenDateForDate(today);
+    final takenDate = pill.takenDates[timeKey];
+
+    // Get the specific time for this dose
+    final doseTime = pill.times.isNotEmpty
+        ? pill.times.first
+        : TimeOfDay(hour: 8, minute: 0);
+    final formattedTime = _formatTime(doseTime);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -633,7 +716,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${pill.dosage} - ${pill.timesPerDay} ${pill.timesPerDay > 1 ? "times" : "time"} per day',
+                    '${pill.dosage}',
                     style: TextStyle(
                       color: textColor.withOpacity(0.8),
                       fontSize: 14,
@@ -647,15 +730,12 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                         color: textColor.withOpacity(0.7),
                       ),
                       const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          pill.getFormattedTimes(),
-                          style: TextStyle(
-                            color: textColor.withOpacity(0.7),
-                            fontSize: 14,
-                          ),
-                          softWrap: true,
-                          overflow: TextOverflow.visible,
+                      Text(
+                        formattedTime,
+                        style: TextStyle(
+                          color: textColor.withOpacity(0.7),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
@@ -669,7 +749,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                         fontStyle: FontStyle.italic,
                       ),
                     ),
-                  if (pill.missed && !pill.isTakenOnDate(today))
+                  if (pill.missed && !pill.takenDates.containsKey(timeKey))
                     Text(
                       'Missed!',
                       style: TextStyle(
@@ -712,10 +792,10 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   // For guardians - show status icon instead of checkbox
                   padding: const EdgeInsets.only(right: 16.0),
                   child: Icon(
-                    pill.isTakenOnDate(today)
+                    pill.takenDates.containsKey(timeKey)
                         ? Icons.check_circle
                         : Icons.pending_actions,
-                    color: pill.isTakenOnDate(today)
+                    color: pill.takenDates.containsKey(timeKey)
                         ? Colors.green[700]
                         : Colors.orange,
                     size: 28,
@@ -727,7 +807,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   child: Transform.scale(
                     scale: 1.3,
                     child: Checkbox(
-                      value: pill.isTakenOnDate(today),
+                      value: pill.takenDates.containsKey(timeKey),
                       activeColor: Colors.green[700],
                       checkColor: Colors.white,
                       shape: RoundedRectangleBorder(
