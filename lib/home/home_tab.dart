@@ -91,9 +91,9 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             _displayUserId = elderData['id'] ?? '';
             if (_displayUserId.isNotEmpty) {
               if (mounted) {
-                setState(() {
-                  _isReadOnly = true;
-                });
+              setState(() {
+                _isReadOnly = true;
+              });
               }
               _displayName = elderData['name'] ?? 'Elder';
             }
@@ -106,9 +106,9 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     } catch (e) {
       print('Error checking user role: $e');
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+      setState(() {
+        _isLoading = false;
+      });
       }
     }
   }
@@ -149,19 +149,19 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
 
   // Static method for compute to run on separate isolate
   static List<PillModel> _filterPillsForToday(List<PillModel> pillsList) {
-    final today = DateTime.now();
-    final todayDate = DateTime(today.year, today.month, today.day);
-    final todayPills = <PillModel>[];
+        final today = DateTime.now();
+        final todayDate = DateTime(today.year, today.month, today.day);
+        final todayPills = <PillModel>[];
 
-    for (var pill in pillsList) {
+        for (var pill in pillsList) {
       final pillStartDate =
           DateTime(pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
 
-      // Calculate days since start date
-      final daysSinceStart = todayDate.difference(pillStartDate).inDays;
+          // Calculate days since start date
+          final daysSinceStart = todayDate.difference(pillStartDate).inDays;
 
-      // Check if the pill should be taken today
-      if (daysSinceStart >= 0 && daysSinceStart < pill.duration) {
+          // Check if the pill should be taken today
+          if (daysSinceStart >= 0 && daysSinceStart < pill.duration) {
         // Instead of adding the pill once, add it once for each dosage time
         for (int i = 0; i < pill.times.length; i++) {
           // Create a copy of the pill with a single time
@@ -332,8 +332,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     } catch (e) {
       print('Error syncing pill to Firebase: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
             content: Text(
               'Warning: Changes may not be saved',
               style: TextStyle(fontSize: 12),
@@ -470,17 +470,17 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.all(screenWidth * 0.05),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            child: Padding(
+              padding: EdgeInsets.all(screenWidth * 0.05),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Header Row
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
                               // Use precacheImage for logo to ensure it's loaded
                               Image.asset(
                                 "assets/images/Amanaklogo2.png",
@@ -488,46 +488,46 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                                 cacheHeight: (screenHeight * 0.07).toInt(),
                                 cacheWidth: (screenHeight * 0.07).toInt(),
                               ),
-                              Text(
+                          Text(
                                 localizations.home,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium!
-                                    .copyWith(
-                                      color: Colors.black,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium!
+                                .copyWith(
+                                  color: Colors.black,
                                       fontSize: screenWidth * 0.06,
-                                    ),
-                              ),
-                            ],
+                                ),
                           ),
+                        ],
+                      ),
                           // Logo
                           NotificationBadge(
                             size: screenHeight * 0.045,
                           ),
-                        ],
-                      ),
-                      SizedBox(height: screenHeight * 0.03),
-                      // Search Field
-                      PillSearchField(
-                        controller: _searchController,
-                        onChanged: (value) {
-                          // Handle search
-                        },
-                      ),
-                      SizedBox(height: screenHeight * 0.03),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.03),
+                  // Search Field
+                  PillSearchField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      // Handle search
+                    },
+                  ),
+                  SizedBox(height: screenHeight * 0.03),
                       // Overlay Buttons - Moved to a dedicated widget
                       OverlayButtonGrid(
                         screenWidth: screenWidth,
                         screenHeight: screenHeight,
                         provider: provider,
-                      ),
-                      SizedBox(height: screenHeight * 0.05),
-                      // Pill Reminder Section
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            _isReadOnly
+                  ),
+                  SizedBox(height: screenHeight * 0.05),
+                  // Pill Reminder Section
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _isReadOnly
                                 ? "${_displayName}'s ${localizations.pillReminder}"
                                 : localizations.pillReminder,
                             style: Theme.of(context)
@@ -537,10 +537,10 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                                   color: Colors.black,
                                   fontSize: screenWidth * 0.055,
                                 ),
-                          ),
-                          GestureDetector(
-                            onTap: () => provider.changeCalendarIndex(),
-                            child: Text(
+                      ),
+                      GestureDetector(
+                        onTap: () => provider.changeCalendarIndex(),
+                        child: Text(
                               localizations.seeAll,
                               style: Theme.of(context)
                                   .textTheme
@@ -550,26 +550,26 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                                     fontWeight: FontWeight.w500,
                                     fontSize: screenWidth * 0.04,
                                   ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                      SizedBox(height: screenHeight * 0.02),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.02),
                     ],
                   ),
                 ),
               ),
 
               // Today's Pills with optimized builder
-              _isLoading
+                  _isLoading
                   ? SliverToBoxAdapter(
                       child: Center(
-                        child: CircularProgressIndicator(
+                          child: CircularProgressIndicator(
                           color: Theme.of(context).primaryColor,
                         ),
                       ),
                     )
-                  : _todayPills.isEmpty
+                      : _todayPills.isEmpty
                       ? SliverToBoxAdapter(
                           child: Padding(
                             padding: EdgeInsets.symmetric(
@@ -607,7 +607,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                                     return _buildPillCard(
                                         pill, _getTimeStatus(pill));
                                   },
-                                ),
+                                      ),
                               ],
                             ),
                           ),

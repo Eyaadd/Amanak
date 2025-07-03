@@ -34,33 +34,27 @@ class _HomeScreenState extends State<HomeScreen> {
           highlightColor: Colors.transparent,
         ),
         child: BottomNavigationBar(
-          items: [
+        items: [
             BottomNavigationBarItem(
               icon: (provider.selectedIndexHome == 0)
                 ? SvgPicture.asset('assets/svg/HomeSelected.svg')
                 : SvgPicture.asset('assets/svg/Home.svg'),
               label: "Home",
             ),
-            BottomNavigationBarItem(
+          BottomNavigationBarItem(
               icon: (provider.selectedIndexHome == 1)
                 ? SvgPicture.asset('assets/svg/calendarSelected.svg')
                 : SvgPicture.asset('assets/svg/Calendaric.svg'),
               label: "Calendar",
             ),
-            BottomNavigationBarItem(
+          BottomNavigationBarItem(
               icon: (provider.selectedIndexHome == 2)
                 ? SvgPicture.asset('assets/svg/MessageSelected.svg')
                 : SvgPicture.asset('assets/svg/Message.svg'),
               label: "Messages",
             ),
-            BottomNavigationBarItem(
+          BottomNavigationBarItem(
               icon: (provider.selectedIndexHome == 3)
-                ? SvgPicture.asset('assets/svg/sensorsSelected.svg')
-                : SvgPicture.asset('assets/svg/sensors.svg'),
-              label: "Fall Detection",
-            ),
-            BottomNavigationBarItem(
-              icon: (provider.selectedIndexHome == 4)
                 ? SvgPicture.asset('assets/svg/ProfileSelected.svg')
                 : SvgPicture.asset('assets/svg/Profile.svg'),
               label: "Profile",
@@ -77,16 +71,13 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: IndexedStack(
         index: provider.selectedIndexHome,
-        children: currentTabs,
+        children: [
+          HomeTab(),
+          CalendarTab(),
+          MessagingTab(),
+          ProfileTab(),
+        ],
       ),
     );
   }
 }
-
-List<Widget> currentTabs = [
-  HomeTab(),
-  CalendarTab(),
-  MessagingTab(),
-  FallDetectionTab(),
-  ProfileTab(),
-];

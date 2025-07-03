@@ -10,6 +10,7 @@ import '../widgets/logout_dialog.dart';
 import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../services/localization_service.dart';
+import 'fall_detection_tab.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
@@ -315,7 +316,7 @@ class _ProfileTabState extends State<ProfileTab> {
                                   SizedBox(height: screenHeight * 0.05),
                                   Container(
                                     width: double.infinity,
-                                    height: screenHeight * 0.5378,
+                                    height: screenHeight * 0.65,
                                     decoration: BoxDecoration(
                                         borderRadius: BorderRadius.only(
                                           topLeft: Radius.circular(
@@ -325,184 +326,182 @@ class _ProfileTabState extends State<ProfileTab> {
                                         ),
                                         color: Colors.white),
                                     padding: EdgeInsets.all(screenWidth * 0.04),
-                                    child: Column(
-                                      children: [
-                                        _buildProfileOption(
-                                            assetName: "emergencyic",
-                                            title:
-                                                localizations.emergencyContacts,
-                                            onTap: () {
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        children: [
+                                          _buildProfileOption(
+                                              assetName: "emergencyic",
+                                              title:
+                                                  localizations.emergencyContacts,
+                                              onTap: () {
+                                                setState(() {
+                                                  showEmergencyContacts = true;
+                                                  showEditInformation = false;
+                                                });
+                                              },
+                                              screenWidth: screenWidth),
+                                          Divider(
+                                            color: Color(0xFFE8F3F1),
+                                            thickness: 2,
+                                            endIndent: screenWidth * 0.025,
+                                            indent: screenWidth * 0.025,
+                                          ),
+                                          _buildProfileOption(
+                                            assetName: "editic",
+                                            title: localizations.editInformation,
+                                            onTap: () async {
                                               setState(() {
-                                                showEmergencyContacts = true;
-                                                showEditInformation = false;
+                                                _isLoading = true;
+                                              });
+                                              await _loadUserDataForEdit();
+                                              setState(() {
+                                                showEditInformation = true;
+                                                showEmergencyContacts = false;
+                                                _isLoading = false;
                                               });
                                             },
-                                            screenWidth: screenWidth),
-                                        Divider(
-                                          color: Color(0xFFE8F3F1),
-                                          thickness: 2,
-                                          endIndent: screenWidth * 0.025,
-                                          indent: screenWidth * 0.025,
-                                        ),
-                                        _buildProfileOption(
-                                          assetName: "editic",
-                                          title: localizations.editInformation,
-                                          onTap: () async {
-                                            setState(() {
-                                              _isLoading = true;
-                                            });
-                                            await _loadUserDataForEdit();
-                                            setState(() {
-                                              showEditInformation = true;
-                                              showEmergencyContacts = false;
-                                              _isLoading = false;
-                                            });
-                                          },
-                                          screenWidth: screenWidth,
-                                        ),
-                                        Divider(
-                                          color: Color(0xFFE8F3F1),
-                                          thickness: 2,
-                                          endIndent: screenWidth * 0.025,
-                                          indent: screenWidth * 0.025,
-                                        ),
-                                        _buildProfileOption(
-                                          assetName: "language",
-                                          title: localizations.language,
-                                          onTap: () async {
-                                            final localizationService = Provider
-                                                .of<LocalizationService>(
-                                                    context,
-                                                    listen: false);
-                                            await showDialog(
-                                              context: context,
-                                              builder: (context) => Dialog(
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                ),
-                                                child: Padding(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 24,
-                                                      vertical: 28),
-                                                  child: Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Text(
-                                                        localizations.language,
-                                                        style: Theme.of(context)
-                                                            .textTheme
-                                                            .titleLarge
-                                                            ?.copyWith(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color: Theme.of(
-                                                                      context)
-                                                                  .primaryColor,
-                                                            ),
-                                                        textAlign:
-                                                            TextAlign.center,
+                                            screenWidth: screenWidth,
+                                          ),
+                                          Divider(
+                                            color: Color(0xFFE8F3F1),
+                                            thickness: 2,
+                                            endIndent: screenWidth * 0.025,
+                                            indent: screenWidth * 0.025,
+                                          ),
+                                          _buildProfileOption(
+                                            assetName: "language",
+                                            title: localizations.language,
+                                            onTap: () async {
+                                              final localizationService = Provider
+                                                  .of<LocalizationService>(
+                                                      context,
+                                                      listen: false);
+                                              showDialog(
+                                                context: context,
+                                                barrierDismissible: true,
+                                                builder: (context) => FocusScope(
+                                                  canRequestFocus: false,
+                                                  child: GestureDetector(
+                                                    onTap: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                    child: Dialog(
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(20),
                                                       ),
-                                                      SizedBox(height: 24),
-                                                      ListTile(
-                                                        leading: Text('🇺🇸',
-                                                            style: TextStyle(
-                                                                fontSize: 32)),
-                                                        title: Text(
-                                                          localizations.english,
-                                                          style: TextStyle(
-                                                              fontSize: 20,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600),
-                                                        ),
+                                                      child: GestureDetector(
                                                         onTap: () {
-                                                          localizationService
-                                                              .changeLanguage(
-                                                                  'en');
-                                                          Navigator.pop(
-                                                              context);
+                                                          // Prevent dialog from closing when tapping inside
                                                         },
-                                                        contentPadding:
-                                                            EdgeInsets
-                                                                .symmetric(
-                                                                    horizontal:
-                                                                        8),
-                                                        shape: RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        12)),
-                                                        hoverColor: Theme.of(
-                                                                context)
-                                                            .primaryColor
-                                                            .withOpacity(0.08),
-                                                      ),
-                                                      SizedBox(height: 12),
-                                                      ListTile(
-                                                        leading: Text('🇪🇬',
-                                                            style: TextStyle(
-                                                                fontSize: 32)),
-                                                        title: Text(
-                                                          localizations.arabic,
-                                                          style: TextStyle(
-                                                              fontSize: 20,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600),
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.symmetric(
+                                                            horizontal: 24,
+                                                            vertical: 28,
+                                                          ),
+                                                          child: Column(
+                                                            mainAxisSize: MainAxisSize.min,
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment.center,
+                                                            children: [
+                                                              Text(
+                                                                localizations.language,
+                                                                style: Theme.of(context)
+                                                                    .textTheme
+                                                                    .titleLarge
+                                                                    ?.copyWith(
+                                                                      fontWeight:
+                                                                          FontWeight.bold,
+                                                                      color: Theme.of(context)
+                                                                          .primaryColor,
+                                                                    ),
+                                                                textAlign: TextAlign.center,
+                                                              ),
+                                                              SizedBox(height: 24),
+                                                              ListTile(
+                                                                focusColor: Colors.transparent,
+                                                                hoverColor: Theme.of(context).primaryColor.withOpacity(0.08),
+                                                                leading: Text('🇺🇸', style: TextStyle(fontSize: 32)),
+                                                                title: Text(
+                                                                  localizations.english,
+                                                                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                                                                ),
+                                                                onTap: () {
+                                                                  localizationService.changeLanguage('en');
+                                                                  Navigator.pop(context);
+                                                                },
+                                                                contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                                                                shape: RoundedRectangleBorder(
+                                                                  borderRadius: BorderRadius.circular(12),
+                                                                ),
+                                                              ),
+                                                              SizedBox(height: 12),
+                                                              ListTile(
+                                                                focusColor: Colors.transparent,
+                                                                hoverColor: Theme.of(context).primaryColor.withOpacity(0.08),
+                                                                leading: Text('🇪🇬', style: TextStyle(fontSize: 32)),
+                                                                title: Text(
+                                                                  localizations.arabic,
+                                                                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                                                                ),
+                                                                onTap: () {
+                                                                  localizationService.changeLanguage('ar');
+                                                                  Navigator.pop(context);
+                                                                },
+                                                                contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                                                                shape: RoundedRectangleBorder(
+                                                                  borderRadius: BorderRadius.circular(12),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
                                                         ),
-                                                        onTap: () {
-                                                          localizationService
-                                                              .changeLanguage(
-                                                                  'ar');
-                                                          Navigator.pop(
-                                                              context);
-                                                        },
-                                                        contentPadding:
-                                                            EdgeInsets
-                                                                .symmetric(
-                                                                    horizontal:
-                                                                        8),
-                                                        shape: RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        12)),
-                                                        hoverColor: Theme.of(
-                                                                context)
-                                                            .primaryColor
-                                                            .withOpacity(0.08),
                                                       ),
-                                                    ],
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                            );
-                                          },
-                                          screenWidth: screenWidth,
-                                        ),
-                                        Divider(
-                                          color: Color(0xFFE8F3F1),
-                                          thickness: 2,
-                                          endIndent: screenWidth * 0.025,
-                                          indent: screenWidth * 0.025,
-                                        ),
-                                        _buildProfileOption(
-                                          assetName: "dangercircle",
-                                          title: localizations.logout,
-                                          textColor: Color(0xFFFF5C5C),
-                                          onTap: () {
-                                            showLogoutDialog(context);
-                                          },
-                                          screenWidth: screenWidth,
-                                        ),
-                                      ],
+                                              );
+                                            },
+                                            screenWidth: screenWidth,
+                                          ),
+                                          Divider(
+                                            color: Color(0xFFE8F3F1),
+                                            thickness: 2,
+                                            endIndent: screenWidth * 0.025,
+                                            indent: screenWidth * 0.025,
+                                          ),
+                                          if (userRole.toLowerCase() == 'user')
+                                            _buildProfileOption(
+                                              assetName: "sensors",
+                                              title: "Fall Detection",
+                                              onTap: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) => FallDetectionTab(),
+                                                  ),
+                                                );
+                                              },
+                                              screenWidth: screenWidth,
+                                            ),
+                                          Divider(
+                                            color: Color(0xFFE8F3F1),
+                                            thickness: 2,
+                                            endIndent: screenWidth * 0.025,
+                                            indent: screenWidth * 0.025,
+                                          ),
+                                          _buildProfileOption(
+                                            assetName: "dangercircle",
+                                            title: localizations.logout,
+                                            textColor: Color(0xFFFF5C5C),
+                                            onTap: () {
+                                              showLogoutDialog(context);
+                                            },
+                                            screenWidth: screenWidth,
+                                          ),
+                                          SizedBox(height: 16),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -529,55 +528,34 @@ class _ProfileTabState extends State<ProfileTab> {
         child: Row(
           children: [
             Container(
-                width: screenWidth * 0.12,
-                height: screenWidth * 0.12,
-                decoration: BoxDecoration(
-                    color: Color(0xFFE8F3F1),
-                    borderRadius: BorderRadius.circular(screenWidth * 0.06)),
-                child: Center(
-                  child: SvgPicture.asset(
-                    "assets/svg/$assetName.svg",
-                    width: screenWidth * 0.05,
-                  ),
-                )),
+              width: screenWidth * 0.12,
+              height: screenWidth * 0.12,
+              decoration: BoxDecoration(
+                color: Color(0xFFE8F3F1),
+                borderRadius: BorderRadius.circular(screenWidth * 0.06),
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  "assets/svg/$assetName.svg",
+                  width: screenWidth * 0.05,
+                ),
+              ),
+            ),
             SizedBox(width: screenWidth * 0.04),
-            idShow
-                ? Expanded(
-                    child: Row(
-                      children: [
-                        Flexible(
-                          child: SelectableText(
-                            title,
-                            style: GoogleFonts.albertSans(
-                              fontWeight: FontWeight.w700,
-                              fontSize: screenWidth * 0.042,
-                              color: textColor ?? Colors.black,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.copy, size: screenWidth * 0.04),
-                          onPressed: () {
-                            Clipboard.setData(ClipboardData(text: title));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('ID Copied to clipboard')),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  )
-                : Text(
-                    title,
-                    style: GoogleFonts.albertSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: screenWidth * 0.042,
-                      color: textColor ?? Colors.black,
-                    ),
-                  ),
-            const Spacer(),
-            SvgPicture.asset("assets/svg/arrowright.svg",
-                width: screenWidth * 0.06)
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.albertSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: screenWidth * 0.042,
+                  color: textColor ?? Colors.black,
+                ),
+              ),
+            ),
+            SvgPicture.asset(
+              "assets/svg/arrowright.svg",
+              width: screenWidth * 0.06,
+            ),
           ],
         ),
       ),
