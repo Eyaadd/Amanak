@@ -238,14 +238,25 @@ class _MessagingTabState extends State<MessagingTab>
 
       // Only send notification if the user is not actively viewing the chat
       if (_currentUserId != null && !_isActive) {
-        // For notifications, we use the decrypted message
+        // Get chat ID for decryption
+        final chatId = _getChatId();
+
+        // Ensure message is decrypted before showing in notification
+        String decryptedText = messageText;
+        if (messageText.isNotEmpty &&
+            _encryptionService.isLikelyEncrypted(messageText)) {
+          decryptedText =
+              await _encryptionService.decryptMessage(messageText, chatId);
+        }
+
+        // Send notification with decrypted message
         await _notiService.sendFcmNotification(
           userId: _currentUserId!,
           title: "New Message",
-          body: "$senderName: $messageText",
+          body: "$senderName: $decryptedText",
           data: {
             'type': 'message',
-            'chatId': _getChatId(),
+            'chatId': chatId,
             'senderId': _guardianId ?? '',
             'senderName': senderName,
           },

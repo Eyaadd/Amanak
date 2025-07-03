@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:amanak/notifications/noti_service.dart';
 import 'package:flutter/material.dart' show TimeOfDay;
+import 'package:cloud_functions/cloud_functions.dart';
 
 class FirebaseManager {
   static CollectionReference<UserModel> getUsersCollection() {
@@ -399,6 +400,12 @@ class FirebaseManager {
                       notificationDetails: notiService.missedPillDetails(),
                       payload: "missed:${pill.id}:${today.toIso8601String()}",
                     );
+
+                    // Send direct FCM notification to guardian about missed pill
+                    await _sendDirectMissedPillNotification(
+                        guardianId: guardianId,
+                        pillName: pill.name,
+                        elderName: elderName);
                   }
                 }
               }
@@ -411,6 +418,136 @@ class FirebaseManager {
       }
     } catch (e) {
       print('Error checking for missed pills: $e');
+    }
+  }
+
+  static Future<void> _sendDirectMissedPillNotification({
+    required String guardianId,
+    required String pillName,
+    required String elderName,
+  }) async {
+    try {
+      // Get guardian's FCM token
+      final guardianDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(guardianId)
+          .get();
+
+      if (!guardianDoc.exists) {
+        print('Guardian document not found');
+        return;
+      }
+
+      final guardianData = guardianDoc.data();
+      if (guardianData == null) return;
+
+      final fcmToken = guardianData['fcmToken'];
+      if (fcmToken == null || fcmToken.isEmpty) {
+        print('FCM token not found for guardian');
+        return;
+      }
+
+      // Prepare notification message
+      final title = "Pill Missed Alert";
+      final body = "$elderName missed their medicine: $pillName.";
+
+      // Prepare notification payload with additional fields to ensure proper handling
+      final message = {
+        'token': fcmToken,
+        'notification': {
+          'title': title,
+          'body': body,
+        },
+        'data': {
+          'type': 'pill_missed',
+          'pillName': pillName,
+          'elderName': elderName,
+          'title': title, // Duplicate in data for data-only messages
+          'body': body, // Duplicate in data for data-only messages
+          'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
+        },
+        'android': {
+          'priority': 'high',
+          'notification': {
+            'channel_id': 'high_importance_channel',
+            'priority': 'high',
+          }
+        },
+        'apns': {
+          'payload': {
+            'aps': {
+              'sound': 'default',
+              'badge': 1,
+              'content-available': 1,
+            }
+          }
+        }
+      };
+
+      // Send via Cloud Functions
+      try {
+        final functions = FirebaseFunctions.instance;
+        final callable = functions.httpsCallable('sendNotification');
+        print('Calling Cloud Function directly for missed pill notification');
+        final result = await callable.call(message);
+        print(
+            'Missed pill notification sent via Cloud Functions: ${result.data}');
+
+        // Store notification in Firestore for the guardian
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(guardianId)
+            .collection('notifications')
+            .add({
+          'title': title,
+          'message': body,
+          'timestamp': FieldValue.serverTimestamp(),
+          'isRead': false,
+          'type': 'pill_missed',
+          'data': {
+            'pillName': pillName,
+            'elderName': elderName,
+          },
+        });
+      } catch (e) {
+        print('Error sending direct missed pill notification: $e');
+        // Store for later delivery
+        await FirebaseFirestore.instance
+            .collection('pending_notifications')
+            .add({
+          'userId': guardianId,
+          'title': title,
+          'body': body,
+          'data': {
+            'type': 'pill_missed',
+            'pillName': pillName,
+            'elderName': elderName,
+            'title': title,
+            'body': body,
+          },
+          'timestamp': FieldValue.serverTimestamp(),
+          'delivered': false,
+        });
+      }
+    } catch (e) {
+      print('Error in _sendDirectMissedPillNotification: $e');
+    }
+  }
+
+  // Ensure Firebase Auth is properly initialized
+  static Future<void> ensureAuthInitialized() async {
+    try {
+      // Check if there's a current user
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Force refresh the token to ensure it's valid
+        await user.getIdToken(true);
+        print('Firebase Auth token refreshed successfully');
+      } else {
+        print('No user is currently signed in');
+      }
+    } catch (e) {
+      print('Error ensuring Firebase Auth is initialized: $e');
     }
   }
 }

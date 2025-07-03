@@ -1014,43 +1014,28 @@ class NotiService {
         print('Got a message whilst in the foreground!');
         print('Message data: ${message.data}');
 
-        // Check if this is a message notification
-        if (message.data.containsKey('type') &&
-            message.data['type'] == 'message') {
-          // Check if we should show the notification
-          final context = navigatorKey.currentContext;
-          if (context != null) {
-            final currentRoute = ModalRoute.of(context)?.settings.name;
-            if (_isInForeground && currentRoute == 'Messaging') {
-              print(
-                  'Skipping message notification as user is already in messaging tab');
-              return;
-            }
-          }
+        // Force show the notification even when app is in foreground
+        _showFcmNotification(message);
 
-          // Handle message notifications without notification payload (data-only)
-          final title = message.data['title'] ?? 'New Message';
-          final body = message.data['body'] ?? '';
-
-          // Create a payload for message notifications
-          final chatId = message.data['chatId'] ?? '';
-          final senderId = message.data['senderId'] ?? '';
-          final senderName = message.data['senderName'] ?? '';
-
-          // Show local notification for the message
-          notificationsPlugin.show(
-            MESSAGE_NOTIFICATION_ID_PREFIX + message.hashCode % 10000,
-            title,
-            body,
-            messageDetails(),
-            payload: 'message:$chatId:$senderId:$senderName',
-          );
-        } else if (message.notification != null) {
+        if (message.notification != null) {
           print(
               'Message also contained a notification: ${message.notification}');
-          _showFcmNotification(message);
         }
       });
+
+      // Handle notification click when app is in background or terminated
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        print('A notification was clicked on: ${message.data}');
+        _handleNotificationClick(message.data);
+      });
+
+      // Check for initial notification that launched the app
+      final initialMessage =
+          await FirebaseMessaging.instance.getInitialMessage();
+      if (initialMessage != null) {
+        print('App was launched by notification: ${initialMessage.data}');
+        _handleNotificationClick(initialMessage.data);
+      }
     } catch (e) {
       print('Error initializing FCM: $e');
     }
@@ -1081,30 +1066,42 @@ class NotiService {
       final android = message.notification?.android;
       final data = message.data;
 
-      // For message notifications, check if we should show them
-      if (data.containsKey('type') && data['type'] == 'message') {
-        // Don't show notification if the app is in foreground and user is in the messaging tab
-        final context = navigatorKey.currentContext;
-        if (context != null) {
-          final currentRoute = ModalRoute.of(context)?.settings.name;
-          if (_isInForeground && currentRoute == 'Messaging') {
-            print('Skipping notification as user is already in messaging tab');
-            return;
-          }
-        }
-      }
-
+      // Always show notifications regardless of app state
       NotificationDetails details;
       String? payload;
 
-      // Check if this is a message notification
-      if (data.containsKey('type') && data['type'] == 'message') {
-        details = messageDetails();
-        // Create a payload for message notifications
-        final chatId = data['chatId'] ?? '';
-        final senderId = data['senderId'] ?? '';
-        final senderName = data['senderName'] ?? '';
-        payload = 'message:$chatId:$senderId:$senderName';
+      // Determine notification details based on type
+      if (data.containsKey('type')) {
+        final type = data['type'];
+
+        if (type == 'message') {
+          details = messageDetails();
+          // Create a payload for message notifications
+          final chatId = data['chatId'] ?? '';
+          final senderId = data['senderId'] ?? '';
+          final senderName = data['senderName'] ?? '';
+          payload = 'message:$chatId:$senderId:$senderName';
+        } else if (type == 'pill_taken') {
+          details = takenPillDetails();
+          payload = 'pill_taken:${data['pillId'] ?? ''}';
+        } else if (type == 'pill_missed') {
+          details = missedPillDetails();
+          payload = 'pill_missed:${data['pillId'] ?? ''}';
+        } else {
+          // Default notification details
+          details = NotificationDetails(
+            android: AndroidNotificationDetails(
+              'high_importance_channel',
+              'High Importance Notifications',
+              channelDescription:
+                  'This channel is used for important notifications.',
+              importance: Importance.high,
+              priority: Priority.high,
+              icon: 'notification_icon',
+            ),
+            iOS: const DarwinNotificationDetails(),
+          );
+        }
       } else {
         // Default notification details
         details = NotificationDetails(
@@ -1121,17 +1118,36 @@ class NotiService {
         );
       }
 
+      // Show the notification
       if (notification != null) {
-        // Note: For FCM notifications, the message should already be decrypted
-        // before being sent to FCM, as we don't want to send encrypted text to
-        // the FCM servers. This is handled in the messaging tab.
+        // For message notifications, we use the pre-decrypted text from messaging_tab.dart
+        // The message is already decrypted before being sent to FCM
+        String notificationBody = notification.body ?? 'New message';
+
+        // No need to modify the notification body as it's already decrypted in messaging_tab.dart
         notificationsPlugin.show(
           message.hashCode,
           notification.title,
-          notification.body,
+          notificationBody,
           details,
           payload: payload,
         );
+
+        print('Showed FCM notification in foreground: ${notification.title}');
+      } else if (data.isNotEmpty) {
+        // Handle data-only messages (no notification payload)
+        final title = data['title'] ?? 'Notification';
+        final body = data['body'] ?? '';
+
+        notificationsPlugin.show(
+          data.hashCode,
+          title,
+          body,
+          details,
+          payload: payload,
+        );
+
+        print('Showed data-only FCM notification in foreground: $title');
       }
     } catch (e) {
       print('Error showing FCM notification: $e');
@@ -1166,9 +1182,11 @@ class NotiService {
         return;
       }
 
-      // For message notifications, we send the decrypted text in the notification
-      // but store the encrypted text in Firestore
+      // For message notifications, we use the pre-decrypted text from messaging_tab.dart
+      // The message is already decrypted before being sent to FCM
       String notificationBody = body;
+
+      // No need to modify the notification body as it's already decrypted in messaging_tab.dart
 
       // Prepare notification payload
       final message = {
@@ -1204,7 +1222,7 @@ class NotiService {
           await notificationsPlugin.show(
             MESSAGE_NOTIFICATION_ID_PREFIX + userId.hashCode % 10000,
             title,
-            notificationBody, // Already decrypted
+            notificationBody, // Using the privacy-protected notification body from above
             messageDetails(),
             payload:
                 'message:${data['chatId'] ?? ''}:${data['senderId'] ?? ''}:${data['senderName'] ?? ''}',
@@ -1222,7 +1240,7 @@ class NotiService {
           'userId': userId,
           'title': title,
           'body':
-              body, // Store the original body (which is already decrypted in messaging_tab.dart)
+              body, // Store the actual decrypted message from messaging_tab.dart
           'data': data,
           'timestamp': FieldValue.serverTimestamp(),
           'delivered': false,
@@ -1238,13 +1256,16 @@ class NotiService {
   Future<void> _storeNotificationForUser(String userId, String title,
       String body, Map<String, dynamic>? data) async {
     try {
+      // Store the actual message content (already decrypted in messaging_tab.dart)
+      String messageToStore = body;
+
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
           .collection('notifications')
           .add({
         'title': title,
-        'message': body,
+        'message': messageToStore,
         'timestamp': FieldValue.serverTimestamp(),
         'isRead': false,
         'type': data != null ? data['type'] : null,
@@ -1252,6 +1273,40 @@ class NotiService {
       });
     } catch (e) {
       print('Error storing notification for user $userId: $e');
+    }
+  }
+
+  // Handle notification click based on notification type
+  void _handleNotificationClick(Map<String, dynamic> data) {
+    try {
+      final type = data['type'];
+
+      // Handle different notification types
+      if (type == 'message') {
+        final chatId = data['chatId'];
+        final senderId = data['senderId'];
+        final senderName = data['senderName'];
+
+        // Navigate to messaging tab with the chat info
+        navigatorKey.currentState?.pushNamed(
+          'Messaging',
+          arguments: {
+            'chatId': chatId,
+            'senderId': senderId,
+            'senderName': senderName,
+          },
+        );
+      } else if (type == 'pill_taken') {
+        // Navigate to calendar tab
+        navigatorKey.currentState
+            ?.pushNamed('Home', arguments: {'tabIndex': 0});
+      } else if (type == 'pill_missed') {
+        // Navigate to calendar tab
+        navigatorKey.currentState
+            ?.pushNamed('Home', arguments: {'tabIndex': 0});
+      }
+    } catch (e) {
+      print('Error handling notification click: $e');
     }
   }
 }
