@@ -12,6 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
+import 'l10n/app_localizations.dart';
 
 // Define the primary color to match guardian location
 const Color primaryBlue = Color(0xFF015C92);
@@ -646,14 +647,15 @@ class _LiveTrackingState extends State<LiveTracking> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'Live Location Sharing',
-          style: TextStyle(color: primaryBlue),
+        title: Text(
+          AppLocalizations.of(context)!.liveTrackingTitle,
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
-        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 2,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: primaryBlue),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _isLoading
           ? loadingContainer()
@@ -755,7 +757,10 @@ class _LiveTrackingState extends State<LiveTracking> {
                   left: 0,
                   right: 0,
                   child: Container(
-                    height: 25.h,
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.3,
+                      minHeight: 120,
+                    ),
                     width: MediaQuery.of(context).size.width,
                     padding: const EdgeInsets.all(16.0),
                     decoration: BoxDecoration(
@@ -778,29 +783,35 @@ class _LiveTrackingState extends State<LiveTracking> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               if (hasCurrentLocation) ...[
-                                const Text(
-                                  'Your Location',
+                                Text(
+                                  AppLocalizations.of(context)!.yourLocation,
                                   style: TextStyle(
                                     color: primaryBlue,
-                                    fontSize: 16,
+                                    fontSize:
+                                        MediaQuery.of(context).size.width *
+                                            0.04,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       Icons.location_on,
                                       color: primaryBlue,
-                                      size: 16,
+                                      size: MediaQuery.of(context).size.width *
+                                          0.04,
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
                                         currentLocationName,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           color: Colors.black87,
-                                          fontSize: 12,
+                                          fontSize: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.03,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -812,28 +823,34 @@ class _LiveTrackingState extends State<LiveTracking> {
                               if (hasSharedLocation) ...[
                                 const SizedBox(height: 12),
                                 Text(
-                                  'Tracking: ${sharedUserEmail ?? ""}',
-                                  style: const TextStyle(
+                                  '${AppLocalizations.of(context)!.trackingSharedUser}: ${sharedUserEmail ?? ""}',
+                                  style: TextStyle(
                                     color: primaryBlue,
-                                    fontSize: 16,
+                                    fontSize:
+                                        MediaQuery.of(context).size.width *
+                                            0.04,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       Icons.location_on,
                                       color: primaryBlue,
-                                      size: 16,
+                                      size: MediaQuery.of(context).size.width *
+                                          0.04,
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
                                         sharedLocationName,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           color: Colors.black87,
-                                          fontSize: 12,
+                                          fontSize: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.03,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -842,7 +859,7 @@ class _LiveTrackingState extends State<LiveTracking> {
                                   ],
                                 ),
                               ],
-                              const Spacer(),
+                              const SizedBox(height: 16),
                               Row(
                                 children: [
                                   Expanded(
@@ -850,23 +867,34 @@ class _LiveTrackingState extends State<LiveTracking> {
                                       onPressed: () {
                                         newCameraPosition();
                                       },
-                                      icon: const Icon(
+                                      icon: Icon(
                                         Icons.my_location,
                                         color: Colors.white,
-                                        size: 20,
+                                        size:
+                                            MediaQuery.of(context).size.width *
+                                                0.05,
                                       ),
-                                      label: const Text(
+                                      label: Text(
                                         'Show Both',
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 14,
+                                          fontSize: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.035,
                                         ),
                                       ),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: primaryBlue,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 10,
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.04,
+                                          vertical: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.012,
                                         ),
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
@@ -879,23 +907,34 @@ class _LiveTrackingState extends State<LiveTracking> {
                                   Expanded(
                                     child: ElevatedButton.icon(
                                       onPressed: _openDirections,
-                                      icon: const Icon(
+                                      icon: Icon(
                                         Icons.directions,
                                         color: Colors.white,
-                                        size: 20,
+                                        size:
+                                            MediaQuery.of(context).size.width *
+                                                0.05,
                                       ),
-                                      label: const Text(
+                                      label: Text(
                                         'Directions',
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 14,
+                                          fontSize: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.035,
                                         ),
                                       ),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: primaryBlue,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 10,
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.04,
+                                          vertical: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.012,
                                         ),
                                         shape: RoundedRectangleBorder(
                                           borderRadius:

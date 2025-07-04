@@ -381,4 +381,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get medicineDetailTitle => 'Medicine Details';
+
+  @override
+  String get liveTrackingTitle => 'Live Tracking';
+
+  @override
+  String get yourLocation => 'Your Location';
+
+  @override
+  String get trackingSharedUser => 'Tracking';
+
+  @override
+  String get nearestHospitalsTitle => 'Nearest Hospitals';
+
+  @override
+  String get showAll => 'Show All';
+
+  @override
+  String get searchHospitals => 'Search hospitals...';
+
+  @override
+  String get noHospitalsFound => 'No hospitals found nearby';
 }

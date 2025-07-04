@@ -142,5 +142,17 @@
   "medicineDetailEnglishName": "English Name",
   "medicineDetailArabicName": "Arabic Name",
   "medicineDetailNotFound": "Medicine not found",
-  "medicineDetailTitle": "Medicine Details"
+  "medicineDetailTitle": "Medicine Details",
+  
+  "@liveTracking": {},
+  "liveTrackingTitle": "Live Tracking",
+  "yourLocation": "Your Location",
+  "trackingSharedUser": "Tracking",
+  
+  "@nearestHospitals": {},
+  "nearestHospitalsTitle": "Nearest Hospitals",
+  "showAll": "Show All",
+  "searchHospitals": "Search hospitals...",
+  "noHospitalsFound": "No hospitals found nearby",
+  "retry": "Retry"
 } 

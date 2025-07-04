@@ -829,6 +829,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Medicine Details'**
   String get medicineDetailTitle;
+
+  /// No description provided for @liveTrackingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Tracking'**
+  String get liveTrackingTitle;
+
+  /// No description provided for @yourLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Location'**
+  String get yourLocation;
+
+  /// No description provided for @trackingSharedUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking'**
+  String get trackingSharedUser;
+
+  /// No description provided for @nearestHospitalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearest Hospitals'**
+  String get nearestHospitalsTitle;
+
+  /// No description provided for @showAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show All'**
+  String get showAll;
+
+  /// No description provided for @searchHospitals.
+  ///
+  /// In en, this message translates to:
+  /// **'Search hospitals...'**
+  String get searchHospitals;
+
+  /// No description provided for @noHospitalsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No hospitals found nearby'**
+  String get noHospitalsFound;
 }
 
 class _AppLocalizationsDelegate

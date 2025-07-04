@@ -46,6 +46,7 @@
   "guardianLocation": "موقع الوصي",
   "nearestHospitals": "أقرب\nالمستشفيات",
   
+  
   "@chatbot": {},
   "chatbot": "المساعد الذكي",
   "askQuestion": "اطرح سؤالاً...",
@@ -142,5 +143,17 @@
   "medicineDetailEnglishName": "الاسم الإنجليزي",
   "medicineDetailArabicName": "الاسم العربي",
   "medicineDetailNotFound": "لم يتم العثور على الدواء",
-  "medicineDetailTitle": "تفاصيل الدواء"
+  "medicineDetailTitle": "تفاصيل الدواء",
+  
+  "@liveTracking": {},
+  "liveTrackingTitle": "التتبع المباشر",
+  "yourLocation": "موقعك",
+  "trackingSharedUser": "تتبع",
+  
+  "@nearestHospitals": {},
+  "nearestHospitalsTitle": "أقرب المستشفيات",
+  "showAll": "عرض الكل",
+  "searchHospitals": "ابحث عن المستشفيات...",
+  "noHospitalsFound": "لم يتم العثور على مستشفيات قريبة",
+  "retry": "إعادة المحاولة"
 } 

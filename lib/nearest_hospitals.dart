@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
+import 'l10n/app_localizations.dart';
 
 class NearestHospitals extends StatefulWidget {
   static const routeName = "NearestHospitals";
@@ -492,275 +493,344 @@ class _NearestHospitalsState extends State<NearestHospitals> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          "Nearest Hospitals",
-          style: TextStyle(color: primaryBlue),
-        ),
+    final locale = Localizations.localeOf(context);
+    final isRTL = locale.languageCode == 'ar';
+    return Directionality(
+      textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
         backgroundColor: Colors.white,
-        centerTitle: true,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: primaryBlue),
-      ),
-      body: Column(
-        children: [
-          if (_selectedHospital != null)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              color: primaryBlue.withOpacity(0.1),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Showing: ${_selectedHospital!['name']}',
-                      style: const TextStyle(
-                        color: primaryBlue,
-                        fontWeight: FontWeight.bold,
+        appBar: AppBar(
+          title: Text(
+            AppLocalizations.of(context)!.nearestHospitalsTitle,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: Theme.of(context).primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 2,
+          centerTitle: true,
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
+        body: Column(
+          children: [
+            if (_selectedHospital != null)
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                color: primaryBlue.withOpacity(0.1),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Showing: ${_selectedHospital!['name']}',
+                        style: const TextStyle(
+                          color: primaryBlue,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  TextButton.icon(
-                    onPressed: _showAllHospitals,
-                    icon: const Icon(Icons.view_list),
-                    label: const Text('Show All'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: primaryBlue,
+                    TextButton.icon(
+                      onPressed: _showAllHospitals,
+                      icon: const Icon(Icons.view_list),
+                      label: Text(AppLocalizations.of(context)!.showAll),
+                      style: TextButton.styleFrom(
+                        foregroundColor: primaryBlue,
+                      ),
                     ),
+                  ],
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                controller: _searchController,
+                onChanged: _filterHospitals,
+                decoration: InputDecoration(
+                  hintText: AppLocalizations.of(context)!.searchHospitals,
+                  prefixIcon: const Icon(Icons.search, color: primaryBlue),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: primaryBlue),
                   ),
-                ],
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _filterHospitals,
-              decoration: InputDecoration(
-                hintText: 'Search hospitals...',
-                prefixIcon: const Icon(Icons.search, color: primaryBlue),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: primaryBlue),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: primaryBlue, width: 2),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: primaryBlue, width: 2),
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: primaryBlue))
-                : _errorMessage != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _errorMessage!,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _fetchLocationAndHospitals,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryBlue,
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(color: primaryBlue))
+                  : _errorMessage != null
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _errorMessage!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.red),
                               ),
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
-                      )
-                    : Stack(
-                        children: [
-                          GoogleMap(
-                            initialCameraPosition: CameraPosition(
-                              target: _currentLocation!,
-                              zoom: _currentZoom,
-                            ),
-                            markers: _markers,
-                            onMapCreated: (controller) =>
-                                _controller.complete(controller),
-                            myLocationEnabled: true,
-                            myLocationButtonEnabled: false,
-                            zoomControlsEnabled: false,
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: _fetchLocationAndHospitals,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: primaryBlue,
+                                ),
+                                child:
+                                    Text(AppLocalizations.of(context)!.retry),
+                              ),
+                            ],
                           ),
-                          Positioned(
-                            right: 16,
-                            bottom: 280,
-                            child: Column(
-                              children: [
-                                FloatingActionButton(
-                                  heroTag: "btn1",
-                                  mini: true,
-                                  backgroundColor: primaryBlue,
-                                  onPressed: () =>
-                                      _moveToLocation(_currentLocation!),
-                                  child:
-                                      const Icon(Icons.my_location, size: 20),
-                                ),
-                                const SizedBox(height: 8),
-                                FloatingActionButton(
-                                  heroTag: "btn2",
-                                  mini: true,
-                                  backgroundColor: primaryBlue,
-                                  onPressed: () => _zoomMap(true),
-                                  child: const Icon(Icons.add, size: 20),
-                                ),
-                                const SizedBox(height: 8),
-                                FloatingActionButton(
-                                  heroTag: "btn3",
-                                  mini: true,
-                                  backgroundColor: primaryBlue,
-                                  onPressed: () => _zoomMap(false),
-                                  child: const Icon(Icons.remove, size: 20),
-                                ),
-                                const SizedBox(height: 8),
-                                FloatingActionButton(
-                                  heroTag: "btn4",
-                                  mini: true,
-                                  backgroundColor: primaryBlue,
-                                  onPressed: _isRefreshing
-                                      ? null
-                                      : () {
-                                          setState(() => _isRefreshing = true);
-                                          _fetchLocationAndHospitals();
-                                        },
-                                  child: _isRefreshing
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      : const Icon(Icons.refresh, size: 20),
-                                ),
-                              ],
+                        )
+                      : Stack(
+                          children: [
+                            GoogleMap(
+                              initialCameraPosition: CameraPosition(
+                                target: _currentLocation!,
+                                zoom: _currentZoom,
+                              ),
+                              markers: _markers,
+                              onMapCreated: (controller) =>
+                                  _controller.complete(controller),
+                              myLocationEnabled: true,
+                              myLocationButtonEnabled: false,
+                              zoomControlsEnabled: false,
                             ),
-                          ),
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            child: Container(
-                              height: 250,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(20)),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, -5),
+                            Positioned(
+                              right: 16,
+                              bottom: 280,
+                              child: Column(
+                                children: [
+                                  FloatingActionButton(
+                                    heroTag: "btn1",
+                                    mini: true,
+                                    backgroundColor: primaryBlue,
+                                    onPressed: () =>
+                                        _moveToLocation(_currentLocation!),
+                                    child:
+                                        const Icon(Icons.my_location, size: 20),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  FloatingActionButton(
+                                    heroTag: "btn2",
+                                    mini: true,
+                                    backgroundColor: primaryBlue,
+                                    onPressed: () => _zoomMap(true),
+                                    child: const Icon(Icons.add, size: 20),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  FloatingActionButton(
+                                    heroTag: "btn3",
+                                    mini: true,
+                                    backgroundColor: primaryBlue,
+                                    onPressed: () => _zoomMap(false),
+                                    child: const Icon(Icons.remove, size: 20),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  FloatingActionButton(
+                                    heroTag: "btn4",
+                                    mini: true,
+                                    backgroundColor: primaryBlue,
+                                    onPressed: _isRefreshing
+                                        ? null
+                                        : () {
+                                            setState(
+                                                () => _isRefreshing = true);
+                                            _fetchLocationAndHospitals();
+                                          },
+                                    child: _isRefreshing
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Icon(Icons.refresh, size: 20),
                                   ),
                                 ],
                               ),
-                              child: _filteredHospitals.isEmpty
-                                  ? const Center(
-                                      child: Text(
-                                        'No hospitals found nearby',
-                                        style: TextStyle(
-                                            fontSize: 16, color: Colors.grey),
-                                      ),
-                                    )
-                                  : ListView.builder(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8),
-                                      itemCount: _filteredHospitals.length,
-                                      itemBuilder: (context, index) {
-                                        final hospital =
-                                            _filteredHospitals[index];
-                                        return Card(
-                                          margin: const EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 8),
-                                          elevation: 2,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          child: InkWell(
-                                            onTap: () =>
-                                                _showHospitalDetails(hospital),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(16),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Row(
-                                                    children: [
-                                                      const Icon(
-                                                          Icons.local_hospital,
-                                                          color: primaryBlue,
-                                                          size: 20),
-                                                      const SizedBox(width: 8),
-                                                      Expanded(
-                                                        child: Text(
-                                                          hospital['name'],
-                                                          style:
-                                                              const TextStyle(
-                                                            fontSize: 16,
-                                                            fontWeight:
-                                                                FontWeight.bold,
+                            ),
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                constraints: BoxConstraints(
+                                  maxHeight:
+                                      MediaQuery.of(context).size.height * 0.35,
+                                  minHeight: 150,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(20)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, -5),
+                                    ),
+                                  ],
+                                ),
+                                child: _filteredHospitals.isEmpty
+                                    ? Center(
+                                        child: Text(
+                                          AppLocalizations.of(context)!
+                                              .noHospitalsFound,
+                                          style: TextStyle(
+                                              fontSize: MediaQuery.of(context)
+                                                      .size
+                                                      .width *
+                                                  0.04,
+                                              color: Colors.grey),
+                                        ),
+                                      )
+                                    : ListView.builder(
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: MediaQuery.of(context)
+                                                    .size
+                                                    .height *
+                                                0.01),
+                                        itemCount: _filteredHospitals.length,
+                                        itemBuilder: (context, index) {
+                                          final hospital =
+                                              _filteredHospitals[index];
+                                          return Card(
+                                            margin: EdgeInsets.symmetric(
+                                                horizontal:
+                                                    MediaQuery.of(context)
+                                                            .size
+                                                            .width *
+                                                        0.04,
+                                                vertical: MediaQuery.of(context)
+                                                        .size
+                                                        .height *
+                                                    0.01),
+                                            elevation: 2,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: InkWell(
+                                              onTap: () => _showHospitalDetails(
+                                                  hospital),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              child: Padding(
+                                                padding: EdgeInsets.all(
+                                                    MediaQuery.of(context)
+                                                            .size
+                                                            .width *
+                                                        0.04),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(
+                                                      children: [
+                                                        Icon(
+                                                            Icons
+                                                                .local_hospital,
+                                                            color: primaryBlue,
+                                                            size: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.05),
+                                                        SizedBox(
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.02),
+                                                        Expanded(
+                                                          child: Text(
+                                                            hospital['name'],
+                                                            style: TextStyle(
+                                                              fontSize: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.04,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                            ),
                                                           ),
                                                         ),
-                                                      ),
-                                                      Text(
-                                                        '${hospital['distance'].toStringAsFixed(1)} km',
-                                                        style: const TextStyle(
-                                                          fontSize: 14,
-                                                          color: Colors.grey,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 8),
-                                                  Row(
-                                                    children: [
-                                                      const Icon(
-                                                          Icons.location_on,
-                                                          color: Colors.grey,
-                                                          size: 16),
-                                                      const SizedBox(width: 8),
-                                                      Expanded(
-                                                        child: Text(
-                                                          hospital['address'] ??
-                                                              '',
-                                                          style:
-                                                              const TextStyle(
-                                                            fontSize: 14,
+                                                        Text(
+                                                          '${hospital['distance'].toStringAsFixed(1)} km',
+                                                          style: TextStyle(
+                                                            fontSize: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.035,
                                                             color: Colors.grey,
+                                                            fontWeight:
+                                                                FontWeight.w500,
                                                           ),
                                                         ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
+                                                      ],
+                                                    ),
+                                                    SizedBox(
+                                                        height: MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .height *
+                                                            0.01),
+                                                    Row(
+                                                      children: [
+                                                        Icon(Icons.location_on,
+                                                            color: Colors.grey,
+                                                            size: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.04),
+                                                        SizedBox(
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.02),
+                                                        Expanded(
+                                                          child: Text(
+                                                            hospital[
+                                                                    'address'] ??
+                                                                '',
+                                                            style: TextStyle(
+                                                              fontSize: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.035,
+                                                              color:
+                                                                  Colors.grey,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        );
-                                      },
-                                    ),
+                                          );
+                                        },
+                                      ),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-          ),
-        ],
+                          ],
+                        ),
+            ),
+          ],
+        ),
       ),
     );
   }

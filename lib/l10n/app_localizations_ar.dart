@@ -380,4 +380,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get medicineDetailTitle => 'تفاصيل الدواء';
+
+  @override
+  String get liveTrackingTitle => 'التتبع المباشر';
+
+  @override
+  String get yourLocation => 'موقعك';
+
+  @override
+  String get trackingSharedUser => 'تتبع';
+
+  @override
+  String get nearestHospitalsTitle => 'أقرب المستشفيات';
+
+  @override
+  String get showAll => 'عرض الكل';
+
+  @override
+  String get searchHospitals => 'ابحث عن المستشفيات...';
+
+  @override
+  String get noHospitalsFound => 'لم يتم العثور على مستشفيات قريبة';
 }
