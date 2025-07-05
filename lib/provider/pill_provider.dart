@@ -135,6 +135,26 @@ class PillProvider extends ChangeNotifier {
   // Mark pill as taken with all the original functionality
   Future<void> markPillAsTaken(PillModel pill, String timeKey) async {
     try {
+      // Check time window validation
+      final now = DateTime.now();
+      final pillTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        pill.times.first.hour,
+        pill.times.first.minute,
+      );
+
+      // Calculate time difference in minutes
+      final timeDifference = now.difference(pillTime).inMinutes;
+
+      // Check if we're outside the allowed window (15 minutes before to 15 minutes after)
+      if (timeDifference < -15 || timeDifference > 15) {
+        // Throw an exception to be caught by the calling method
+        throw Exception(
+            'Cannot mark pill as taken outside the allowed time window (15 minutes before to 15 minutes after scheduled time)');
+      }
+
       // Get the original pill from our list
       final originalPill = _pills.firstWhere((p) => p.id == pill.id);
 
@@ -156,8 +176,8 @@ class PillProvider extends ChangeNotifier {
       await loadPills(_displayUserId);
     } catch (e) {
       print('Error marking pill as taken: $e');
-      // Make sure we reload data even if there was an error
-      await loadPills(_displayUserId);
+      // Re-throw the exception so the calling method can handle it
+      rethrow;
     }
   }
 

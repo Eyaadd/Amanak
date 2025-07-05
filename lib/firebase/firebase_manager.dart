@@ -204,18 +204,18 @@ class FirebaseManager {
 
             final takenTime = pill.takenDates[timeKey]!;
 
+            // Calculate the day index from the start date
+            final startDate = pill.dateTime;
+            final dayDifference = today.difference(startDate).inDays;
+
+            // Always cancel notifications for this specific time slot when marked as taken
+            await notiService.cancelPillTimeNotifications(
+                pill.id, dayDifference, i);
+
             // Only notify if the pill was taken at or after its scheduled time
             // or within 15 minutes before the scheduled time (reasonable early window)
             if (takenTime.isAfter(pillTime) ||
                 pillTime.difference(takenTime).inMinutes <= 15) {
-              // Calculate the day index from the start date
-              final startDate = pill.dateTime;
-              final dayDifference = today.difference(startDate).inDays;
-
-              // Cancel notifications only for this specific time slot
-              await notiService.cancelPillTimeNotifications(
-                  pill.id, dayDifference, i);
-
               // Notify guardian about the pill being taken
               final sharedUserEmail = userData['sharedUsers'] ?? '';
               if (sharedUserEmail.isNotEmpty) {
@@ -274,6 +274,9 @@ class FirebaseManager {
                 'No shared user (guardian) found for elder. Cannot send notification.');
           }
         }
+
+        // Reschedule notifications to ensure they're up-to-date with the latest pill status
+        await pill.scheduleNotifications();
       } else {
         print('Guardian user updating pill - not sending notifications');
       }

@@ -501,6 +501,11 @@ class NotiService {
           // Calculate the date for this day
           final pillDate = startDate.add(Duration(days: day));
 
+          // Skip past days entirely
+          if (pillDate.isBefore(DateTime(now.year, now.month, now.day))) {
+            continue;
+          }
+
           // Schedule notifications for each time of the day
           for (int timeIndex = 0; timeIndex < pill.times.length; timeIndex++) {
             final time = pill.times[timeIndex];
@@ -513,6 +518,17 @@ class NotiService {
             if (isAlreadyTaken) {
               print(
                   'Skipping notifications for ${pill.name} at time $timeKey - already taken');
+
+              // Make sure to cancel any existing notifications for this time slot
+              final timeSlotId = timeIndex * 1000;
+              final reminderId = dueIdBase + day + timeSlotId;
+              final exactTimeId = reminderIdBase + day + timeSlotId;
+              final missedId = missedIdBase + day + timeSlotId;
+
+              await notificationsPlugin.cancel(reminderId);
+              await notificationsPlugin.cancel(exactTimeId);
+              await notificationsPlugin.cancel(missedId);
+
               continue;
             }
 
@@ -589,6 +605,14 @@ class NotiService {
   Future<void> _scheduleMissedPillCheck(PillModel pill, int day,
       tz.TZDateTime checkTime, int notificationId, int timeIndex) async {
     try {
+      // Get current time
+      final now = tz.TZDateTime.now(checkTime.location);
+
+      // Skip if the check time is in the past
+      if (checkTime.isBefore(now)) {
+        return;
+      }
+
       // Calculate the date for this day
       final pillDate = pill.dateTime.add(Duration(days: day));
 
@@ -600,6 +624,15 @@ class NotiService {
       if (isAlreadyTaken) {
         print(
             'Skipping missed pill check for ${pill.name} at time $timeKey - already taken');
+        return;
+      }
+
+      // Skip if the pill date is in the past (before today)
+      final today = DateTime(now.year, now.month, now.day);
+      final pillDay = DateTime(pillDate.year, pillDate.month, pillDate.day);
+      if (pillDay.isBefore(today)) {
+        print(
+            'Skipping missed pill check for ${pill.name} at time $timeKey - date is in the past');
         return;
       }
 
@@ -896,9 +929,14 @@ class NotiService {
       final missedId = missedIdBase + day + timeSlotId;
 
       // Cancel notifications for this specific time slot
-      await notificationsPlugin.cancel(reminderId);
-      await notificationsPlugin.cancel(exactTimeId);
-      await notificationsPlugin.cancel(missedId);
+      List<Future<void>> cancelTasks = [
+        notificationsPlugin.cancel(reminderId),
+        notificationsPlugin.cancel(exactTimeId),
+        notificationsPlugin.cancel(missedId)
+      ];
+
+      // Execute all cancellation tasks in parallel
+      await Future.wait(cancelTasks);
 
       print(
           'Canceled notifications for pill ID: $pillId, day: $day, timeIndex: $timeIndex');

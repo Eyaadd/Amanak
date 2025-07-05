@@ -387,55 +387,58 @@ class _CalendarTabState extends State<CalendarTab> {
                 ),
                 SizedBox(height: 2.h),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: medicines.length,
-                    itemBuilder: (context, index) {
-                      final medicine = medicines[index];
-                      final medicineName = medicine['medicine'] as String;
-                      final dosage = medicine['dosage'] as String;
-                      final confidence = medicine['confidence'] as double;
-                      final confidencePercent =
-                          (confidence * 100).toStringAsFixed(0);
+                  child: SingleChildScrollView(
+                    child: ListView.builder(
+                      itemCount: medicines.length,
+                      itemBuilder: (context, index) {
+                        final medicine = medicines[index];
+                        final medicineName = medicine['medicine'] as String;
+                        final dosage = medicine['dosage'] as String;
+                        final confidence = medicine['confidence'] as double;
+                        final confidencePercent =
+                            (confidence * 100).toStringAsFixed(0);
 
-                      return Card(
-                        margin: EdgeInsets.only(bottom: 2.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ListTile(
-                          contentPadding: EdgeInsets.all(2.w),
-                          title: Text(
-                            medicineName,
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
+                        return Card(
+                          margin: EdgeInsets.only(bottom: 2.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.all(2.w),
+                            title: Text(
+                              medicineName,
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Dosage: $dosage',
-                                style: TextStyle(fontSize: 14.sp),
-                              ),
-                              Text(
-                                'Confidence: $confidencePercent%',
-                                style: TextStyle(fontSize: 12.sp),
-                              ),
-                            ],
-                          ),
-                          trailing:
-                              Icon(Icons.add_circle, color: Color(0xFF015C92)),
-                          onTap: () {
-                            // Close the dialog
-                            Navigator.pop(context);
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Dosage: $dosage',
+                                  style: TextStyle(fontSize: 14.sp),
+                                ),
+                                Text(
+                                  'Confidence: $confidencePercent%',
+                                  style: TextStyle(fontSize: 12.sp),
+                                ),
+                              ],
+                            ),
+                            trailing: Icon(Icons.add_circle,
+                                color: Color(0xFF015C92)),
+                            onTap: () {
+                              // Close the dialog
+                              Navigator.pop(context);
 
-                            // Show add pill form pre-filled with the medicine info
-                            _showAddPillDialogWithOCRData(medicineName, dosage);
-                          },
-                        ),
-                      );
-                    },
+                              // Show add pill form pre-filled with the medicine info
+                              _showAddPillDialogWithOCRData(
+                                  medicineName, dosage);
+                            },
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
                 SizedBox(height: 2.h),
@@ -539,26 +542,12 @@ class _CalendarTabState extends State<CalendarTab> {
 
   @override
   Widget build(BuildContext context) {
-    final hasPillsForTomorrow = _checkForPillsTomorrow();
+    // Check if tomorrow has any pills scheduled
+    final tomorrow = DateTime.now().add(Duration(days: 1));
+    final tomorrowDate = DateTime(tomorrow.year, tomorrow.month, tomorrow.day);
+    final hasPillsForTomorrow = _pills[tomorrowDate]?.isNotEmpty ?? false;
 
     return Scaffold(
-      backgroundColor: Color(0xFFF5F5F5),
-      appBar: AppBar(
-        title: Text(
-          _isReadOnly ? "${_displayName}'s Medications" : "Medication Reminder",
-          style: TextStyle(fontSize: 18.sp),
-        ),
-        backgroundColor: Color(0xFF015C92),
-        foregroundColor: Colors.white,
-        leading: null,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh, size: 6.w),
-            onPressed: refreshData,
-          )
-        ],
-      ),
       body: Stack(
         children: [
           _isLoading
@@ -566,239 +555,246 @@ class _CalendarTabState extends State<CalendarTab> {
                   child: CircularProgressIndicator(
                   color: Theme.of(context).primaryColor,
                 ))
-              : Padding(
-                  padding: EdgeInsets.all(4.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Calendar Card - Made larger and centered
-                      Padding(
-                        padding: EdgeInsets.symmetric(vertical: 2.w),
-                        child: Card(
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(3.w),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+              : SafeArea(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.all(4.w),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Calendar Card - Made larger and centered
+                          Padding(
+                            padding: EdgeInsets.symmetric(vertical: 2.w),
+                            child: Card(
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.all(3.w),
+                                child: Column(
                                   children: [
-                                    Text(
-                                      DateFormat('MMMM yyyy')
-                                          .format(_focusedDay),
-                                      style: TextStyle(
-                                        fontSize: 16.sp,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF015C92),
-                                      ),
-                                    ),
                                     Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        IconButton(
-                                          icon: Icon(Icons.chevron_left,
-                                              color: Color(0xFF015C92),
-                                              size: 6.w),
-                                          onPressed: () {
-                                            setState(() {
-                                              _focusedDay = DateTime(
-                                                  _focusedDay.year,
-                                                  _focusedDay.month - 1);
-                                            });
-                                          },
+                                        Text(
+                                          DateFormat('MMMM yyyy')
+                                              .format(_focusedDay),
+                                          style: TextStyle(
+                                            fontSize: 16.sp,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF015C92),
+                                          ),
                                         ),
-                                        IconButton(
-                                          icon: Icon(Icons.chevron_right,
-                                              color: Color(0xFF015C92),
-                                              size: 6.w),
-                                          onPressed: () {
-                                            setState(() {
-                                              _focusedDay = DateTime(
-                                                  _focusedDay.year,
-                                                  _focusedDay.month + 1);
-                                            });
-                                          },
+                                        Row(
+                                          children: [
+                                            IconButton(
+                                              icon: Icon(Icons.chevron_left,
+                                                  color: Color(0xFF015C92),
+                                                  size: 6.w),
+                                              onPressed: () {
+                                                setState(() {
+                                                  _focusedDay = DateTime(
+                                                      _focusedDay.year,
+                                                      _focusedDay.month - 1);
+                                                });
+                                              },
+                                            ),
+                                            IconButton(
+                                              icon: Icon(Icons.chevron_right,
+                                                  color: Color(0xFF015C92),
+                                                  size: 6.w),
+                                              onPressed: () {
+                                                setState(() {
+                                                  _focusedDay = DateTime(
+                                                      _focusedDay.year,
+                                                      _focusedDay.month + 1);
+                                                });
+                                              },
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
+                                    SizedBox(height: 1.h),
+                                    TableCalendar(
+                                      firstDay: DateTime.utc(2010, 10, 16),
+                                      lastDay: DateTime.utc(2030, 3, 14),
+                                      focusedDay: _focusedDay,
+                                      calendarFormat: _calendarFormat,
+                                      headerVisible: false,
+                                      daysOfWeekHeight: 4.h,
+                                      rowHeight: 5.h,
+                                      eventLoader: (day) {
+                                        final date = DateTime(
+                                            day.year, day.month, day.day);
+                                        return _pills[date] ?? [];
+                                      },
+                                      selectedDayPredicate: (day) =>
+                                          isSameDay(_selectedDay, day),
+                                      onDaySelected: (selectedDay, focusedDay) {
+                                        setState(() {
+                                          _selectedDay = selectedDay;
+                                          _focusedDay = focusedDay;
+                                        });
+                                      },
+                                      onFormatChanged: (format) {
+                                        if (_calendarFormat != format) {
+                                          setState(() {
+                                            _calendarFormat = format;
+                                          });
+                                        }
+                                      },
+                                      onPageChanged: (focusedDay) {
+                                        setState(() {
+                                          _focusedDay = focusedDay;
+                                        });
+                                      },
+                                      calendarStyle: CalendarStyle(
+                                        selectedDecoration: BoxDecoration(
+                                          color: Color(0xFF015C92),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        todayDecoration: BoxDecoration(
+                                          color: Colors.blue.withAlpha(128),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        weekendTextStyle:
+                                            TextStyle(color: Colors.red),
+                                        outsideTextStyle:
+                                            TextStyle(color: Colors.grey[400]),
+                                        markersMaxCount: 3,
+                                        markerDecoration: BoxDecoration(
+                                          color: Colors.redAccent,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      daysOfWeekStyle: DaysOfWeekStyle(
+                                        weekdayStyle: TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                        weekendStyle: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.red),
+                                      ),
+                                    ),
                                   ],
                                 ),
-                                SizedBox(height: 1.h),
-                                TableCalendar(
-                                  firstDay: DateTime.utc(2010, 10, 16),
-                                  lastDay: DateTime.utc(2030, 3, 14),
-                                  focusedDay: _focusedDay,
-                                  calendarFormat: _calendarFormat,
-                                  headerVisible: false,
-                                  daysOfWeekHeight: 4.h,
-                                  rowHeight: 5.h,
-                                  eventLoader: (day) {
-                                    final date =
-                                        DateTime(day.year, day.month, day.day);
-                                    return _pills[date] ?? [];
-                                  },
-                                  selectedDayPredicate: (day) =>
-                                      isSameDay(_selectedDay, day),
-                                  onDaySelected: (selectedDay, focusedDay) {
-                                    setState(() {
-                                      _selectedDay = selectedDay;
-                                      _focusedDay = focusedDay;
-                                    });
-                                  },
-                                  onFormatChanged: (format) {
-                                    if (_calendarFormat != format) {
-                                      setState(() {
-                                        _calendarFormat = format;
-                                      });
-                                    }
-                                  },
-                                  onPageChanged: (focusedDay) {
-                                    setState(() {
-                                      _focusedDay = focusedDay;
-                                    });
-                                  },
-                                  calendarStyle: CalendarStyle(
-                                    selectedDecoration: BoxDecoration(
-                                      color: Color(0xFF015C92),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    todayDecoration: BoxDecoration(
-                                      color: Colors.blue.withAlpha(128),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    weekendTextStyle:
-                                        TextStyle(color: Colors.red),
-                                    outsideTextStyle:
-                                        TextStyle(color: Colors.grey[400]),
-                                    markersMaxCount: 3,
-                                    markerDecoration: BoxDecoration(
-                                      color: Colors.redAccent,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  daysOfWeekStyle: DaysOfWeekStyle(
-                                    weekdayStyle:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                    weekendStyle: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.red),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      SizedBox(height: 2.h),
+                          SizedBox(height: 2.h),
 
-                      // Pill Reminder Section
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          // Pill Reminder Section
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                _isReadOnly
-                                    ? '${_displayName}\'s Medications'
-                                    : 'Pill Reminder',
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _isReadOnly
+                                        ? '${_displayName}\'s Medications'
+                                        : 'Pill Reminder',
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    hasPillsForTomorrow
+                                        ? 'Don\'t forget schedule for tomorrow'
+                                        : 'No reminders for tomorrow',
+                                    style: TextStyle(
+                                      fontSize: 14.sp,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                hasPillsForTomorrow
-                                    ? 'Don\'t forget schedule for tomorrow'
-                                    : 'No reminders for tomorrow',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  color: Colors.grey[600],
+                              // Add pill button at the top - only show for elders
+                              if (!_isReadOnly)
+                                Container(
+                                  height: 10.w,
+                                  width: 10.w,
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF015C92),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: IconButton(
+                                    icon: Icon(Icons.add,
+                                        color: Colors.white, size: 5.w),
+                                    onPressed: _showAddPillDialog,
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
-                          // Add pill button at the top - only show for elders
+
+                          SizedBox(height: 2.h),
+
+                          // Pills List for selected day
+                          Container(
+                            height: 40.h, // Fixed height for the pills list
+                            child: _selectedDay != null
+                                ? _buildPillsList()
+                                : Center(
+                                    child: Text(
+                                      'Select a day to see pills',
+                                      style: TextStyle(fontSize: 15.sp),
+                                    ),
+                                  ),
+                          ),
+
+                          // Bottom Buttons - Only show for elders
                           if (!_isReadOnly)
-                            Container(
-                              height: 10.w,
-                              width: 10.w,
-                              decoration: BoxDecoration(
-                                color: Color(0xFF015C92),
-                                shape: BoxShape.circle,
-                              ),
-                              child: IconButton(
-                                icon: Icon(Icons.add,
-                                    color: Colors.white, size: 5.w),
-                                onPressed: _showAddPillDialog,
+                            Padding(
+                              padding: EdgeInsets.only(top: 3.h, bottom: 2.h),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: SizedBox(
+                                      height: 6.h,
+                                      child: OutlinedButton(
+                                        onPressed: _showAddPillDialog,
+                                        child: Text('Add Pills',
+                                            style: TextStyle(fontSize: 15.sp)),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: Color(0xFF015C92),
+                                          side: BorderSide(
+                                              color: Color(0xFF015C92)),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 4.w),
+                                  Expanded(
+                                    child: SizedBox(
+                                      height: 6.h,
+                                      child: ElevatedButton(
+                                        onPressed: _showImageSourceDialog,
+                                        child: Text('Scan Prescription',
+                                            style: TextStyle(fontSize: 15.sp)),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Color(0xFF015C92),
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                         ],
                       ),
-
-                      SizedBox(height: 2.h),
-
-                      // Pills List for selected day
-                      Expanded(
-                        child: _selectedDay != null
-                            ? _buildPillsList()
-                            : Center(
-                                child: Text(
-                                  'Select a day to see pills',
-                                  style: TextStyle(fontSize: 15.sp),
-                                ),
-                              ),
-                      ),
-
-                      // Bottom Buttons - Only show for elders
-                      if (!_isReadOnly)
-                        Padding(
-                          padding: EdgeInsets.only(top: 3.h, bottom: 2.h),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: SizedBox(
-                                  height: 6.h,
-                                  child: OutlinedButton(
-                                    onPressed: _showAddPillDialog,
-                                    child: Text('Add Pills',
-                                        style: TextStyle(fontSize: 15.sp)),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: Color(0xFF015C92),
-                                      side:
-                                          BorderSide(color: Color(0xFF015C92)),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 4.w),
-                              Expanded(
-                                child: SizedBox(
-                                  height: 6.h,
-                                  child: ElevatedButton(
-                                    onPressed: _showImageSourceDialog,
-                                    child: Text('Scan Prescription',
-                                        style: TextStyle(fontSize: 15.sp)),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Color(0xFF015C92),
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
                 ),
 
@@ -884,7 +880,10 @@ class _CalendarTabState extends State<CalendarTab> {
       );
     }
 
+    // Use a ListView.builder with shrinkWrap to prevent overflow issues
     return ListView.builder(
+      shrinkWrap: true,
+      physics: AlwaysScrollableScrollPhysics(),
       itemCount: pillsForSelectedDay.length,
       itemBuilder: (context, index) {
         final pill = pillsForSelectedDay[index];
@@ -968,6 +967,8 @@ class _CalendarTabState extends State<CalendarTab> {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
+              mainAxisSize: MainAxisSize
+                  .min, // Ensure column doesn't expand unnecessarily
               children: [
                 ListTile(
                   contentPadding:
@@ -1001,6 +1002,8 @@ class _CalendarTabState extends State<CalendarTab> {
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize
+                        .min, // Ensure column doesn't expand unnecessarily
                     children: [
                       Text(
                         pill.dosage,
@@ -1146,6 +1149,56 @@ class _CalendarTabState extends State<CalendarTab> {
       // Get the time key for this specific dose
       final timeKey = _getTimeKeyForPill(pill);
 
+      // Check time window validation only when marking as taken
+      if (isTaken) {
+        final now = DateTime.now();
+        final pillTime = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          pill.times.first.hour,
+          pill.times.first.minute,
+        );
+
+        // Calculate time difference in minutes
+        final timeDifference = now.difference(pillTime).inMinutes;
+
+        // Check if we're outside the allowed window (15 minutes before to 15 minutes after)
+        if (timeDifference < -15 || timeDifference > 15) {
+          // Format the allowed time window for display
+          final earlyTime = pillTime.subtract(Duration(minutes: 15));
+          final lateTime = pillTime.add(Duration(minutes: 15));
+
+          final earlyTimeStr =
+              '${earlyTime.hour.toString().padLeft(2, '0')}:${earlyTime.minute.toString().padLeft(2, '0')}';
+          final lateTimeStr =
+              '${lateTime.hour.toString().padLeft(2, '0')}:${lateTime.minute.toString().padLeft(2, '0')}';
+          final pillTimeStr =
+              '${pillTime.hour.toString().padLeft(2, '0')}:${pillTime.minute.toString().padLeft(2, '0')}';
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Cannot mark ${pill.name} as taken outside the allowed time window.\n'
+                'Scheduled time: $pillTimeStr\n'
+                'Allowed window: $earlyTimeStr - $lateTimeStr',
+                style: TextStyle(fontSize: 14.sp),
+              ),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 4),
+              action: SnackBarAction(
+                label: 'OK',
+                textColor: Colors.white,
+                onPressed: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                },
+              ),
+            ),
+          );
+          return; // Don't proceed with marking as taken
+        }
+      }
+
       // Update local state immediately for better performance
       setState(() {
         // Update all instances of this pill in the pills map
@@ -1192,25 +1245,8 @@ class _CalendarTabState extends State<CalendarTab> {
         updatedPill.markTimeTaken(timeKey, DateTime.now());
         updatedPill.missed = false;
 
-        // Check if the pill is being taken before its scheduled time
-        final now = DateTime.now();
-        final pillTime = DateTime(
-          now.year,
-          now.month,
-          now.day,
-          pill.times.first.hour,
-          pill.times.first.minute,
-        );
-
-        // Only send notification if the pill is being taken at or after its scheduled time
-        // or if it's within 15 minutes before the scheduled time (reasonable early window)
-        if (now.isAfter(pillTime) || now.difference(pillTime).inMinutes > -15) {
-          // Send notification to guardian
-          await _sendInstantPillNotification(updatedPill);
-        } else {
-          print(
-              'Pill marked as taken before scheduled time - no notification sent');
-        }
+        // Send notification to guardian (time window already validated above)
+        await _sendInstantPillNotification(updatedPill);
       } else {
         updatedPill.markTimeNotTaken(timeKey);
       }

@@ -157,6 +157,54 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       // Get the time key for this specific dose
       final timeKey = _getTimeKeyForPill(pill);
 
+      // Check time window validation
+      final now = DateTime.now();
+      final pillTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        pill.times.first.hour,
+        pill.times.first.minute,
+      );
+
+      // Calculate time difference in minutes
+      final timeDifference = now.difference(pillTime).inMinutes;
+
+      // Check if we're outside the allowed window (15 minutes before to 15 minutes after)
+      if (timeDifference < -15 || timeDifference > 15) {
+        // Format the allowed time window for display
+        final earlyTime = pillTime.subtract(Duration(minutes: 15));
+        final lateTime = pillTime.add(Duration(minutes: 15));
+
+        final earlyTimeStr =
+            '${earlyTime.hour.toString().padLeft(2, '0')}:${earlyTime.minute.toString().padLeft(2, '0')}';
+        final lateTimeStr =
+            '${lateTime.hour.toString().padLeft(2, '0')}:${lateTime.minute.toString().padLeft(2, '0')}';
+        final pillTimeStr =
+            '${pillTime.hour.toString().padLeft(2, '0')}:${pillTime.minute.toString().padLeft(2, '0')}';
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Cannot mark ${pill.name} as taken outside the allowed time window.\n'
+              'Scheduled time: $pillTimeStr\n'
+              'Allowed window: $earlyTimeStr - $lateTimeStr',
+              style: TextStyle(fontSize: 14.sp),
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'OK',
+              textColor: Colors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
+          ),
+        );
+        return; // Don't proceed with marking as taken
+      }
+
       // Show immediate feedback
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -180,25 +228,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       // Update the pill through the provider
       await pillProvider.updatePill(updatedPill);
 
-      // Check if the pill is being taken before its scheduled time
-      final now = DateTime.now();
-      final pillTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        pill.times.first.hour,
-        pill.times.first.minute,
-      );
-
-      // Only send notification if the pill is being taken at or after its scheduled time
-      // or if it's within 15 minutes before the scheduled time (reasonable early window)
-      if (now.isAfter(pillTime) || now.difference(pillTime).inMinutes > -15) {
-        // Send an instant notification to the guardian
-        await _sendInstantPillNotification(updatedPill);
-      } else {
-        print(
-            'Pill marked as taken before scheduled time - no notification sent');
-      }
+      // Send an instant notification to the guardian (time window already validated above)
+      await _sendInstantPillNotification(updatedPill);
 
       // Update today's pills list after the provider has updated
       await _updateTodayPills();
