@@ -23,6 +23,9 @@ import '../l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:amanak/widgets/notification_badge.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:amanak/services/fcm_service.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -177,6 +180,9 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       // Update the pill through the provider
       await pillProvider.updatePill(updatedPill);
 
+      // Send an instant notification to the guardian
+      await _sendInstantPillNotification(updatedPill);
+
       // Update today's pills list after the provider has updated
       await _updateTodayPills();
     } catch (e) {
@@ -187,6 +193,138 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  // Send an instant notification when a pill is marked as taken
+  Future<void> _sendInstantPillNotification(PillModel pill) async {
+    try {
+      print('⚡ Starting to send instant pill notification for: ${pill.name}');
+
+      // Get current user data
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        print('User not authenticated, cannot send notification');
+        return;
+      }
+
+      final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
+      final elderName = userData['name'] ?? 'User';
+      final sharedUserEmail = userData['sharedUsers'] ?? '';
+
+      if (sharedUserEmail.isEmpty) {
+        print('No guardian email found, cannot send notification');
+        return;
+      }
+
+      // Find guardian by email
+      print('🔍 Looking up guardian by email: $sharedUserEmail');
+      final guardianData =
+          await FirebaseManager.getUserByEmail(sharedUserEmail);
+      if (guardianData == null) {
+        print('Guardian not found for email: $sharedUserEmail');
+        return;
+      }
+
+      final guardianId = guardianData['id'] ?? '';
+      if (guardianId.isEmpty) {
+        print('Invalid guardian ID');
+        return;
+      }
+
+      // Create notification message
+      final title = "Medicine Taken";
+      final body = "$elderName marked ${pill.name} as taken.";
+
+      print('⚡ SENDING INSTANT NOTIFICATION: $title - $body');
+
+      // Use the direct Firebase Manager method for sending notifications
+      await _sendDirectPillNotification(
+          guardianId: guardianId,
+          pillName: pill.name,
+          elderName: elderName,
+          isTaken: true);
+
+      print('✅ INSTANT NOTIFICATION SENT');
+    } catch (e) {
+      print('❌ Error sending instant notification: $e');
+    }
+  }
+
+  // Send a direct FCM notification to the guardian about pill status
+  Future<void> _sendDirectPillNotification(
+      {required String guardianId,
+      required String pillName,
+      required String elderName,
+      required bool isTaken}) async {
+    try {
+      // Import FCMService
+      final fcmService = FCMService();
+
+      // Prepare notification data
+      final title = isTaken ? "Medicine Taken" : "Pill Missed Alert";
+      final body = isTaken
+          ? "$elderName marked $pillName as taken."
+          : "$elderName missed their medicine: $pillName.";
+
+      // Send notification using FCM service
+      bool fcmSuccess = await fcmService.sendNotification(
+        userId: guardianId,
+        title: title,
+        body: body,
+        data: {
+          'type': isTaken ? 'pill_taken' : 'pill_missed',
+          'pillName': pillName,
+          'elderName': elderName,
+          'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
+        },
+        highPriority: true,
+      );
+
+      if (!fcmSuccess) {
+        print(
+            'FCM notification failed, storing in Firestore for later delivery');
+
+        // Store for later delivery
+        await FirebaseFirestore.instance
+            .collection('pending_notifications')
+            .add({
+          'userId': guardianId,
+          'title': title,
+          'body': body,
+          'data': {
+            'type': isTaken ? 'pill_taken' : 'pill_missed',
+            'pillName': pillName,
+            'elderName': elderName,
+            'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
+          },
+          'timestamp': FieldValue.serverTimestamp(),
+          'delivered': false,
+          'attempts': 1,
+          'lastAttempt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        print('Pill notification sent successfully to guardian');
+
+        // Also store in Firestore for history
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(guardianId)
+            .collection('notifications')
+            .add({
+          'title': title,
+          'message': body,
+          'timestamp': FieldValue.serverTimestamp(),
+          'isRead': false,
+          'type': isTaken ? 'pill_taken' : 'pill_missed',
+          'data': {
+            'pillName': pillName,
+            'elderName': elderName,
+          },
+        });
+      }
+    } catch (e) {
+      print('Error in _sendDirectPillNotification: $e');
     }
   }
 
@@ -297,7 +435,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       case "missed":
         return "Missed";
       default:
-        return "Upcoming";
+        return "Scheduled";
     }
   }
 
