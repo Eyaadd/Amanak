@@ -201,14 +201,24 @@ class PillModel {
 
   // Schedule notifications for this pill
   Future<void> scheduleNotifications() async {
-    final notiService = NotiService();
-    await notiService.schedulePillNotifications(this);
+    try {
+      final notiService = NotiService();
+      await notiService.schedulePillNotifications(this);
+    } catch (e) {
+      print('Error scheduling notifications for pill $id: $e');
+      // Don't rethrow to avoid crashing the app
+    }
   }
 
   // Cancel notifications for this pill
   Future<void> cancelNotifications() async {
-    final notiService = NotiService();
-    await notiService.cancelPillNotifications(id);
+    try {
+      final notiService = NotiService();
+      await notiService.cancelPillNotifications(id);
+    } catch (e) {
+      print('Error canceling notifications for pill $id: $e');
+      // Don't rethrow to avoid crashing the app
+    }
   }
 
   // Format time in 12-hour format with AM/PM

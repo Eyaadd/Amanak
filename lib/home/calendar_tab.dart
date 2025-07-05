@@ -933,12 +933,20 @@ class _CalendarTabState extends State<CalendarTab> {
             if (_isReadOnly) return;
 
             try {
+              // Store pill info before deletion
+              final pillId = pill.id;
+
+              // Immediately remove from local state to prevent the error
+              setState(() {
+                pillsForSelectedDay.removeWhere((p) => p.id == pillId);
+              });
+
               // Only remove from Firebase if this is the start date
               final startDate = DateTime(
                   pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
 
               if (startDate.isAtSameMomentAs(selectedDate)) {
-                await FirebaseManager.deletePill(pill.id);
+                await FirebaseManager.deletePill(pillId);
               }
 
               // Update local state and reload to reflect changes across all days

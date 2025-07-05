@@ -131,15 +131,37 @@ class FirebaseManager {
   }
 
   static Future<String> addPill(PillModel pill, {String? userId}) async {
-    final currentUserId = userId ?? FirebaseAuth.instance.currentUser!.uid;
-    var collection = getPillsCollection(currentUserId);
-    DocumentReference docRef = await collection.add(pill);
+    try {
+      final currentUserId = userId ?? FirebaseAuth.instance.currentUser!.uid;
+      var collection = getPillsCollection(currentUserId);
 
-    // Update the pill with the new ID and schedule notifications
-    final pillWithId = pill.copyWith(id: docRef.id);
-    await pillWithId.scheduleNotifications();
+      // First, add the pill to Firestore
+      DocumentReference docRef = await collection.add(pill);
+      final pillId = docRef.id;
 
-    return docRef.id;
+      // Update the pill with the new ID
+      final pillWithId = pill.copyWith(id: pillId);
+
+      // Schedule notifications in the background to avoid blocking the UI
+      // This allows the function to return quickly while notifications are scheduled
+      _scheduleNotificationsInBackground(pillWithId);
+
+      return pillId;
+    } catch (e) {
+      print('Error adding pill: $e');
+      throw Exception('Error adding pill: $e');
+    }
+  }
+
+  // Helper method to schedule notifications in the background
+  static Future<void> _scheduleNotificationsInBackground(PillModel pill) async {
+    try {
+      await pill.scheduleNotifications();
+    } catch (e) {
+      print('Error scheduling notifications in background: $e');
+      // Don't rethrow the exception to avoid crashing the app
+      // The pill is already saved in Firestore, so this is not critical
+    }
   }
 
   static Future<void> updatePill(PillModel pill) async {
@@ -262,18 +284,35 @@ class FirebaseManager {
   }
 
   static Future<void> deletePill(String pillId, {String? userId}) async {
-    final currentUserId = userId ?? FirebaseAuth.instance.currentUser!.uid;
-    var collection = getPillsCollection(currentUserId);
+    try {
+      final currentUserId = userId ?? FirebaseAuth.instance.currentUser!.uid;
+      var collection = getPillsCollection(currentUserId);
 
-    // Get the pill to cancel its notifications
-    final pillDoc = await collection.doc(pillId).get();
-    if (pillDoc.exists) {
-      final pill = pillDoc.data()!;
-      await pill.cancelNotifications();
+      // Get the pill data first
+      final pillDoc = await collection.doc(pillId).get();
+
+      // Delete from Firestore immediately
+      await collection.doc(pillId).delete();
+
+      // Cancel notifications in the background after deletion
+      if (pillDoc.exists) {
+        final pill = pillDoc.data()!;
+        _cancelNotificationsInBackground(pill);
+      }
+    } catch (e) {
+      print('Error deleting pill: $e');
+      throw Exception('Error deleting pill: $e');
     }
+  }
 
-    // Delete from Firestore
-    return collection.doc(pillId).delete();
+  // Helper method to cancel notifications in the background
+  static Future<void> _cancelNotificationsInBackground(PillModel pill) async {
+    try {
+      await pill.cancelNotifications();
+    } catch (e) {
+      print('Error canceling notifications in background: $e');
+      // Don't rethrow the exception since the pill is already deleted
+    }
   }
 
   static Stream<List<PillModel>> getPillsStream({String? userId}) {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:amanak/firebase/firebase_manager.dart';
 import 'package:amanak/models/pill_model.dart';
@@ -480,14 +481,23 @@ class NotiService {
         final startDate = pill.dateTime;
         final int duration = pill.duration;
 
+        // Limit scheduling to 7 days in advance to improve performance
+        final int daysToSchedule = min(duration, 7);
+
         // Calculate ID ranges for this pill using a safe hash code
         final int safeHashCode = pill.id.hashCode % 10000; // Limit to 4 digits
         final int reminderIdBase = PILL_REMINDER_ID_PREFIX + safeHashCode;
         final int dueIdBase = PILL_ADVANCE_REMINDER_ID_PREFIX + safeHashCode;
         final int missedIdBase = MISSED_NOTIFICATION_ID_PREFIX + safeHashCode;
 
-        // For each day in the duration
-        for (int day = 0; day < duration; day++) {
+        // Get current time once to avoid repeated calculations
+        final now = tz.TZDateTime.now(tzLocation);
+
+        // Track notifications to schedule
+        List<Future<void>> scheduleTasks = [];
+
+        // For each day in the duration (limited to daysToSchedule)
+        for (int day = 0; day < daysToSchedule; day++) {
           // Calculate the date for this day
           final pillDate = startDate.add(Duration(days: day));
 
@@ -516,6 +526,11 @@ class NotiService {
               time.minute,
             );
 
+            // Skip if the pill time is in the past
+            if (pillTime.isBefore(now)) {
+              continue;
+            }
+
             // Calculate the reminder time (5 minutes before)
             final reminderTime = pillTime.subtract(Duration(minutes: 5));
 
@@ -526,11 +541,9 @@ class NotiService {
             final exactTimeId = reminderIdBase + day + timeSlotId;
             final missedId = missedIdBase + day + timeSlotId;
 
-            // Only schedule if the time is in the future
-            final now = tz.TZDateTime.now(tzLocation);
+            // Schedule 5-minute advance reminder if it's in the future
             if (reminderTime.isAfter(now)) {
-              // Schedule 5-minute advance reminder
-              await _scheduleNotification(
+              scheduleTasks.add(_scheduleNotification(
                 id: reminderId,
                 title: "Medicine Reminder",
                 body:
@@ -538,35 +551,32 @@ class NotiService {
                 scheduledTime: reminderTime,
                 details: _pillReminderDetails(),
                 payload: "reminder:${pill.id}:${day}:${timeIndex}",
-              );
+              ));
             }
 
-            // Only schedule if the time is in the future
-            if (pillTime.isAfter(now)) {
-              // Schedule exact time reminder
-              final doseText =
-                  pill.times.length > 1 ? " (Dose ${timeIndex + 1})" : "";
-              await _scheduleNotification(
-                id: exactTimeId,
-                title: "Medicine Time",
-                body:
-                    "${userName}, it's time to take your medicine: ${pill.name}$doseText.",
-                scheduledTime: pillTime,
-                details: _pillReminderDetails(),
-                payload: "take:${pill.id}:${day}:${timeIndex}",
-              );
+            // Schedule exact time reminder
+            scheduleTasks.add(_scheduleNotification(
+              id: exactTimeId,
+              title: "Medicine Time",
+              body:
+                  "${userName}, it's time to take your medicine: ${pill.name}${pill.times.length > 1 ? " (Dose ${timeIndex + 1})" : ""}.",
+              scheduledTime: pillTime,
+              details: _pillReminderDetails(),
+              payload: "take:${pill.id}:${day}:${timeIndex}",
+            ));
 
-              // Schedule a check for missed pill 5 minutes after the scheduled time
-              final checkTime = pillTime.add(Duration(
-                  minutes:
-                      6)); // 6 minutes after to ensure 5 minute threshold is passed
-              await _scheduleMissedPillCheck(
-                  pill, day, checkTime, missedId, timeIndex);
-            }
+            // Schedule a check for missed pill 6 minutes after the scheduled time
+            final checkTime = pillTime.add(Duration(minutes: 6));
+            scheduleTasks.add(_scheduleMissedPillCheck(
+                pill, day, checkTime, missedId, timeIndex));
           }
         }
 
-        print('Scheduled notifications for pill: ${pill.name}');
+        // Execute all scheduling tasks in parallel for better performance
+        await Future.wait(scheduleTasks);
+
+        print(
+            'Scheduled notifications for pill: ${pill.name} (${scheduleTasks.length} notifications)');
       } else {
         print('User is a guardian, not scheduling pill reminders');
       }
