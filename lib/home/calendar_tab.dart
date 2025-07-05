@@ -1094,6 +1094,11 @@ class _CalendarTabState extends State<CalendarTab> {
                         onChanged: (bool? value) {
                           if (value != null) {
                             _markPillAsTaken(pill, value);
+
+                            // If marking as taken, send an immediate notification
+                            if (value == true) {
+                              _sendInstantPillNotification(pill);
+                            }
                           }
                         },
                       ),
@@ -1183,26 +1188,6 @@ class _CalendarTabState extends State<CalendarTab> {
       if (isTaken) {
         updatedPill.markTimeTaken(timeKey, DateTime.now());
         updatedPill.missed = false;
-
-        // Check if the pill is being taken before its scheduled time
-        final now = DateTime.now();
-        final pillTime = DateTime(
-          now.year,
-          now.month,
-          now.day,
-          pill.times.first.hour,
-          pill.times.first.minute,
-        );
-
-        // Only send notification if the pill is being taken at or after its scheduled time
-        // or if it's within 15 minutes before the scheduled time (reasonable early window)
-        if (now.isAfter(pillTime) || now.difference(pillTime).inMinutes > -15) {
-          // Send notification to guardian
-          await _sendInstantPillNotification(updatedPill);
-        } else {
-          print(
-              'Pill marked as taken before scheduled time - no notification sent');
-        }
       } else {
         updatedPill.markTimeNotTaken(timeKey);
       }
@@ -1446,6 +1431,16 @@ class _CalendarTabState extends State<CalendarTab> {
         return;
       }
 
+      // Force token refresh to ensure we have a valid token
+      print('🔑 Refreshing Firebase Auth token...');
+      try {
+        await currentUser.getIdToken(true);
+        print('✅ Token refreshed successfully');
+      } catch (authError) {
+        print('❌ Error refreshing auth token: $authError');
+        // Continue anyway as the FCM service will handle authentication errors
+      }
+
       final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
       final elderName = userData['name'] ?? 'User';
       final sharedUserEmail = userData['sharedUsers'] ?? '';
@@ -1470,13 +1465,7 @@ class _CalendarTabState extends State<CalendarTab> {
         return;
       }
 
-      // Create notification message
-      final title = "Medicine Taken";
-      final body = "$elderName marked ${pill.name} as taken.";
-
-      print('⚡ SENDING INSTANT NOTIFICATION: $title - $body');
-
-      // Use the direct method for sending notifications
+      // Use the direct pill notification method
       await _sendDirectPillNotification(
           guardianId: guardianId,
           pillName: pill.name,

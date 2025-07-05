@@ -166,52 +166,23 @@ class FirebaseManager {
       if (userRole != 'guardian') {
         final today = DateTime.now();
         final todayStr = '${today.year}-${today.month}-${today.day}';
+        final isTakenToday = pill.takenDates.containsKey(todayStr);
 
-        // Check if any time was taken today
-        bool anyTimeTakenToday = false;
-        for (int i = 0; i < pill.times.length; i++) {
-          final timeKey = '$todayStr-$i';
-          if (pill.takenDates.containsKey(timeKey)) {
-            anyTimeTakenToday = true;
+        if (isTakenToday) {
+          // Cancel notifications if pill is taken today
+          await notiService.cancelPillNotifications(pill.id);
 
-            // Check if the pill was taken before its scheduled time
-            final pillTime = DateTime(
-              today.year,
-              today.month,
-              today.day,
-              pill.times[i].hour,
-              pill.times[i].minute,
-            );
-
-            final takenTime = pill.takenDates[timeKey]!;
-
-            // Only notify if the pill was taken at or after its scheduled time
-            // or within 15 minutes before the scheduled time (reasonable early window)
-            if (takenTime.isAfter(pillTime) ||
-                pillTime.difference(takenTime).inMinutes <= 15) {
-              // Cancel notifications if pill is taken today
-              await notiService.cancelPillNotifications(pill.id);
-
-              // Notify guardian about the pill being taken
-              final sharedUserEmail = userData['sharedUsers'] ?? '';
-              if (sharedUserEmail.isNotEmpty) {
-                print(
-                    'Elder marked pill as taken: ${pill.name}. Notifying guardian...');
-                await notiService.notifyGuardianOfTakenPill(
-                    currentUser.uid, pill);
-              } else {
-                print(
-                    'No shared user (guardian) found for elder. Cannot send notification.');
-              }
-            } else {
-              print(
-                  'Pill marked as taken before scheduled time - no notification sent from Firebase Manager');
-            }
+          // Notify guardian about the pill being taken
+          final sharedUserEmail = userData['sharedUsers'] ?? '';
+          if (sharedUserEmail.isNotEmpty) {
+            print(
+                'Elder marked pill as taken: ${pill.name}. Notifying guardian...');
+            await notiService.notifyGuardianOfTakenPill(currentUser.uid, pill);
+          } else {
+            print(
+                'No shared user (guardian) found for elder. Cannot send notification.');
           }
-        }
-
-        // If no time was taken today but pill is missed, handle missed notifications
-        if (!anyTimeTakenToday && pill.missed) {
+        } else if (pill.missed) {
           // Cancel regular notifications and notify guardian
           await notiService.cancelPillNotifications(pill.id);
 
@@ -224,7 +195,7 @@ class FirebaseManager {
             print(
                 'No shared user (guardian) found for elder. Cannot send notification.');
           }
-        } else if (!anyTimeTakenToday && !pill.missed) {
+        } else {
           // Reschedule notifications if pill is reset
           await notiService.schedulePillNotifications(pill);
         }
