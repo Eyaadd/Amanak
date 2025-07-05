@@ -355,27 +355,60 @@ exports.sendPillNotification = functions.firestore
       
       console.log(`Sending pill notification from Firestore trigger: ${title || "Medication Reminder"}`);
       
-      // Send the notification
-      const response = await admin.messaging().send(message);
-      
-      // Mark as processed
-      await snapshot.ref.update({ 
-        processed: true,
-        processedAt: admin.firestore.FieldValue.serverTimestamp(),
-        messageId: response
-      });
-      
-      console.log(`Successfully sent pill notification: ${response}`);
-      return response;
+      try {
+        // Send the notification
+        const response = await admin.messaging().send(message);
+        
+        // Mark as processed
+        await snapshot.ref.update({ 
+          processed: true,
+          processedAt: admin.firestore.FieldValue.serverTimestamp(),
+          messageId: response,
+          success: true
+        });
+        
+        console.log(`Successfully sent pill notification: ${response}`);
+        
+        // Also store in guardian's notifications collection if guardianId is provided
+        if (guardianId) {
+          await admin.firestore().collection('users').doc(guardianId).collection('notifications').add({
+            title: title || "Medication Reminder",
+            message: body || "Medication notification",
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            isRead: false,
+            type: type || 'pill_taken',
+            data: {
+              pillName: pillName || '',
+              elderName: elderName || '',
+            },
+          });
+          console.log(`Notification also stored in guardian's collection: ${guardianId}`);
+        }
+        
+        return response;
+      } catch (error) {
+        console.error('Error sending notification from Firestore trigger:', error);
+        
+        // Mark as failed
+        await snapshot.ref.update({ 
+          processed: false,
+          error: error.message,
+          errorAt: admin.firestore.FieldValue.serverTimestamp(),
+          attempts: admin.firestore.FieldValue.increment(1)
+        });
+        
+        return null;
+      }
     } catch (error) {
-      console.error('Error sending pill notification:', error);
+      console.error('Error in Firestore trigger function:', error);
       
       // Mark as failed if we have a snapshot reference
       if (event.data && event.data.ref) {
         await event.data.ref.update({ 
           processed: false,
           error: error.message,
-          errorAt: admin.firestore.FieldValue.serverTimestamp()
+          errorAt: admin.firestore.FieldValue.serverTimestamp(),
+          attempts: admin.firestore.FieldValue.increment(1)
         });
       }
       

@@ -262,6 +262,41 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
           elderName: elderName,
           isTaken: true);
 
+      // Always store in Firestore as a reliable fallback
+      try {
+        final guardianDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(guardianId)
+            .get();
+
+        if (guardianDoc.exists) {
+          final guardianData = guardianDoc.data();
+          if (guardianData != null) {
+            final fcmToken = guardianData['fcmToken'];
+            if (fcmToken != null && fcmToken.isNotEmpty) {
+              // Store in pill_notifications for the Firestore trigger
+              await FirebaseFirestore.instance
+                  .collection('pill_notifications')
+                  .add({
+                'token': fcmToken,
+                'title': title,
+                'body': body,
+                'pillName': pill.name,
+                'elderName': elderName,
+                'guardianId': guardianId,
+                'type': 'pill_taken',
+                'createdAt': FieldValue.serverTimestamp(),
+                'processed': false,
+              });
+              print(
+                  '📝 Pill notification stored in pill_notifications for Firestore trigger as backup');
+            }
+          }
+        }
+      } catch (e) {
+        print('❌ Error storing backup notification in Firestore: $e');
+      }
+
       print('✅ INSTANT NOTIFICATION SENT');
     } catch (e) {
       print('❌ Error sending instant notification: $e');

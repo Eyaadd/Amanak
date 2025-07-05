@@ -553,50 +553,7 @@ class FCMService {
             '❌ Failed to send direct FCM notification via legacy API. Status: ${response.statusCode}');
         print('📊 FCM Error Response: ${response.body}');
 
-        // Try one more approach - using topic messaging
-        try {
-          // Create a unique topic using the token's hash
-          final topic = 'user_${token.hashCode.abs()}';
-
-          // Subscribe the token to the topic first
-          final subscribeUrl =
-              'https://iid.googleapis.com/iid/v1/$token/rel/topics/$topic';
-          final subscribeResponse = await http.post(
-            Uri.parse(subscribeUrl),
-            headers: headers,
-          );
-
-          if (subscribeResponse.statusCode == 200) {
-            print('✅ Successfully subscribed token to topic: $topic');
-
-            // Now send to the topic
-            final topicPayload = {
-              'to': '/topics/$topic',
-              'priority': 'high',
-              'notification': {
-                'title': title,
-                'body': body,
-                'sound': 'default',
-              },
-              'data': data ?? {},
-            };
-
-            final topicResponse = await http.post(
-              Uri.parse(legacyFcmUrl),
-              headers: headers,
-              body: json.encode(topicPayload),
-            );
-
-            if (topicResponse.statusCode == 200) {
-              print('✅ Successfully sent notification to topic: $topic');
-              return true;
-            }
-          }
-        } catch (topicError) {
-          print('❌ Topic messaging approach failed: $topicError');
-        }
-
-        // Store notification in Firestore for later delivery
+        // As a final fallback, store in Firestore for the Firestore trigger
         try {
           final currentUser = FirebaseAuth.instance.currentUser;
           if (currentUser != null) {
@@ -612,6 +569,7 @@ class FCMService {
               'userId': currentUser.uid,
             });
             print('📝 Notification stored in Firestore for later delivery');
+            return true; // Consider this a success since we've stored it for later processing
           }
         } catch (e) {
           print('❌ Error storing notification in Firestore: $e');
@@ -634,9 +592,9 @@ class FCMService {
     Map<String, dynamic>? data,
   }) async {
     try {
-      // Public Cloud Function endpoint URL
+      // Public Cloud Function endpoint URL - updated with the correct URL from deployment logs
       const String functionUrl =
-          'https://us-central1-amanak-9c6d0.cloudfunctions.net/sendPillNotificationPublic';
+          'https://sendpillnotificationpublic-lo73s4wl4a-uc.a.run.app';
 
       // API key for basic security
       const String apiKey = 'amanak_pill_notification_key_2025';
@@ -689,9 +647,9 @@ class FCMService {
     String? guardianId,
   }) async {
     try {
-      // Dedicated pill taken notification endpoint
+      // Dedicated pill taken notification endpoint - updated with the correct URL from deployment logs
       const String functionUrl =
-          'https://us-central1-amanak-9c6d0.cloudfunctions.net/pillTakenNotification';
+          'https://pilltakennotification-lo73s4wl4a-uc.a.run.app';
 
       // API key for basic security
       const String apiKey = 'amanak_pill_notification_key_2025';
