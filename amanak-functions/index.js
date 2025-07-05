@@ -72,6 +72,101 @@ exports.sendNotification = functions.https.onCall(async (data, context) => {
   }
 });
 
+// New HTTP function that doesn't require authentication
+exports.sendPillNotificationPublic = functions.https.onRequest(async (req, res) => {
+  // Set CORS headers
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+  
+  // Only allow POST
+  if (req.method !== 'POST') {
+    res.status(405).send('Method Not Allowed');
+    return;
+  }
+  
+  try {
+    const { token, title, body, data, apiKey } = req.body;
+    
+    // Very basic API key validation - in production use a more secure method
+    const validApiKey = "amanak_pill_notification_key_2025";
+    
+    if (apiKey !== validApiKey) {
+      console.error('Invalid API key');
+      res.status(403).send({ error: 'Unauthorized' });
+      return;
+    }
+    
+    if (!token) {
+      console.error('No FCM token provided');
+      res.status(400).send({ error: 'Token is required' });
+      return;
+    }
+    
+    // Create high priority message
+    const message = {
+      token: token,
+      notification: {
+        title: title,
+        body: body,
+      },
+      data: data || {},
+      android: {
+        priority: "high",
+        ttl: 60 * 1000, // 1 minute expiration
+        notification: {
+          channel_id: "high_importance_channel",
+          priority: "high",
+          default_vibrate_timings: true,
+          default_sound: true,
+        },
+      },
+      apns: {
+        headers: {
+          "apns-priority": "10", // Immediate delivery
+          "apns-push-type": "alert"
+        },
+        payload: {
+          aps: {
+            sound: "default",
+            badge: 1,
+            content_available: 1,
+            mutable_content: 1,
+          },
+        },
+      },
+    };
+    
+    console.log(`Sending pill notification via public endpoint: ${title} - ${body}`);
+    
+    // Send the notification
+    const response = await admin.messaging().send(message);
+    console.log(`Successfully sent pill notification: ${response}`);
+    
+    // Store notification in Firestore for tracking
+    await admin.firestore().collection('sent_notifications').add({
+      token: token,
+      title: title,
+      body: body,
+      data: data,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+      messageId: response,
+      method: 'public_endpoint'
+    });
+    
+    res.status(200).send({ success: true, messageId: response });
+  } catch (error) {
+    console.error('Error sending pill notification:', error);
+    res.status(500).send({ error: error.message });
+  }
+});
+
 // Firestore trigger to send pill notifications immediately
 exports.sendPillNotification = functions.firestore
   .onDocumentCreated("pill_notifications/{notificationId}", async (event) => {

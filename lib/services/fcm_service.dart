@@ -471,23 +471,37 @@ class FCMService {
     bool highPriority = true,
   }) async {
     try {
-      // FCM API endpoint
-      const String fcmUrl = 'https://fcm.googleapis.com/fcm/send';
+      // Try the public endpoint first (no auth required)
+      print('Trying public endpoint first...');
+      final publicEndpointSuccess = await sendViaPublicEndpoint(
+        token: token,
+        title: title,
+        body: body,
+        data: data,
+      );
+
+      if (publicEndpointSuccess) {
+        print('✅ Successfully sent notification via public endpoint');
+        return true;
+      }
+
+      print('Public endpoint failed, falling back to legacy FCM API...');
+
+      // Try using the legacy FCM API as fallback
+      const String legacyFcmUrl = 'https://fcm.googleapis.com/fcm/send';
 
       // Get the server key from a secure location
-      // For this implementation, we'll use a constant, but in production
-      // this should be stored securely and not in the code
       const String serverKey =
           'AAAA_iD5Ras:APA91bGZnuCCBCdBJEcLFDm-lVZYPzMeNKOZQeITvKCHXoSgUGXBPILYiDkwzQYHhSO9WFZJ1Vs6YQBVUQYMBrZHlpKcDNKKnTNuR2m7oTCqOYhGdTnQVhgC3PvFPXQOAMbcnhbRhCbX';
 
-      // Prepare headers
+      // Prepare headers for legacy API
       final headers = {
         'Content-Type': 'application/json',
         'Authorization': 'key=$serverKey',
       };
 
-      // Prepare notification payload
-      final payload = {
+      // Prepare legacy notification payload
+      final legacyPayload = {
         'to': token,
         'priority': highPriority ? 'high' : 'normal',
         'notification': {
@@ -515,13 +529,13 @@ class FCMService {
       };
 
       print(
-          '📤 Sending direct FCM notification to token: ${token.substring(0, 10)}...');
+          '📤 Sending direct FCM notification via legacy API to token: ${token.substring(0, 10)}...');
 
-      // Send the HTTP request
+      // Send the HTTP request to legacy API
       final response = await http.post(
-        Uri.parse(fcmUrl),
+        Uri.parse(legacyFcmUrl),
         headers: headers,
-        body: json.encode(payload),
+        body: json.encode(legacyPayload),
       );
 
       // Check response
@@ -529,18 +543,140 @@ class FCMService {
         final responseData = json.decode(response.body);
         final success = responseData['success'] ?? 0;
 
-        print('✅ Direct FCM notification sent. Success count: $success');
+        print(
+            '✅ Direct FCM notification sent via legacy API. Success count: $success');
         print('📊 FCM Response: ${response.body}');
 
         return success > 0;
       } else {
         print(
-            '❌ Failed to send direct FCM notification. Status: ${response.statusCode}');
+            '❌ Failed to send direct FCM notification via legacy API. Status: ${response.statusCode}');
         print('📊 FCM Error Response: ${response.body}');
+
+        // Try one more approach - using topic messaging
+        try {
+          // Create a unique topic using the token's hash
+          final topic = 'user_${token.hashCode.abs()}';
+
+          // Subscribe the token to the topic first
+          final subscribeUrl =
+              'https://iid.googleapis.com/iid/v1/$token/rel/topics/$topic';
+          final subscribeResponse = await http.post(
+            Uri.parse(subscribeUrl),
+            headers: headers,
+          );
+
+          if (subscribeResponse.statusCode == 200) {
+            print('✅ Successfully subscribed token to topic: $topic');
+
+            // Now send to the topic
+            final topicPayload = {
+              'to': '/topics/$topic',
+              'priority': 'high',
+              'notification': {
+                'title': title,
+                'body': body,
+                'sound': 'default',
+              },
+              'data': data ?? {},
+            };
+
+            final topicResponse = await http.post(
+              Uri.parse(legacyFcmUrl),
+              headers: headers,
+              body: json.encode(topicPayload),
+            );
+
+            if (topicResponse.statusCode == 200) {
+              print('✅ Successfully sent notification to topic: $topic');
+              return true;
+            }
+          }
+        } catch (topicError) {
+          print('❌ Topic messaging approach failed: $topicError');
+        }
+
+        // Store notification in Firestore for later delivery
+        try {
+          final currentUser = FirebaseAuth.instance.currentUser;
+          if (currentUser != null) {
+            await FirebaseFirestore.instance
+                .collection('pill_notifications')
+                .add({
+              'token': token,
+              'title': title,
+              'body': body,
+              'data': data,
+              'createdAt': FieldValue.serverTimestamp(),
+              'processed': false,
+              'userId': currentUser.uid,
+            });
+            print('📝 Notification stored in Firestore for later delivery');
+          }
+        } catch (e) {
+          print('❌ Error storing notification in Firestore: $e');
+        }
+
         return false;
       }
     } catch (e) {
       print('❌ Error sending direct FCM notification: $e');
+      return false;
+    }
+  }
+
+  /// Send notification using the public Cloud Function endpoint
+  /// This doesn't require authentication
+  Future<bool> sendViaPublicEndpoint({
+    required String token,
+    required String title,
+    required String body,
+    Map<String, dynamic>? data,
+  }) async {
+    try {
+      // Public Cloud Function endpoint URL
+      const String functionUrl =
+          'https://us-central1-amanak-9c6d0.cloudfunctions.net/sendPillNotificationPublic';
+
+      // API key for basic security
+      const String apiKey = 'amanak_pill_notification_key_2025';
+
+      // Prepare the request body
+      final requestBody = {
+        'token': token,
+        'title': title,
+        'body': body,
+        'data': data ?? {},
+        'apiKey': apiKey,
+      };
+
+      print(
+          '📤 Sending notification via public endpoint to token: ${token.substring(0, 10)}...');
+
+      // Send the HTTP request
+      final response = await http.post(
+        Uri.parse(functionUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(requestBody),
+      );
+
+      // Check response
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        final success = responseData['success'] ?? false;
+
+        print('✅ Notification sent via public endpoint. Success: $success');
+        print('📊 Response: ${response.body}');
+
+        return success;
+      } else {
+        print(
+            '❌ Failed to send notification via public endpoint. Status: ${response.statusCode}');
+        print('📊 Error Response: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('❌ Error sending notification via public endpoint: $e');
       return false;
     }
   }
