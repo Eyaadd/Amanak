@@ -48,15 +48,29 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     Future.microtask(() {
       final pillProvider = Provider.of<PillProvider>(context, listen: false);
       pillProvider.initialize().then((_) => _updateTodayPills());
+
+      // Add listener to pill provider to update when data changes
+      pillProvider.addListener(_onPillProviderChanged);
     });
     _setupPeriodicChecks();
   }
 
   @override
   void dispose() {
+    // Remove listener when disposing
+    final pillProvider = Provider.of<PillProvider>(context, listen: false);
+    pillProvider.removeListener(_onPillProviderChanged);
+
     _periodicTimer?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  // Callback when pill provider data changes
+  void _onPillProviderChanged() {
+    if (mounted) {
+      _updateTodayPills();
+    }
   }
 
   // Update today's pills from the provider's data
@@ -140,27 +154,6 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       // Get the time key for this specific dose
       final timeKey = _getTimeKeyForPill(pill);
 
-      // Update local state immediately for better performance
-      if (mounted) {
-        setState(() {
-          // Update all instances of this pill in today's pills list
-          for (int i = 0; i < _todayPills.length; i++) {
-            if (_todayPills[i].id == pill.id) {
-              // Check if this is the specific time we're marking as taken
-              if (_getTimeKeyForPill(_todayPills[i]) == timeKey) {
-                // Replace with the single-time pill that's marked as taken
-                _todayPills[i] = pill.copyWith(
-                  takenDates: {
-                    ...pill.takenDates,
-                    timeKey: DateTime.now(),
-                  },
-                );
-              }
-            }
-          }
-        });
-      }
-
       // Show immediate feedback
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -171,11 +164,21 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
         ),
       );
 
-      // Mark the pill as taken through the provider - this handles all the Firebase operations
-      await pillProvider.markPillAsTaken(pill, timeKey);
+      // Find the original pill in the provider's list
+      final originalPill = pillProvider.pills.firstWhere(
+        (p) => p.id == pill.id,
+        orElse: () => pill,
+      );
+
+      // Create a copy with the updated taken status
+      final updatedPill = originalPill.copyWith();
+      updatedPill.markTimeTaken(timeKey, DateTime.now());
+
+      // Update the pill through the provider
+      await pillProvider.updatePill(updatedPill);
 
       // Update today's pills list after the provider has updated
-      _updateTodayPills();
+      await _updateTodayPills();
     } catch (e) {
       print('Error marking pill as taken: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -191,10 +194,26 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   String _getTimeKeyForPill(PillModel pill) {
     if (pill.times.isEmpty) return "";
 
+    // Get the index of this time in the original pill's times list
     final time = pill.times.first;
+
+    // Find the original pill from the provider to get the time index
+    final pillProvider = Provider.of<PillProvider>(context, listen: false);
+    final originalPill = pillProvider.pills
+        .firstWhere((p) => p.id == pill.id, orElse: () => pill);
+
+    int timeIndex = 0;
+    for (int i = 0; i < originalPill.times.length; i++) {
+      final t = originalPill.times[i];
+      if (t.hour == time.hour && t.minute == time.minute) {
+        timeIndex = i;
+        break;
+      }
+    }
+
     final today = DateTime.now();
     final dateStr = '${today.year}-${today.month}-${today.day}';
-    return '$dateStr-${time.hour}-${time.minute}';
+    return '$dateStr-$timeIndex';
   }
 
   // Helper method to format time
@@ -244,13 +263,14 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       time.minute,
     );
 
-    // If pill time is more than 5 minutes ago and not taken, mark as overdue/missed
-    if (now.difference(pillTime).inMinutes > 5) {
+    // If pill time is more than 15 minutes ago and not taken, mark as overdue/missed
+    // Increased from 5 to 15 minutes to provide more flexibility
+    if (now.difference(pillTime).inMinutes > 15) {
       return "missed";
     }
 
-    // If pill time is within last 5 minutes or next 30 minutes, mark as due now
-    if (now.difference(pillTime).inMinutes <= 5 &&
+    // If pill time is within last 15 minutes or next 30 minutes, mark as due now
+    if (now.difference(pillTime).inMinutes <= 15 &&
         now.difference(pillTime).inMinutes >= -30) {
       return "due-now";
     }
@@ -281,29 +301,20 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     }
   }
 
-  // Set up periodic checks for missed pills
+  // Set up periodic checks for pill status updates
   void _setupPeriodicChecks() {
-    // Check for missed pills every 15 minutes
-    _periodicTimer = Timer.periodic(Duration(minutes: 15), (timer) {
-      if (mounted) {
-        _checkForMissedPills();
-      }
-    });
+    // Check for missed pills and refresh data every minute
+    _periodicTimer = Timer.periodic(Duration(minutes: 1), (timer) {
+      if (!mounted) return;
 
-    // Also check immediately on startup
-    _checkForMissedPills();
-  }
-
-  // Check for missed pills
-  Future<void> _checkForMissedPills() async {
-    try {
       final pillProvider = Provider.of<PillProvider>(context, listen: false);
-      await pillProvider.checkForMissedPills();
-      // Update UI with latest data
-      _updateTodayPills();
-    } catch (e) {
-      print('Error checking for missed pills: $e');
-    }
+
+      // Check for missed pills
+      pillProvider.checkForMissedPills().then((_) {
+        // Update today's pills after checking for missed pills
+        _updateTodayPills();
+      });
+    });
   }
 
   @override

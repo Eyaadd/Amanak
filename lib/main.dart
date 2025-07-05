@@ -6,6 +6,8 @@ import 'package:amanak/nearest_hospitals.dart';
 import 'package:amanak/notifications/noti_service.dart';
 import 'package:amanak/services/medicines_json_service.dart';
 import 'package:amanak/services/localization_service.dart';
+import 'package:amanak/services/fcm_service.dart';
+import 'package:amanak/services/token_verification_service.dart';
 import 'package:amanak/signup/choose_role.dart';
 import 'package:amanak/signup/signup_screen.dart';
 import 'package:amanak/theme/base_theme.dart';
@@ -85,6 +87,14 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // Initialize FCM Service
+  final fcmService = FCMService();
+  await fcmService.initialize();
+
+  // Initialize token verification service
+  final tokenVerificationService = TokenVerificationService();
+  await tokenVerificationService.initialize();
+
   // Remove the always-clear onboarding flag for production
   // final prefs = await SharedPreferences.getInstance();
   // await prefs.remove('onboarding_completed');
@@ -110,6 +120,8 @@ void main() async {
   final authUser = FirebaseAuth.instance.currentUser;
   if (authUser != null) {
     await notiService.checkPendingNotifications();
+    await fcmService.checkPendingNotifications();
+    await fcmService.verifyToken();
   }
 
   // Set preferred orientations

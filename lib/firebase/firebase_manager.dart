@@ -5,6 +5,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:amanak/notifications/noti_service.dart';
 import 'package:flutter/material.dart' show TimeOfDay;
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:amanak/services/fcm_service.dart';
 
 class FirebaseManager {
   static CollectionReference<UserModel> getUsersCollection() {
@@ -297,37 +301,51 @@ class FirebaseManager {
     }
   }
 
-  // Check for missed pills and update their status
+  // Initialize timezone data
+  static bool _tzInitialized = false;
+  static Future<void> _ensureTimezoneInitialized() async {
+    if (!_tzInitialized) {
+      tz_data.initializeTimeZones();
+      _tzInitialized = true;
+    }
+  }
+
+  // Check for missed pills
   static Future<void> checkForMissedPills() async {
     try {
-      // Get current user
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
 
-      // Get user role to determine notification behavior
+      // Get user data to check role
       final userData = await getNameAndRole(currentUser.uid);
       final userRole = userData['role'] ?? '';
 
-      // Only check for missed pills for elder users, not for guardians
-      if (userRole != 'guardian') {
-        // Get all pills for the user
-        final pillsSnapshot = await getPillsCollection(currentUser.uid).get();
+      // Only check for missed pills for elder users, not guardians
+      if (userRole.toLowerCase() != 'guardian') {
+        // Initialize timezone
+        tz_data.initializeTimeZones();
+        final String timezone = userData['timezone'] ?? 'UTC';
+        final tzLocation = tz.getLocation(timezone);
+        final now = tz.TZDateTime.now(tzLocation);
+        final today = tz.TZDateTime(tzLocation, now.year, now.month, now.day);
 
-        // Current time
-        final now = DateTime.now();
-        final today = DateTime(now.year, now.month, now.day);
+        print(
+            'Checking missed pills at ${now.toString()} (${tzLocation.name})');
+
+        // Get all pills
+        final pillsSnapshot = await getPillsCollection(currentUser.uid).get();
 
         // Check each pill
         for (var pillDoc in pillsSnapshot.docs) {
           final pill = pillDoc.data();
           final pillId = pill.id;
 
-          // Skip if already taken today or already marked as missed
-          if (pill.isTakenOnDate(today) || pill.missed) continue;
+          // Skip if already marked as missed
+          if (pill.missed) continue;
 
           // Check if the pill is scheduled for today or a past date
-          final pillStartDate = DateTime(
-              pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
+          final pillStartDate = tz.TZDateTime(tzLocation, pill.dateTime.year,
+              pill.dateTime.month, pill.dateTime.day);
 
           // Skip pills scheduled for future dates - they can't be missed yet
           if (pillStartDate.isAfter(today)) continue;
@@ -336,80 +354,97 @@ class FirebaseManager {
           final daysSinceStart = today.difference(pillStartDate).inDays;
           if (daysSinceStart < 0 || daysSinceStart >= pill.duration) continue;
 
-          // Check if pill time has passed (more than 5 minutes ago)
-          for (final dynamic timeObj in pill.times) {
-            int hour = 8; // Default value
-            int minute = 0; // Default value
+          // Check if this pill was already taken today
+          final dateStr = '${today.year}-${today.month}-${today.day}';
+          final isTakenToday = pill.takenDates.containsKey(dateStr);
 
-            try {
-              // Try to get hour and minute based on the object type
-              if (timeObj is TimeOfDay) {
-                // If it's already a TimeOfDay object
-                hour = timeObj.hour;
-                minute = timeObj.minute;
-              } else {
-                // Try to access as a Map
-                final dynamic hourValue = timeObj['hour'];
-                final dynamic minuteValue = timeObj['minute'];
+          // If the pill was taken today, skip checking for missed times
+          if (isTakenToday) continue;
 
-                if (hourValue != null) {
-                  hour = hourValue is int ? hourValue : 8;
-                }
+          // Track if any time was missed
+          bool anyTimeMissed = false;
+          List<String> missedTimeStrings = [];
 
-                if (minuteValue != null) {
-                  minute = minuteValue is int ? minuteValue : 0;
-                }
-              }
-            } catch (e) {
-              print('Error parsing time object: $e');
-              // Use default values
-            }
+          // Check each time for this pill
+          for (int i = 0; i < pill.times.length; i++) {
+            final timeObj = pill.times[i];
 
-            final pillTime = DateTime(
+            // Extract hour and minute
+            int hour = timeObj.hour;
+            int minute = timeObj.minute;
+
+            // Create pill time using user's timezone
+            final pillTime = tz.TZDateTime(
+              tzLocation,
               now.year,
               now.month,
               now.day,
               hour,
               minute,
             );
-            if (now.difference(pillTime).inMinutes > 5) {
-              // Mark as missed in Firebase directly
-              await getPillsCollection(currentUser.uid)
-                  .doc(pillId)
-                  .update({'missed': true});
-              // Handle notifications
-              final notiService = NotiService();
-              await notiService.cancelPillNotifications(pillId);
-              // Get user data for notification
-              final elderName = userData['name'] ?? 'Elder';
-              final sharedUserEmail = userData['sharedUsers'] ?? '';
-              // Notify guardian if needed
-              if (sharedUserEmail.isNotEmpty) {
-                final guardianData = await getUserByEmail(sharedUserEmail);
-                if (guardianData != null) {
-                  final guardianId = guardianData['id'] ?? '';
-                  if (guardianId.isNotEmpty) {
-                    // Show notification to elder
-                    await notiService.showNotification(
-                      id: NotiService.MISSED_NOTIFICATION_ID_PREFIX +
-                          // Use date hash to create unique ID
-                          pill.dateTime.hashCode % 10000,
-                      title: "Missed Medicine",
-                      body:
-                          "You missed taking: ${pill.name}. Please take it as soon as possible.",
-                      notificationDetails: notiService.missedPillDetails(),
-                      payload: "missed:${pill.id}:${today.toIso8601String()}",
-                    );
 
-                    // Send direct FCM notification to guardian about missed pill
-                    await _sendDirectMissedPillNotification(
-                        guardianId: guardianId,
-                        pillName: pill.name,
-                        elderName: elderName);
-                  }
+            final diffMinutes = now.difference(pillTime).inMinutes;
+            print(
+                'Pill ${pill.name} time ${i + 1}/${pill.times.length}: ${pillTime.toString()}, diff: $diffMinutes minutes');
+
+            // Check if this specific time was missed (15+ minutes ago)
+            if (diffMinutes > 15) {
+              anyTimeMissed = true;
+
+              // Format time for notification
+              final formattedHour =
+                  hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+              final formattedMinute = minute.toString().padLeft(2, '0');
+              final period = hour >= 12 ? 'PM' : 'AM';
+              missedTimeStrings.add('$formattedHour:$formattedMinute $period');
+            }
+          }
+
+          // If any time was missed, mark the pill as missed and send notifications
+          if (anyTimeMissed) {
+            // Mark as missed in Firebase directly
+            await getPillsCollection(currentUser.uid)
+                .doc(pillId)
+                .update({'missed': true});
+
+            // Handle notifications
+            final notiService = NotiService();
+            await notiService.cancelPillNotifications(pillId);
+
+            // Get user data for notification
+            final elderName = userData['name'] ?? 'Elder';
+            final sharedUserEmail = userData['sharedUsers'] ?? '';
+
+            // Create notification message with missed times
+            final missedTimesText = missedTimeStrings.join(', ');
+            final notificationBody =
+                "You missed taking: ${pill.name} at $missedTimesText. Please take it as soon as possible.";
+
+            // Notify guardian if needed
+            if (sharedUserEmail.isNotEmpty) {
+              final guardianData = await getUserByEmail(sharedUserEmail);
+              if (guardianData != null) {
+                final guardianId = guardianData['id'] ?? '';
+                if (guardianId.isNotEmpty) {
+                  // Show notification to elder
+                  await notiService.showNotification(
+                    id: NotiService.MISSED_NOTIFICATION_ID_PREFIX +
+                        // Use date hash to create unique ID
+                        pill.dateTime.hashCode % 10000,
+                    title: "Missed Medicine",
+                    body: notificationBody,
+                    notificationDetails: notiService.missedPillDetails(),
+                    payload: "missed:${pill.id}:${today.toIso8601String()}",
+                  );
+
+                  // Send direct FCM notification to guardian about missed pill
+                  await _sendDirectMissedPillNotification(
+                      guardianId: guardianId,
+                      pillName: pill.name,
+                      elderName: elderName,
+                      missedTimes: missedTimesText);
                 }
               }
-              break; // Only need to mark as missed once
             }
           }
         }
@@ -425,92 +460,43 @@ class FirebaseManager {
     required String guardianId,
     required String pillName,
     required String elderName,
+    required String missedTimes,
   }) async {
     try {
-      // Get guardian's FCM token
-      final guardianDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(guardianId)
-          .get();
+      // Use the centralized FCM service
+      final fcmService = FCMService();
 
-      if (!guardianDoc.exists) {
-        print('Guardian document not found');
-        return;
-      }
-
-      final guardianData = guardianDoc.data();
-      if (guardianData == null) return;
-
-      final fcmToken = guardianData['fcmToken'];
-      if (fcmToken == null || fcmToken.isEmpty) {
-        print('FCM token not found for guardian');
-        return;
-      }
-
-      // Prepare notification message
+      // Prepare notification data
       final title = "Pill Missed Alert";
-      final body = "$elderName missed their medicine: $pillName.";
+      final body =
+          "$elderName missed their medicine: $pillName. Missed times: $missedTimes.";
 
-      // Prepare notification payload with additional fields to ensure proper handling
-      final message = {
-        'token': fcmToken,
-        'notification': {
-          'title': title,
-          'body': body,
-        },
-        'data': {
-          'type': 'pill_missed',
-          'pillName': pillName,
-          'elderName': elderName,
-          'title': title, // Duplicate in data for data-only messages
-          'body': body, // Duplicate in data for data-only messages
-          'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
-        },
-        'android': {
-          'priority': 'high',
-          'notification': {
-            'channel_id': 'high_importance_channel',
-            'priority': 'high',
-          }
-        },
-        'apns': {
-          'payload': {
-            'aps': {
-              'sound': 'default',
-              'badge': 1,
-              'content-available': 1,
-            }
-          }
-        }
-      };
-
-      // Send via Cloud Functions
+      // Try to send notification using FCM service
+      bool fcmSuccess = false;
       try {
-        final functions = FirebaseFunctions.instance;
-        final callable = functions.httpsCallable('sendNotification');
-        print('Calling Cloud Function directly for missed pill notification');
-        final result = await callable.call(message);
-        print(
-            'Missed pill notification sent via Cloud Functions: ${result.data}');
-
-        // Store notification in Firestore for the guardian
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(guardianId)
-            .collection('notifications')
-            .add({
-          'title': title,
-          'message': body,
-          'timestamp': FieldValue.serverTimestamp(),
-          'isRead': false,
-          'type': 'pill_missed',
-          'data': {
+        fcmSuccess = await fcmService.sendNotification(
+          userId: guardianId,
+          title: title,
+          body: body,
+          data: {
+            'type': 'pill_missed',
             'pillName': pillName,
             'elderName': elderName,
+            'missedTimes': missedTimes,
+            'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
           },
-        });
-      } catch (e) {
-        print('Error sending direct missed pill notification: $e');
+          highPriority: true,
+        );
+      } catch (fcmError) {
+        print('Error sending FCM notification: $fcmError');
+        fcmSuccess = false;
+      }
+
+      // If FCM failed, fall back to storing in Firestore directly
+      if (!fcmSuccess) {
+        print(
+            'FCM notification failed, storing in Firestore for later delivery');
+
         // Store for later delivery
         await FirebaseFirestore.instance
             .collection('pending_notifications')
@@ -522,12 +508,16 @@ class FirebaseManager {
             'type': 'pill_missed',
             'pillName': pillName,
             'elderName': elderName,
-            'title': title,
-            'body': body,
+            'missedTimes': missedTimes,
+            'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
           },
           'timestamp': FieldValue.serverTimestamp(),
           'delivered': false,
+          'attempts': 1,
+          'lastAttempt': FieldValue.serverTimestamp(),
         });
+      } else {
+        print('Missed pill notification sent successfully to guardian');
       }
     } catch (e) {
       print('Error in _sendDirectMissedPillNotification: $e');

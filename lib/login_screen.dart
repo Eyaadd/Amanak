@@ -2,6 +2,7 @@ import 'package:amanak/firebase/firebase_manager.dart';
 import 'package:amanak/home_screen.dart';
 import 'package:amanak/models/user_model.dart';
 import 'package:amanak/screens/language_selection_screen.dart';
+import 'package:amanak/services/fcm_service.dart';
 import 'package:amanak/signup/signup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -418,6 +419,11 @@ class _LoginScreenState extends State<LoginScreen> {
             await FirebaseManager.updateEvent(updatedUser);
           }
         }
+
+        // Initialize FCM service now that user is authenticated
+        final fcmService = FCMService();
+        await fcmService.initialize();
+        print('FCM service initialized after login');
       }
 
       // Navigate to home screen after login

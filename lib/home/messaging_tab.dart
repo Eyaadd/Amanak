@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import 'dart:math';
 import 'package:amanak/services/encryption_service.dart';
+import 'package:amanak/services/fcm_service.dart';
 
 class MessagingTab extends StatefulWidget {
   static const routeName = "Messaging";
@@ -24,6 +25,7 @@ class _MessagingTabState extends State<MessagingTab>
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final NotiService _notiService = NotiService();
   final EncryptionService _encryptionService = EncryptionService();
+  final FCMService _fcmService = FCMService();
   String? _currentUserEmail;
   String? _currentUserId;
   String? _currentUserName;
@@ -210,7 +212,7 @@ class _MessagingTabState extends State<MessagingTab>
           // Send notification for the incoming message
           // Only if not active or app is in background
           if (!_isActive) {
-            await _sendIncomingMessageNotification(senderName, messageText);
+            await _sendIncomingMessageNotification(messageText, senderName);
           } else {
             print('User is active in chat, not sending notification');
           }
@@ -229,14 +231,8 @@ class _MessagingTabState extends State<MessagingTab>
   }
 
   Future<void> _sendIncomingMessageNotification(
-      String senderName, String messageText) async {
+      String messageText, String senderName) async {
     try {
-      // Make sure notification service is initialized
-      if (!_notiService.isInitialized) {
-        await _notiService.initNotification();
-      }
-
-      // Only send notification if the user is not actively viewing the chat
       if (_currentUserId != null && !_isActive) {
         // Get chat ID for decryption
         final chatId = _getChatId();
@@ -249,18 +245,44 @@ class _MessagingTabState extends State<MessagingTab>
               await _encryptionService.decryptMessage(messageText, chatId);
         }
 
-        // Send notification with decrypted message
-        await _notiService.sendFcmNotification(
-          userId: _currentUserId!,
-          title: "New Message",
-          body: "$senderName: $decryptedText",
-          data: {
-            'type': 'message',
-            'chatId': chatId,
-            'senderId': _guardianId ?? '',
-            'senderName': senderName,
-          },
-        );
+        // Try to send notification with FCM service first
+        bool fcmSuccess = false;
+        try {
+          // Send notification with decrypted message using FCM service
+          fcmSuccess = await _fcmService.sendNotification(
+            userId: _currentUserId!,
+            title: "New Message",
+            body: "$senderName: $decryptedText",
+            data: {
+              'type': 'message',
+              'chatId': chatId,
+              'senderId': _guardianId ?? '',
+              'senderName': senderName,
+            },
+            highPriority: true,
+          );
+        } catch (fcmError) {
+          print('Error sending FCM notification: $fcmError');
+          fcmSuccess = false;
+        }
+
+        // If FCM failed, fall back to local notification
+        if (!fcmSuccess) {
+          // Initialize notification service if needed
+          if (!_notiService.isInitialized) {
+            await _notiService.initNotification();
+          }
+
+          // Show local notification
+          await _notiService.showNotification(
+            id: 1000 + _currentUserId!.hashCode % 10000,
+            title: "New Message",
+            body: "$senderName: $decryptedText",
+            notificationDetails: _notiService.messageDetails(),
+            payload: "message:$chatId:${_guardianId ?? ''}:$senderName",
+          );
+          print('Showed local notification as fallback');
+        }
       }
     } catch (e) {
       print('Error sending incoming message notification: $e');

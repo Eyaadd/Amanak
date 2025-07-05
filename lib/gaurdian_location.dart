@@ -8,6 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:amanak/services/fcm_service.dart';
 
 class GuardianLiveTracking extends StatefulWidget {
   const GuardianLiveTracking({super.key});
@@ -20,6 +21,7 @@ class GuardianLiveTracking extends StatefulWidget {
 class _GuardianLiveTrackingState extends State<GuardianLiveTracking> {
   double zoomClose = 18.0;
   Completer<GoogleMapController> _controller = Completer();
+  final FCMService _fcmService = FCMService(); // Add FCM service
 
   // For showing elderly's location
   late double elderlyLatitude = 0.0;

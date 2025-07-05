@@ -10,6 +10,7 @@ import 'package:amanak/provider/my_provider.dart';
 import 'package:amanak/provider/pill_provider.dart';
 import 'package:amanak/services/database_service.dart';
 import 'package:amanak/services/encryption_service.dart';
+import 'package:amanak/services/fcm_service.dart';
 import 'package:amanak/services/ocr_service.dart';
 import 'package:amanak/theme/base_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -54,7 +55,25 @@ class _CalendarTabState extends State<CalendarTab> {
         await pillProvider.initialize();
       }
       _updatePillsFromProvider();
+
+      // Add listener to pill provider to update when data changes
+      pillProvider.addListener(_onPillProviderChanged);
     });
+  }
+
+  @override
+  void dispose() {
+    // Remove listener when disposing
+    final pillProvider = Provider.of<PillProvider>(context, listen: false);
+    pillProvider.removeListener(_onPillProviderChanged);
+    super.dispose();
+  }
+
+  // Callback when pill provider data changes
+  void _onPillProviderChanged() {
+    if (mounted) {
+      _updatePillsFromProvider();
+    }
   }
 
   // Helper method to refresh data safely
@@ -150,10 +169,26 @@ class _CalendarTabState extends State<CalendarTab> {
   String _getTimeKeyForPill(PillModel pill) {
     if (pill.times.isEmpty) return "";
 
+    // Get the index of this time in the original pill's times list
     final time = pill.times.first;
+
+    // Find the original pill from the provider to get the time index
+    final pillProvider = Provider.of<PillProvider>(context, listen: false);
+    final originalPill = pillProvider.pills
+        .firstWhere((p) => p.id == pill.id, orElse: () => pill);
+
+    int timeIndex = 0;
+    for (int i = 0; i < originalPill.times.length; i++) {
+      final t = originalPill.times[i];
+      if (t.hour == time.hour && t.minute == time.minute) {
+        timeIndex = i;
+        break;
+      }
+    }
+
     final dateStr =
         '${_selectedDay!.year}-${_selectedDay!.month}-${_selectedDay!.day}';
-    return '$dateStr-${time.hour}-${time.minute}';
+    return '$dateStr-$timeIndex';
   }
 
   // Helper method to format time
@@ -1185,91 +1220,40 @@ class _CalendarTabState extends State<CalendarTab> {
       required String elderName,
       required bool isTaken}) async {
     try {
-      // Get guardian's FCM token
-      final guardianDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(guardianId)
-          .get();
+      // Use the centralized FCM service
+      final fcmService = FCMService();
 
-      if (!guardianDoc.exists) {
-        print('Guardian document not found');
-        return;
-      }
-
-      final guardianData = guardianDoc.data();
-      if (guardianData == null) return;
-
-      final fcmToken = guardianData['fcmToken'];
-      if (fcmToken == null || fcmToken.isEmpty) {
-        print('FCM token not found for guardian');
-        return;
-      }
-
-      // Prepare notification message
+      // Prepare notification data
       final title = isTaken ? "Medicine Taken" : "Pill Missed Alert";
       final body = isTaken
           ? "$elderName marked $pillName as taken."
           : "$elderName missed their medicine: $pillName.";
 
-      // Prepare notification payload with additional fields to ensure proper handling
-      final message = {
-        'token': fcmToken,
-        'notification': {
-          'title': title,
-          'body': body,
-        },
-        'data': {
-          'type': isTaken ? 'pill_taken' : 'pill_missed',
-          'pillName': pillName,
-          'elderName': elderName,
-          'title': title, // Duplicate in data for data-only messages
-          'body': body, // Duplicate in data for data-only messages
-          'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
-        },
-        'android': {
-          'priority': 'high',
-          'notification': {
-            'channel_id': 'high_importance_channel',
-            'priority': 'high',
-          }
-        },
-        'apns': {
-          'payload': {
-            'aps': {
-              'sound': 'default',
-              'badge': 1,
-              'content-available': 1,
-            }
-          }
-        }
-      };
-
-      // Send via Cloud Functions
+      // Try to send notification using FCM service
+      bool fcmSuccess = false;
       try {
-        final functions = FirebaseFunctions.instance;
-        final callable = functions.httpsCallable('sendNotification');
-        print('Calling Cloud Function directly for pill notification');
-        final result = await callable.call(message);
-        print('Pill notification sent via Cloud Functions: ${result.data}');
-
-        // Store notification in Firestore for the guardian
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(guardianId)
-            .collection('notifications')
-            .add({
-          'title': title,
-          'message': body,
-          'timestamp': FieldValue.serverTimestamp(),
-          'isRead': false,
-          'type': isTaken ? 'pill_taken' : 'pill_missed',
-          'data': {
+        fcmSuccess = await fcmService.sendNotification(
+          userId: guardianId,
+          title: title,
+          body: body,
+          data: {
+            'type': isTaken ? 'pill_taken' : 'pill_missed',
             'pillName': pillName,
             'elderName': elderName,
+            'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
           },
-        });
-      } catch (e) {
-        print('Error sending direct pill notification: $e');
+          highPriority: true,
+        );
+      } catch (fcmError) {
+        print('Error sending FCM notification: $fcmError');
+        fcmSuccess = false;
+      }
+
+      // If FCM failed, fall back to storing in Firestore directly
+      if (!fcmSuccess) {
+        print(
+            'FCM notification failed, storing in Firestore for later delivery');
+
         // Store for later delivery
         await FirebaseFirestore.instance
             .collection('pending_notifications')
@@ -1281,12 +1265,15 @@ class _CalendarTabState extends State<CalendarTab> {
             'type': isTaken ? 'pill_taken' : 'pill_missed',
             'pillName': pillName,
             'elderName': elderName,
-            'title': title,
-            'body': body,
+            'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
           },
           'timestamp': FieldValue.serverTimestamp(),
           'delivered': false,
+          'attempts': 1,
+          'lastAttempt': FieldValue.serverTimestamp(),
         });
+      } else {
+        print('Pill notification sent successfully to guardian');
       }
     } catch (e) {
       print('Error in _sendDirectPillNotification: $e');

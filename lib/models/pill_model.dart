@@ -14,6 +14,8 @@ class PillModel {
   String note;
   Map<String, DateTime> takenDates; // Map of date strings to taken timestamps
   bool missed;
+  Map<String, bool>
+      missedTimes; // Map to track which specific times were missed
 
   PillModel({
     this.id = "",
@@ -27,8 +29,10 @@ class PillModel {
     this.note = "",
     Map<String, DateTime>? takenDates,
     this.missed = false,
+    Map<String, bool>? missedTimes,
   })  : this.takenDates = takenDates ?? {},
-        this.times = times ?? [TimeOfDay(hour: 8, minute: 0)];
+        this.times = times ?? [TimeOfDay(hour: 8, minute: 0)],
+        this.missedTimes = missedTimes ?? {};
 
   // Backward compatibility constructor
   PillModel.withSingleTime({
@@ -44,8 +48,10 @@ class PillModel {
     this.note = "",
     Map<String, DateTime>? takenDates,
     this.missed = false,
+    Map<String, bool>? missedTimes,
   })  : this.takenDates = takenDates ?? {},
-        this.times = [TimeOfDay(hour: alarmHour, minute: alarmMinute)];
+        this.times = [TimeOfDay(hour: alarmHour, minute: alarmMinute)],
+        this.missedTimes = missedTimes ?? {};
 
   PillModel.fromJson(Map<String, dynamic> json, String id)
       : this(
@@ -60,6 +66,7 @@ class PillModel {
           note: json['note'] ?? "",
           takenDates: _parseTakenDates(json['takenDates'], json),
           missed: json['missed'] ?? false,
+          missedTimes: _parseMissedTimes(json['missedTimes']),
         );
 
   Map<String, dynamic> toJson() {
@@ -81,6 +88,7 @@ class PillModel {
         (key, value) => MapEntry(key, Timestamp.fromDate(value)),
       ),
       'missed': missed,
+      'missedTimes': missedTimes,
     };
   }
 
@@ -97,6 +105,7 @@ class PillModel {
     String? note,
     Map<String, DateTime>? takenDates,
     bool? missed,
+    Map<String, bool>? missedTimes,
   }) {
     return PillModel(
       id: id ?? this.id,
@@ -110,6 +119,7 @@ class PillModel {
       note: note ?? this.note,
       takenDates: takenDates ?? Map.from(this.takenDates),
       missed: missed ?? this.missed,
+      missedTimes: missedTimes ?? Map.from(this.missedTimes),
     );
   }
 
@@ -130,6 +140,13 @@ class PillModel {
     final dateStr = '${date.year}-${date.month}-${date.day}';
     if (taken) {
       takenDates[dateStr] = DateTime.now();
+      // When marking as taken, clear any missed status
+      missed = false;
+      // Clear missed times for this date
+      for (int i = 0; i < times.length; i++) {
+        final timeKey = '$dateStr-$i';
+        missedTimes.remove(timeKey);
+      }
     } else {
       takenDates.remove(dateStr);
     }
@@ -138,11 +155,48 @@ class PillModel {
   // Helper method to mark a specific time as taken
   void markTimeTaken(String timeKey, DateTime takenTime) {
     takenDates[timeKey] = takenTime;
+    // When marking a specific time as taken, clear its missed status
+    missedTimes.remove(timeKey);
+
+    // Check if all times for today are taken, then clear missed status
+    final dateStr = timeKey.split('-').take(3).join('-'); // Extract date part
+    bool allTimesTaken = true;
+    for (int i = 0; i < times.length; i++) {
+      final currentTimeKey = '$dateStr-$i';
+      if (!takenDates.containsKey(currentTimeKey)) {
+        allTimesTaken = false;
+        break;
+      }
+    }
+
+    if (allTimesTaken) {
+      missed = false;
+    }
   }
 
   // Helper method to mark a specific time as not taken
   void markTimeNotTaken(String timeKey) {
     takenDates.remove(timeKey);
+  }
+
+  // Helper method to mark a specific time as missed
+  void markTimeMissed(String timeKey, bool isMissed) {
+    if (isMissed) {
+      missedTimes[timeKey] = true;
+    } else {
+      missedTimes.remove(timeKey);
+    }
+  }
+
+  // Helper method to check if a specific time is missed
+  bool isTimeMissed(String timeKey) {
+    return missedTimes[timeKey] ?? false;
+  }
+
+  // Helper method to get the time key for a specific time index and date
+  String getTimeKey(DateTime date, int timeIndex) {
+    final dateStr = '${date.year}-${date.month}-${date.day}';
+    return '$dateStr-$timeIndex';
   }
 
   // Schedule notifications for this pill
@@ -242,6 +296,28 @@ class PillModel {
       }
     } catch (e) {
       print('Error parsing takenDates: $e');
+    }
+    return {};
+  }
+
+  // Helper method to parse missedTimes safely
+  static Map<String, bool> _parseMissedTimes(dynamic missedTimesData) {
+    if (missedTimesData == null) {
+      return {};
+    }
+
+    try {
+      if (missedTimesData is Map) {
+        final Map<String, bool> result = {};
+        missedTimesData.forEach((key, value) {
+          if (key is String && value is bool) {
+            result[key] = value;
+          }
+        });
+        return result;
+      }
+    } catch (e) {
+      print('Error parsing missedTimes: $e');
     }
     return {};
   }

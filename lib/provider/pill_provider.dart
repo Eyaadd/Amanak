@@ -76,8 +76,31 @@ class PillProvider extends ChangeNotifier {
       final targetUserId = userId ?? FirebaseAuth.instance.currentUser?.uid;
       if (targetUserId != null) {
         // Get pills from Firebase
-        _pills = await FirebaseManager.getPills(userId: targetUserId);
+        final updatedPills =
+            await FirebaseManager.getPills(userId: targetUserId);
+
+        // Check if there are actual changes before notifying
+        bool hasChanges = _pills.length != updatedPills.length;
+
+        if (!hasChanges) {
+          // Compare each pill to see if there are changes
+          for (int i = 0; i < _pills.length; i++) {
+            if (i >= updatedPills.length ||
+                _pills[i].id != updatedPills[i].id ||
+                _pills[i].takenDates.length !=
+                    updatedPills[i].takenDates.length ||
+                _pills[i].missed != updatedPills[i].missed) {
+              hasChanges = true;
+              break;
+            }
+          }
+        }
+
+        // Update the pills list
+        _pills = updatedPills;
         _isLoading = false;
+
+        // Always notify listeners to ensure UI updates
         notifyListeners();
       }
     } catch (e) {
@@ -90,13 +113,22 @@ class PillProvider extends ChangeNotifier {
   // Update a pill
   Future<void> updatePill(PillModel pill) async {
     try {
+      // Update local list immediately for better UI responsiveness
+      final index = _pills.indexWhere((p) => p.id == pill.id);
+      if (index >= 0) {
+        _pills[index] = pill;
+        notifyListeners();
+      }
+
       // Use the original FirebaseManager update method to preserve notifications
       await FirebaseManager.updatePill(pill);
 
-      // Reload pills to keep UI in sync
+      // Reload pills to keep UI in sync across all tabs
       await loadPills(_displayUserId);
     } catch (e) {
       print('Error updating pill: $e');
+      // Make sure we reload data even if there was an error
+      await loadPills(_displayUserId);
     }
   }
 
@@ -110,10 +142,22 @@ class PillProvider extends ChangeNotifier {
       final updatedPill = originalPill.copyWith();
       updatedPill.markTimeTaken(timeKey, DateTime.now());
 
+      // Update the pill in our local list immediately
+      final index = _pills.indexWhere((p) => p.id == pill.id);
+      if (index >= 0) {
+        _pills[index] = updatedPill;
+        notifyListeners();
+      }
+
       // Update via Firebase to preserve notifications
-      await updatePill(updatedPill);
+      await FirebaseManager.updatePill(updatedPill);
+
+      // Reload pills to ensure consistency across all tabs
+      await loadPills(_displayUserId);
     } catch (e) {
       print('Error marking pill as taken: $e');
+      // Make sure we reload data even if there was an error
+      await loadPills(_displayUserId);
     }
   }
 
@@ -146,10 +190,15 @@ class PillProvider extends ChangeNotifier {
   // Check for missed pills
   Future<void> checkForMissedPills() async {
     try {
+      // First check for missed pills using Firebase Manager
       await FirebaseManager.checkForMissedPills();
+
+      // Then reload pills to update the UI
       await loadPills(_displayUserId);
     } catch (e) {
       print('Error checking for missed pills: $e');
+      // Make sure we reload data even if there was an error
+      await loadPills(_displayUserId);
     }
   }
 }

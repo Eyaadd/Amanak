@@ -18,6 +18,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:amanak/main.dart'; // Import for navigatorKey
 import 'package:http/http.dart' as http;
 import 'package:amanak/services/encryption_service.dart';
+import 'package:amanak/services/fcm_service.dart';
 // import 'package:dotenv/dotenv.dart';
 
 class NotiService {
@@ -27,6 +28,7 @@ class NotiService {
   bool _isInitialized = false;
   String? _localTimezone;
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  final FCMService _fcmService = FCMService();
 
   // Track if the app is in foreground
   bool _isInForeground = false;
@@ -987,27 +989,10 @@ class NotiService {
   // Initialize Firebase Cloud Messaging
   Future<void> _initFirebaseMessaging() async {
     try {
-      // Request permission for FCM
-      NotificationSettings settings =
-          await _firebaseMessaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-
-      print('FCM Authorization status: ${settings.authorizationStatus}');
-
-      // Get FCM token
-      String? token = await _firebaseMessaging.getToken();
-      if (token != null) {
-        print('FCM Token: $token');
-        await _saveFcmToken(token);
+      // Use the centralized FCM service instead
+      if (!_fcmService.isInitialized) {
+        await _fcmService.initialize();
       }
-
-      // Listen for token refreshes
-      _firebaseMessaging.onTokenRefresh.listen((newToken) {
-        _saveFcmToken(newToken);
-      });
 
       // Handle FCM messages when app is in foreground
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -1038,24 +1023,6 @@ class NotiService {
       }
     } catch (e) {
       print('Error initializing FCM: $e');
-    }
-  }
-
-  // Save FCM token to Firestore
-  Future<void> _saveFcmToken(String token) async {
-    try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) return;
-
-      // Save token to user document
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser.uid)
-          .update({'fcmToken': token});
-
-      print('FCM token saved to Firestore');
-    } catch (e) {
-      print('Error saving FCM token: $e');
     }
   }
 
@@ -1162,117 +1129,21 @@ class NotiService {
     Map<String, dynamic>? data,
   }) async {
     try {
-      // Get user document to retrieve FCM token
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .get();
+      // Use the centralized FCM service
+      final success = await _fcmService.sendNotification(
+        userId: userId,
+        title: title,
+        body: body,
+        data: data,
+      );
 
-      if (!userDoc.exists) {
-        print('User document not found');
-        return;
-      }
-
-      final userData = userDoc.data();
-      if (userData == null) return;
-
-      final fcmToken = userData['fcmToken'];
-      if (fcmToken == null || fcmToken.isEmpty) {
-        print('FCM token not found for user $userId');
-        return;
-      }
-
-      // For message notifications, we use the pre-decrypted text from messaging_tab.dart
-      // The message is already decrypted before being sent to FCM
-      String notificationBody = body;
-
-      // No need to modify the notification body as it's already decrypted in messaging_tab.dart
-
-      // Prepare notification payload
-      final message = {
-        'token': fcmToken,
-        'notification': {
-          'title': title,
-          'body': notificationBody, // Already decrypted in messaging_tab.dart
-        },
-        'data': data ?? {},
-      };
-
-      // Try to send via Cloud Functions if available
-      try {
-        // Try with default region (us-central1)
-        final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
-        final callable = functions.httpsCallable('sendNotification');
-        print(
-            'Attempting to call Cloud Function: us-central1/sendNotification');
-        final result = await callable.call(message);
-        print('FCM notification sent via Cloud Functions: ${result.data}');
-
-        // Store notification in Firestore for the recipient
-        await _storeNotificationForUser(userId, title, body, data);
-      } catch (functionError) {
-        // Fall back to direct FCM (only works in development with Firebase Admin SDK)
-        print('Cloud Function not available: $functionError');
-        print(
-            'This error is common when testing on emulators without Google Play Services');
-
-        // If we can't send via FCM, try local notification
-        if (data != null && data['type'] == 'message') {
-          // For message notifications, show a local notification
-          await notificationsPlugin.show(
-            MESSAGE_NOTIFICATION_ID_PREFIX + userId.hashCode % 10000,
-            title,
-            notificationBody, // Using the privacy-protected notification body from above
-            messageDetails(),
-            payload:
-                'message:${data['chatId'] ?? ''}:${data['senderId'] ?? ''}:${data['senderName'] ?? ''}',
-          );
-        }
-
-        // Log the message details
-        print('Would send FCM message: $message');
-        print('FCM notification attempted for user $userId');
-
-        // Store the notification in Firestore for delivery when user comes online
-        await FirebaseFirestore.instance
-            .collection('pending_notifications')
-            .add({
-          'userId': userId,
-          'title': title,
-          'body':
-              body, // Store the actual decrypted message from messaging_tab.dart
-          'data': data,
-          'timestamp': FieldValue.serverTimestamp(),
-          'delivered': false,
-        });
-        print('Notification stored in Firestore for later delivery');
+      if (success) {
+        print('FCM notification sent successfully to $userId');
+      } else {
+        print('FCM notification sending failed, will be retried later');
       }
     } catch (e) {
       print('Error sending FCM notification: $e');
-    }
-  }
-
-  // Store notification for a specific user
-  Future<void> _storeNotificationForUser(String userId, String title,
-      String body, Map<String, dynamic>? data) async {
-    try {
-      // Store the actual message content (already decrypted in messaging_tab.dart)
-      String messageToStore = body;
-
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('notifications')
-          .add({
-        'title': title,
-        'message': messageToStore,
-        'timestamp': FieldValue.serverTimestamp(),
-        'isRead': false,
-        'type': data != null ? data['type'] : null,
-        'data': data,
-      });
-    } catch (e) {
-      print('Error storing notification for user $userId: $e');
     }
   }
 

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:amanak/models/user_model.dart';
 import 'package:amanak/firebase/firebase_manager.dart';
+import 'package:amanak/services/fcm_service.dart';
 import 'package:amanak/widgets/success_dialog.dart';
 import 'package:amanak/login_screen.dart';
 
@@ -32,14 +33,16 @@ class _GuardianUserAssignmentState extends State<GuardianUserAssignment> {
 
       if (querySnapshot.docs.isEmpty) {
         setState(() {
-          _errorMessage = 'No user found with this email or the user is not a regular user';
+          _errorMessage =
+              'No user found with this email or the user is not a regular user';
         });
         return false;
       }
 
       // Check if user is already linked to another guardian
       final userData = querySnapshot.docs.first.data();
-      if (userData['sharedUsers'] != null && userData['sharedUsers'].toString().isNotEmpty) {
+      if (userData['sharedUsers'] != null &&
+          userData['sharedUsers'].toString().isNotEmpty) {
         setState(() {
           _errorMessage = 'This user is already linked to another guardian';
         });
@@ -57,7 +60,7 @@ class _GuardianUserAssignmentState extends State<GuardianUserAssignment> {
 
   Future<void> _assignUser() async {
     final userEmail = _userEmailController.text.trim();
-    
+
     if (userEmail.isEmpty) {
       setState(() {
         _errorMessage = 'Please enter a user email';
@@ -98,6 +101,10 @@ class _GuardianUserAssignmentState extends State<GuardianUserAssignment> {
         userEmail,
         widget.user.email,
       );
+
+      // Initialize FCM token
+      final fcmService = FCMService();
+      await fcmService.initialize();
 
       // Show success dialog and navigate to login
       if (mounted) {
@@ -188,4 +195,4 @@ class _GuardianUserAssignmentState extends State<GuardianUserAssignment> {
     _userEmailController.dispose();
     super.dispose();
   }
-} 
+}
