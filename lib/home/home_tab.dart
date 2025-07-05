@@ -223,7 +223,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
 
       // Create a copy with the updated taken status
       final updatedPill = originalPill.copyWith();
-      updatedPill.markTimeTaken(timeKey, DateTime.now());
+      updatedPill.markTimeTaken(timeKey, DateTime.now().toUtc());
 
       // Update the pill through the provider
       await pillProvider.updatePill(updatedPill);
@@ -877,7 +877,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   ),
                   if (takenDate != null)
                     Text(
-                      'Taken at: ${DateFormat('h:mm a').format(takenDate)}',
+                      'Taken at: ${DateFormat('h:mm a').format(takenDate.toLocal())}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.green[700],

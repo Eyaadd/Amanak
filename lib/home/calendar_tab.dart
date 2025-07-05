@@ -1327,7 +1327,7 @@ class _CalendarTabState extends State<CalendarTab> {
                                     SizedBox(width: 2.w),
                                     Flexible(
                                       child: Text(
-                                        'Taken at ${DateFormat('h:mm a').format(takenDate)}',
+                                        'Taken at ${DateFormat('h:mm a').format(takenDate.toLocal())}',
                                         style: TextStyle(
                                           fontSize: 12.sp,
                                           color: Colors.green[700],
@@ -1551,7 +1551,10 @@ class _CalendarTabState extends State<CalendarTab> {
                 // Update the taken status for this specific time
                 pills[i] = pills[i].copyWith(
                   takenDates: isTaken
-                      ? {...pills[i].takenDates, timeKey: DateTime.now()}
+                      ? {
+                          ...pills[i].takenDates,
+                          timeKey: DateTime.now().toUtc()
+                        }
                       : {...pills[i].takenDates}
                     ..remove(timeKey),
                   missed: isTaken ? false : pills[i].missed,
@@ -1583,7 +1586,7 @@ class _CalendarTabState extends State<CalendarTab> {
       final updatedPill = originalPill.copyWith();
 
       if (isTaken) {
-        updatedPill.markTimeTaken(timeKey, DateTime.now());
+        updatedPill.markTimeTaken(timeKey, DateTime.now().toUtc());
         updatedPill.missed = false;
 
         // Send notification to guardian (time window already validated above)
