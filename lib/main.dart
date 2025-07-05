@@ -141,6 +141,9 @@ void main() async {
     print('Error initializing medicines data: $e');
   }
 
+  // Get SharedPreferences instance
+  final prefs = await SharedPreferences.getInstance();
+
   // Check if user is already logged in
   User? currentUser = FirebaseAuth.instance.currentUser;
   print(
@@ -149,8 +152,23 @@ void main() async {
   // If user is logged in, reschedule all pill notifications
   if (currentUser != null) {
     try {
-      await FirebaseManager.rescheduleAllNotifications();
-      print('Rescheduled all pill notifications');
+      // Check if we've already scheduled notifications in this session
+      final bool notificationsScheduledToday = prefs.getBool(
+              'notifications_scheduled_today_${DateTime.now().day}_${DateTime.now().month}_${DateTime.now().year}') ??
+          false;
+
+      if (!notificationsScheduledToday) {
+        // Only reschedule if we haven't already done it today
+        await FirebaseManager.rescheduleAllNotifications();
+        print('Rescheduled all pill notifications');
+
+        // Mark that we've scheduled notifications today
+        await prefs.setBool(
+            'notifications_scheduled_today_${DateTime.now().day}_${DateTime.now().month}_${DateTime.now().year}',
+            true);
+      } else {
+        print('Notifications already scheduled today, skipping rescheduling');
+      }
     } catch (e) {
       print('Error rescheduling notifications: $e');
     }
@@ -166,9 +184,6 @@ void main() async {
   // Initialize localization service
   final localizationService = LocalizationService();
   await localizationService.initialize();
-
-  // Get SharedPreferences instance
-  final prefs = await SharedPreferences.getInstance();
 
   // Check if this is the first launch ever
   final bool isFirstLaunch = !(prefs.containsKey('first_launch_completed'));

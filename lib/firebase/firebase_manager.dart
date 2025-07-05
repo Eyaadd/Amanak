@@ -290,14 +290,41 @@ class FirebaseManager {
 
     final notiService = NotiService();
 
-    // Cancel all existing notifications first
-    for (final pill in pills) {
-      await notiService.cancelPillNotifications(pill.id);
-    }
+    // Get user data to check role
+    final userData = await getNameAndRole(currentUserId);
+    final userRole = userData['role'] ?? '';
 
-    // Schedule new notifications
-    for (final pill in pills) {
-      await notiService.schedulePillNotifications(pill);
+    // Only schedule notifications for elder users, not for guardians
+    if (userRole.toLowerCase() != 'guardian') {
+      print('Rescheduling notifications for ${pills.length} pills');
+
+      // Cancel all existing notifications first
+      await notiService.cancelAllNotifications();
+
+      // Only schedule future pills that haven't been taken or missed
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      int scheduledCount = 0;
+
+      // Schedule new notifications only for active pills
+      for (final pill in pills) {
+        // Skip pills that have already ended their duration
+        final pillStartDate = DateTime(
+            pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
+        final daysSinceStart = today.difference(pillStartDate).inDays;
+
+        // Only schedule if the pill is still active (within duration and not completely taken/missed)
+        if (daysSinceStart < pill.duration) {
+          await notiService.schedulePillNotifications(pill);
+          scheduledCount++;
+        }
+      }
+
+      print(
+          'Successfully rescheduled notifications for $scheduledCount active pills');
+    } else {
+      print('User is a guardian, not rescheduling pill notifications');
     }
   }
 

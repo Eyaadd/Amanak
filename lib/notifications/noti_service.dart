@@ -446,6 +446,9 @@ class NotiService {
 
       // Only schedule pill reminders for elders, not for guardians
       if (userRole != 'guardian') {
+        // First cancel any existing notifications for this pill to prevent duplicates
+        await cancelPillNotifications(pill.id);
+
         // Get user timezone or default to local timezone
         final userTimezone = userData['timezone'] ?? 'local';
         final tzLocation = userTimezone == 'local'
@@ -530,6 +533,8 @@ class NotiService {
             }
           }
         }
+
+        print('Scheduled notifications for pill: ${pill.name}');
       } else {
         print('User is a guardian, not scheduling pill reminders');
       }
@@ -1178,6 +1183,16 @@ class NotiService {
       }
     } catch (e) {
       print('Error handling notification click: $e');
+    }
+  }
+
+  // Cancel all notifications
+  Future<void> cancelAllNotifications() async {
+    try {
+      await notificationsPlugin.cancelAll();
+      print('All notifications canceled');
+    } catch (e) {
+      print('Error canceling all notifications: $e');
     }
   }
 }
