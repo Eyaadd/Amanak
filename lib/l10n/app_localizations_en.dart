@@ -45,10 +45,93 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chooseRole => 'Choose Role';
 
   @override
+  String get chooseYourRole => 'Choose Your Role';
+
+  @override
   String get elder => 'Elder';
 
   @override
   String get guardian => 'Guardian';
+
+  @override
+  String get user => 'User';
+
+  @override
+  String get assignUser => 'Assign User';
+
+  @override
+  String get assignUserTitle =>
+      'As a guardian, you need to assign yourself to a user';
+
+  @override
+  String get assignUserSubtitle =>
+      'Please enter the email of the user you want to monitor';
+
+  @override
+  String get enterUserEmail => 'Enter user\'s email';
+
+  @override
+  String get completeRegistration => 'Complete Registration';
+
+  @override
+  String get noUserFound =>
+      'No user found with this email or the user is not a regular user';
+
+  @override
+  String get userAlreadyLinked =>
+      'This user is already linked to another guardian';
+
+  @override
+  String get errorValidatingEmail => 'Error validating user email';
+
+  @override
+  String get pleaseEnterUserEmail => 'Please enter a user email';
+
+  @override
+  String get errorAssigningUser => 'Error assigning user';
+
+  @override
+  String get mainAmbulance => 'Main Ambulance';
+
+  @override
+  String get trafficPolice => 'Traffic Police';
+
+  @override
+  String get emergencyPolice => 'Emergency Police';
+
+  @override
+  String get fireDepartment => 'Fire Department';
+
+  @override
+  String get civilDefence => 'Civil Defence';
+
+  @override
+  String get naturalGasEmergency => 'Natural Gas Emergency';
+
+  @override
+  String get waterEmergency => 'Water Emergency';
+
+  @override
+  String get electricityEmergency => 'Electricity Emergency';
+
+  @override
+  String get goBack => 'Go Back';
+
+  @override
+  String get couldNotLaunchDialer => 'Could not launch phone dialer';
+
+  @override
+  String get errorOpeningDialer => 'Error opening phone dialer';
+
+  @override
+  String editField(Object field) {
+    return 'Edit $field';
+  }
+
+  @override
+  String enterNewField(Object field) {
+    return 'Enter new $field';
+  }
 
   @override
   String get home => 'Home';

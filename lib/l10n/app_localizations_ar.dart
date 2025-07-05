@@ -45,10 +45,91 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chooseRole => 'اختر الدور';
 
   @override
+  String get chooseYourRole => 'اختر دورك';
+
+  @override
   String get elder => 'كبير السن';
 
   @override
   String get guardian => 'الوصي';
+
+  @override
+  String get user => 'المستخدم';
+
+  @override
+  String get assignUser => 'تعيين المستخدم';
+
+  @override
+  String get assignUserTitle => 'كوصي، تحتاج إلى تعيين نفسك لمستخدم';
+
+  @override
+  String get assignUserSubtitle =>
+      'يرجى إدخال بريد المستخدم الإلكتروني الذي تريد مراقبته';
+
+  @override
+  String get enterUserEmail => 'أدخل بريد المستخدم الإلكتروني';
+
+  @override
+  String get completeRegistration => 'إكمال التسجيل';
+
+  @override
+  String get noUserFound =>
+      'لم يتم العثور على مستخدم بهذا البريد الإلكتروني أو المستخدم ليس مستخدم عادي';
+
+  @override
+  String get userAlreadyLinked => 'هذا المستخدم مرتبط بالفعل بوصي آخر';
+
+  @override
+  String get errorValidatingEmail => 'خطأ في التحقق من صحة البريد الإلكتروني';
+
+  @override
+  String get pleaseEnterUserEmail => 'يرجى إدخال بريد المستخدم الإلكتروني';
+
+  @override
+  String get errorAssigningUser => 'خطأ في تعيين المستخدم';
+
+  @override
+  String get mainAmbulance => 'الإسعاف الرئيسي';
+
+  @override
+  String get trafficPolice => 'شرطة المرور';
+
+  @override
+  String get emergencyPolice => 'الشرطة الطارئة';
+
+  @override
+  String get fireDepartment => 'إدارة الإطفاء';
+
+  @override
+  String get civilDefence => 'الدفاع المدني';
+
+  @override
+  String get naturalGasEmergency => 'الغاز الطبيعي الطارئ';
+
+  @override
+  String get waterEmergency => 'المياه الطارئة';
+
+  @override
+  String get electricityEmergency => 'الكهرباء الطارئة';
+
+  @override
+  String get goBack => 'رجوع';
+
+  @override
+  String get couldNotLaunchDialer => 'لا يمكن تشغيل الهاتف';
+
+  @override
+  String get errorOpeningDialer => 'خطأ في فتح الهاتف';
+
+  @override
+  String editField(Object field) {
+    return 'تعديل $field';
+  }
+
+  @override
+  String enterNewField(Object field) {
+    return 'أدخل $field جديد';
+  }
 
   @override
   String get home => 'الرئيسية';
