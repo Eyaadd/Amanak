@@ -665,19 +665,12 @@ class NotiService {
 
       final pill = pillDoc.data()!;
 
-      // Get user data to check role and timezone
+      // Get user data to check role
       final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
       final userRole = userData['role'] ?? '';
-      final userTimezone = userData['timezone'] ?? 'local';
 
-      // Get user's timezone location
-      final tzLocation = userTimezone == 'local'
-          ? tz.getLocation(_localTimezone!)
-          : tz.getLocation(userTimezone);
-
-      // Get current time in user's timezone
-      final now = tz.TZDateTime.now(tzLocation);
-      final today = DateTime(now.year, now.month, now.day);
+      // Get today's date string
+      final today = DateTime.now();
       final todayStr = '${today.year}-${today.month}-${today.day}';
 
       // Check if pill was taken today
@@ -690,33 +683,7 @@ class NotiService {
         }
       }
 
-      // Check if any pill times are still in the future or within allowed window
-      bool anyTimeStillValid = false;
-      for (int i = 0; i < pill.times.length; i++) {
-        final pillTime = tz.TZDateTime(
-          tzLocation,
-          today.year,
-          today.month,
-          today.day,
-          pill.times[i].hour,
-          pill.times[i].minute,
-        );
-
-        // Check if pill time is in the future
-        if (pillTime.isAfter(now)) {
-          anyTimeStillValid = true;
-          break;
-        }
-
-        // Check if we're within the allowed time window (15 minutes after scheduled time)
-        final allowedWindowEnd = pillTime.add(Duration(minutes: 15));
-        if (now.isBefore(allowedWindowEnd)) {
-          anyTimeStillValid = true;
-          break;
-        }
-      }
-
-      if (!anyTimeTakenToday && !anyTimeStillValid) {
+      if (!anyTimeTakenToday) {
         // Pill was missed - mark it as missed in Firebase
         final missedPill = pill.copyWith(missed: true);
         await FirebaseManager.updatePill(missedPill);
@@ -727,8 +694,7 @@ class NotiService {
           await notifyGuardianOfMissedPill(currentUser.uid, missedPill);
         }
       } else {
-        print(
-            'Pill ${pill.name} already taken today or still within valid time window, not marking as missed');
+        print('Pill ${pill.name} already taken today, not marking as missed');
       }
     } catch (e) {
       print('Error checking missed pill: $e');
@@ -752,68 +718,23 @@ class NotiService {
 
       final pill = pillDoc.data()!;
 
-      // Get user data to check role and timezone
+      // Get user data to check role
       final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
       final userRole = userData['role'] ?? '';
-      final userTimezone = userData['timezone'] ?? 'local';
 
-      // Get user's timezone location
-      final tzLocation = userTimezone == 'local'
-          ? tz.getLocation(_localTimezone!)
-          : tz.getLocation(userTimezone);
-
-      // Calculate the date for this day in user's timezone
+      // Calculate the date for this day
       final pillDate = pill.dateTime.add(Duration(days: day));
-
-      // Get current time in user's timezone
-      final now = tz.TZDateTime.now(tzLocation);
-
-      // Calculate the pill time in user's timezone
-      final pillTime = tz.TZDateTime(
-        tzLocation,
-        pillDate.year,
-        pillDate.month,
-        pillDate.day,
-        pill.times[timeIndex].hour,
-        pill.times[timeIndex].minute,
-      );
 
       // Check if this specific time is already marked as taken
       final timeKey = pill.getTimeKey(pillDate, timeIndex);
       final isAlreadyTaken = pill.takenDates.containsKey(timeKey);
 
-      // Log timezone debugging information
-      print('🔍 Timezone Debug for ${pill.name}:');
-      print('   User timezone: $userTimezone');
-      print('   Current time (user tz): ${now.hour}:${now.minute}');
-      print('   Pill time (user tz): ${pillTime.hour}:${pillTime.minute}');
-      print('   Time key: $timeKey');
-      print('   Already taken: $isAlreadyTaken');
-
       // Skip marking as missed if this time is already taken
       if (isAlreadyTaken) {
         print(
-            '✅ Pill ${pill.name} at time $timeKey already taken, not marking as missed');
+            'Pill ${pill.name} at time $timeKey already taken, not marking as missed');
         return;
       }
-
-      // Check if the pill time is in the future (user might be in a different timezone)
-      if (pillTime.isAfter(now)) {
-        print(
-            '⏰ Pill ${pill.name} at time $timeKey is in the future (${pillTime.hour}:${pillTime.minute}), not marking as missed yet');
-        return;
-      }
-
-      // Check if we're within the allowed time window (15 minutes after scheduled time)
-      final allowedWindowEnd = pillTime.add(Duration(minutes: 15));
-      if (now.isBefore(allowedWindowEnd)) {
-        print(
-            '⏳ Pill ${pill.name} at time $timeKey is still within allowed window (until ${allowedWindowEnd.hour}:${allowedWindowEnd.minute}), not marking as missed yet');
-        return;
-      }
-
-      print(
-          '❌ Pill ${pill.name} at time $timeKey is MISSED - marking as missed');
 
       // Mark this specific time as missed
       pill.markTimeMissed(timeKey, true);
