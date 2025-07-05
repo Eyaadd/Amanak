@@ -1220,28 +1220,25 @@ class _CalendarTabState extends State<CalendarTab> {
       required String elderName,
       required bool isTaken}) async {
     try {
-      // Ensure user is authenticated before proceeding
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) {
-        print('Cannot send notification: User not authenticated');
+      // Get guardian's FCM token directly
+      final guardianDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(guardianId)
+          .get();
+
+      if (!guardianDoc.exists) {
+        print('Guardian document not found');
         return;
       }
 
-      // Force token refresh to ensure we have a valid token
-      print('Refreshing Firebase Auth token...');
-      try {
-        await currentUser.getIdToken(true);
-        print('Token refreshed successfully');
-      } catch (authError) {
-        print('Error refreshing auth token: $authError');
-        // Continue anyway, the FCM service will handle authentication errors
+      final guardianData = guardianDoc.data();
+      if (guardianData == null) return;
+
+      final fcmToken = guardianData['fcmToken'];
+      if (fcmToken == null || fcmToken.isEmpty) {
+        print('FCM token not found for guardian');
+        return;
       }
-
-      // Import FCMService
-      final fcmService = FCMService();
-
-      // Ensure FCM service is initialized
-      await fcmService.ensureInitialized();
 
       // Prepare notification data
       final title = isTaken ? "Medicine Taken" : "Pill Missed Alert";
@@ -1249,9 +1246,12 @@ class _CalendarTabState extends State<CalendarTab> {
           ? "$elderName marked $pillName as taken."
           : "$elderName missed their medicine: $pillName.";
 
-      // Send notification using FCM service
-      bool fcmSuccess = await fcmService.sendNotification(
-        userId: guardianId,
+      // Import FCMService
+      final fcmService = FCMService();
+
+      // Try to send notification directly using FCM API
+      bool fcmSuccess = await fcmService.sendDirectNotification(
+        token: fcmToken,
         title: title,
         body: body,
         data: {
@@ -1265,7 +1265,7 @@ class _CalendarTabState extends State<CalendarTab> {
 
       if (!fcmSuccess) {
         print(
-            'FCM notification failed, storing in Firestore for later delivery');
+            'Direct FCM notification failed, storing in Firestore for later delivery');
 
         // Store for later delivery
         await FirebaseFirestore.instance
@@ -1286,7 +1286,7 @@ class _CalendarTabState extends State<CalendarTab> {
           'lastAttempt': FieldValue.serverTimestamp(),
         });
       } else {
-        print('Pill notification sent successfully to guardian');
+        print('Direct pill notification sent successfully to guardian');
 
         // Also store in Firestore for history
         await FirebaseFirestore.instance

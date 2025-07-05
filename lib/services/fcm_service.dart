@@ -6,6 +6,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:amanak/notifications/noti_service.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 /// A centralized service for handling Firebase Cloud Messaging (FCM) operations
 /// including token management, permission requests, and notification sending.
@@ -255,7 +257,10 @@ class FCMService {
         },
       };
 
-      // Try to send via Cloud Functions
+      // First try to send via Cloud Functions
+      bool success = false;
+      String errorMessage = '';
+
       try {
         // Ensure user is authenticated before calling Cloud Functions
         final currentUser = FirebaseAuth.instance.currentUser;
@@ -284,54 +289,69 @@ class FCMService {
         print('Calling Cloud Function with fresh authentication...');
         final result = await callable.call(message);
         print('FCM notification sent via Cloud Functions: ${result.data}');
+        success = true;
+      } catch (functionError) {
+        errorMessage = functionError.toString();
+        print('Cloud Function error: $functionError');
+        success = false;
+      }
 
+      // If Cloud Functions failed, try direct FCM API
+      if (!success) {
+        print('Cloud Functions approach failed, trying direct FCM API...');
+        success = await sendDirectNotification(
+          token: fcmToken,
+          title: title,
+          body: body,
+          data: data,
+          highPriority: highPriority,
+        );
+      }
+
+      // If either approach succeeded, store the notification in Firestore
+      if (success) {
         // Store notification in Firestore for the recipient
         await _storeNotificationForUser(userId, title, body, data);
         return true;
-      } catch (functionError) {
-        print('Cloud Function error: $functionError');
-
-        // Store for later delivery
-        await FirebaseFirestore.instance
-            .collection('pending_notifications')
-            .add({
-          'userId': userId,
-          'title': title,
-          'body': body,
-          'data': data,
-          'timestamp': FieldValue.serverTimestamp(),
-          'delivered': false,
-          'attempts': 1,
-          'lastAttempt': FieldValue.serverTimestamp(),
-          'error': functionError.toString(),
-        });
-        print(
-            'Notification stored in pending_notifications for later delivery');
-
-        // Try direct notification if it's a message
-        if (data != null && data['type'] == 'message') {
-          try {
-            final notiService = NotiService();
-            if (!notiService.isInitialized) {
-              await notiService.initNotification();
-            }
-
-            await notiService.showNotification(
-              id: 1000 + userId.hashCode % 10000,
-              title: title,
-              body: body,
-              notificationDetails: notiService.messageDetails(),
-              payload:
-                  "message:${data['chatId'] ?? ''}:${data['senderId'] ?? ''}:${data['senderName'] ?? ''}",
-            );
-            print('Showed local notification as fallback');
-          } catch (e) {
-            print('Error showing local notification: $e');
-          }
-        }
-
-        return false;
       }
+
+      // If both approaches failed, store for later delivery
+      await FirebaseFirestore.instance.collection('pending_notifications').add({
+        'userId': userId,
+        'title': title,
+        'body': body,
+        'data': data,
+        'timestamp': FieldValue.serverTimestamp(),
+        'delivered': false,
+        'attempts': 1,
+        'lastAttempt': FieldValue.serverTimestamp(),
+        'error': errorMessage,
+      });
+      print('Notification stored in pending_notifications for later delivery');
+
+      // Try direct notification if it's a message
+      if (data != null && data['type'] == 'message') {
+        try {
+          final notiService = NotiService();
+          if (!notiService.isInitialized) {
+            await notiService.initNotification();
+          }
+
+          await notiService.showNotification(
+            id: 1000 + userId.hashCode % 10000,
+            title: title,
+            body: body,
+            notificationDetails: notiService.messageDetails(),
+            payload:
+                "message:${data['chatId'] ?? ''}:${data['senderId'] ?? ''}:${data['senderName'] ?? ''}",
+          );
+          print('Showed local notification as fallback');
+        } catch (e) {
+          print('Error showing local notification: $e');
+        }
+      }
+
+      return false;
     } catch (e) {
       print('Error sending FCM notification: $e');
       return false;
@@ -437,6 +457,90 @@ class FCMService {
       return _isInitialized;
     } catch (e) {
       print('Error ensuring FCM service is initialized: $e');
+      return false;
+    }
+  }
+
+  /// Send notification directly using FCM HTTP API
+  /// This is a fallback method that doesn't require Cloud Functions
+  Future<bool> sendDirectNotification({
+    required String token,
+    required String title,
+    required String body,
+    Map<String, dynamic>? data,
+    bool highPriority = true,
+  }) async {
+    try {
+      // FCM API endpoint
+      const String fcmUrl = 'https://fcm.googleapis.com/fcm/send';
+
+      // Get the server key from a secure location
+      // For this implementation, we'll use a constant, but in production
+      // this should be stored securely and not in the code
+      const String serverKey =
+          'AAAA_iD5Ras:APA91bGZnuCCBCdBJEcLFDm-lVZYPzMeNKOZQeITvKCHXoSgUGXBPILYiDkwzQYHhSO9WFZJ1Vs6YQBVUQYMBrZHlpKcDNKKnTNuR2m7oTCqOYhGdTnQVhgC3PvFPXQOAMbcnhbRhCbX';
+
+      // Prepare headers
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'key=$serverKey',
+      };
+
+      // Prepare notification payload
+      final payload = {
+        'to': token,
+        'priority': highPriority ? 'high' : 'normal',
+        'notification': {
+          'title': title,
+          'body': body,
+          'sound': 'default',
+        },
+        'data': data ?? {},
+        'android': {
+          'priority': highPriority ? 'high' : 'normal',
+          'notification': {
+            'channel_id': 'high_importance_channel',
+            'priority': highPriority ? 'high' : 'normal',
+          }
+        },
+        'apns': {
+          'payload': {
+            'aps': {
+              'sound': 'default',
+              'badge': 1,
+              'content-available': 1,
+            }
+          }
+        }
+      };
+
+      print(
+          '📤 Sending direct FCM notification to token: ${token.substring(0, 10)}...');
+
+      // Send the HTTP request
+      final response = await http.post(
+        Uri.parse(fcmUrl),
+        headers: headers,
+        body: json.encode(payload),
+      );
+
+      // Check response
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        final success = responseData['success'] ?? 0;
+
+        print('✅ Direct FCM notification sent. Success count: $success');
+        print('📊 FCM Response: ${response.body}');
+
+        return success > 0;
+      } else {
+        print(
+            '❌ Failed to send direct FCM notification. Status: ${response.statusCode}');
+        print('📊 FCM Error Response: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('❌ Error sending direct FCM notification: $e');
       return false;
     }
   }
