@@ -202,6 +202,48 @@ class FCMService {
         await initialize();
       }
 
+      // Check for duplicate notifications
+      final prefs = await SharedPreferences.getInstance();
+      final notificationKey = '${userId}_${title}_${body}';
+      final recentNotifications =
+          prefs.getStringList('recent_fcm_notifications') ?? [];
+      final currentTime = DateTime.now().millisecondsSinceEpoch;
+
+      // Check if we've sent this exact notification in the last 30 seconds
+      bool isDuplicate = false;
+      for (final entry in recentNotifications) {
+        if (entry.startsWith(notificationKey)) {
+          final parts = entry.split('_timestamp_');
+          if (parts.length == 2) {
+            final timestamp = int.tryParse(parts[1]);
+            if (timestamp != null) {
+              final timeDiff = currentTime - timestamp;
+              if (timeDiff < 30000) {
+                // 30 seconds
+                print(
+                    'Skipping duplicate notification sent within the last 30 seconds');
+                isDuplicate = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      if (isDuplicate) {
+        print('Duplicate notification prevented: $title - $body');
+        return true; // Return true to prevent fallback mechanisms from triggering
+      }
+
+      // Store this notification in recent list
+      recentNotifications.add('${notificationKey}_timestamp_$currentTime');
+      // Keep only the most recent 20 notifications
+      if (recentNotifications.length > 20) {
+        recentNotifications.removeRange(0, recentNotifications.length - 20);
+      }
+      await prefs.setStringList(
+          'recent_fcm_notifications', recentNotifications);
+
       // Get the FCM token for this user
       final userDoc = await FirebaseFirestore.instance
           .collection('users')

@@ -180,8 +180,9 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       // Update the pill through the provider
       await pillProvider.updatePill(updatedPill);
 
-      // Send an instant notification to the guardian
-      await _sendInstantPillNotification(updatedPill);
+      // Note: We're removing this direct notification call to avoid duplicate notifications
+      // The FirebaseManager.updatePill method will handle sending notifications
+      // await _sendInstantPillNotification(updatedPill);
 
       // Update today's pills list after the provider has updated
       await _updateTodayPills();

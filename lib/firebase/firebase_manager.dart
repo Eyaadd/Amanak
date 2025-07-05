@@ -9,6 +9,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:amanak/services/fcm_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FirebaseManager {
   static CollectionReference<UserModel> getUsersCollection() {
@@ -154,6 +155,32 @@ class FirebaseManager {
       final userData = await getNameAndRole(currentUser.uid);
       final userRole = userData['role'] ?? '';
 
+      // Check if this is a new "taken" status by getting the previous pill state
+      bool shouldSendNotification = false;
+      String? takenTimeKey;
+
+      try {
+        final previousPillDoc =
+            await getPillsCollection(currentUser.uid).doc(pill.id).get();
+
+        if (previousPillDoc.exists) {
+          final previousPill = previousPillDoc.data()!;
+
+          // Compare taken dates to find newly taken time
+          for (final entry in pill.takenDates.entries) {
+            if (!previousPill.takenDates.containsKey(entry.key)) {
+              // This is a newly marked taken time
+              shouldSendNotification = true;
+              takenTimeKey = entry.key;
+              break;
+            }
+          }
+        }
+      } catch (e) {
+        print('Error checking previous pill state: $e');
+        // Continue with update even if we can't check previous state
+      }
+
       // Update pill in Firebase
       await getPillsCollection(currentUser.uid)
           .doc(pill.id)
@@ -164,12 +191,12 @@ class FirebaseManager {
 
       // Only process notifications for elder users, not for guardians viewing elder's pills
       if (userRole != 'guardian') {
-        final today = DateTime.now();
-        final todayStr = '${today.year}-${today.month}-${today.day}';
-        final isTakenToday = pill.takenDates.containsKey(todayStr);
+        // Check if we should send a notification about a newly taken pill
+        if (shouldSendNotification && takenTimeKey != null) {
+          print(
+              'Pill ${pill.name} newly marked as taken for time: $takenTimeKey');
 
-        if (isTakenToday) {
-          // Cancel notifications if pill is taken today
+          // Cancel notifications for this specific pill
           await notiService.cancelPillNotifications(pill.id);
 
           // Notify guardian about the pill being taken
@@ -177,7 +204,33 @@ class FirebaseManager {
           if (sharedUserEmail.isNotEmpty) {
             print(
                 'Elder marked pill as taken: ${pill.name}. Notifying guardian...');
-            await notiService.notifyGuardianOfTakenPill(currentUser.uid, pill);
+
+            // Use a unique notification ID based on pill ID and time key to prevent duplicates
+            final notificationId =
+                '${pill.id}_${takenTimeKey}_${DateTime.now().millisecondsSinceEpoch}';
+
+            // Store this notification ID temporarily to prevent duplicates
+            final prefs = await SharedPreferences.getInstance();
+            final recentNotifications =
+                prefs.getStringList('recent_pill_notifications') ?? [];
+
+            // Check if we've sent this notification recently (within last minute)
+            if (!recentNotifications.contains(notificationId)) {
+              // Add to recent notifications
+              recentNotifications.add(notificationId);
+              // Keep only the most recent 10 notifications
+              if (recentNotifications.length > 10) {
+                recentNotifications.removeAt(0);
+              }
+              await prefs.setStringList(
+                  'recent_pill_notifications', recentNotifications);
+
+              // Send the notification
+              await notiService.notifyGuardianOfTakenPill(
+                  currentUser.uid, pill);
+            } else {
+              print('Skipping duplicate notification for ${pill.name}');
+            }
           } else {
             print(
                 'No shared user (guardian) found for elder. Cannot send notification.');

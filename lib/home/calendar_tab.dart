@@ -1094,11 +1094,6 @@ class _CalendarTabState extends State<CalendarTab> {
                         onChanged: (bool? value) {
                           if (value != null) {
                             _markPillAsTaken(pill, value);
-
-                            // If marking as taken, send an immediate notification
-                            if (value == true) {
-                              _sendInstantPillNotification(pill);
-                            }
                           }
                         },
                       ),
