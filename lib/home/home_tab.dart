@@ -4,6 +4,7 @@ import 'package:amanak/home/messaging_tab.dart';
 import 'package:amanak/nearest_hospitals.dart';
 import 'package:amanak/notifications/noti_service.dart';
 import 'package:amanak/provider/fall_detection_provider.dart';
+import 'package:amanak/provider/pill_provider.dart';
 import 'package:amanak/widgets/overlay_button.dart';
 import 'package:amanak/widgets/pillsearchfield.dart';
 import 'package:flutter/material.dart';
@@ -34,11 +35,6 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   static int selectedHomeIndex = 0;
   final _searchController = TextEditingController();
   List<PillModel> _todayPills = [];
-  bool _isLoading = true;
-  bool _isReadOnly = false;
-  String _currentUserRole = "";
-  String _displayUserId = "";
-  String _displayName = "";
   Timer? _periodicTimer;
 
   // Keep page alive when switching tabs to prevent rebuilds
@@ -48,8 +44,11 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     super.initState();
-    // Use Future.microtask to avoid blocking the UI thread during initialization
-    Future.microtask(() => _checkUserRoleAndLoadData());
+    // Initialize pill provider
+    Future.microtask(() {
+      final pillProvider = Provider.of<PillProvider>(context, listen: false);
+      pillProvider.initialize().then((_) => _updateTodayPills());
+    });
     _setupPeriodicChecks();
   }
 
@@ -60,90 +59,20 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     super.dispose();
   }
 
-  // Check user role and load appropriate data
-  Future<void> _checkUserRoleAndLoadData() async {
+  // Update today's pills from the provider's data
+  Future<void> _updateTodayPills() async {
     if (!mounted) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    final pillProvider = Provider.of<PillProvider>(context, listen: false);
+    final allPills = pillProvider.pills;
 
-    try {
-      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    // Use compute to filter pills off the main thread for better performance
+    final todayPills = await compute(_filterPillsForToday, allPills);
 
-      if (currentUserId != null) {
-        // Get user data for the current user
-        final userData = await FirebaseManager.getNameAndRole(currentUserId);
-        final userRole = userData['role'] ?? '';
-        final sharedUserEmail = userData['sharedUsers'] ?? '';
-
-        print('👤 User Role: $userRole');
-        _currentUserRole = userRole;
-        _displayUserId = currentUserId;
-        _displayName = userData['name'] ?? 'User';
-
-        if (userRole.toLowerCase() == 'guardian' &&
-            sharedUserEmail.isNotEmpty) {
-          // If guardian, find the elder user's ID by their email
-          final elderData =
-              await FirebaseManager.getUserByEmail(sharedUserEmail);
-          if (elderData != null) {
-            _displayUserId = elderData['id'] ?? '';
-            if (_displayUserId.isNotEmpty) {
-              if (mounted) {
-                setState(() {
-                  _isReadOnly = true;
-                });
-              }
-              _displayName = elderData['name'] ?? 'Elder';
-            }
-          }
-        }
-
-        // Load pills for either current user (elder) or shared user (for guardian)
-        await _loadPills(_displayUserId);
-      }
-    } catch (e) {
-      print('Error checking user role: $e');
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  // Load pills using compute to offload from UI thread
-  Future<void> _loadPills([String? userId]) async {
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final targetUserId = userId ?? FirebaseAuth.instance.currentUser?.uid;
-      if (targetUserId != null) {
-        // Get pills from Firebase
-        final pillsList = await FirebaseManager.getPills(userId: targetUserId);
-
-        // Use compute to filter pills off the main thread
-        final todayPills = await compute(_filterPillsForToday, pillsList);
-
-        if (mounted) {
-          setState(() {
-            _todayPills = todayPills;
-            _isLoading = false;
-          });
-        }
-      }
-    } catch (e) {
-      print('Error loading pills: $e');
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    if (mounted) {
+      setState(() {
+        _todayPills = todayPills;
+      });
     }
   }
 
@@ -194,8 +123,10 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
 
   // Mark a pill as taken
   Future<void> _markPillAsTaken(PillModel pill) async {
+    final pillProvider = Provider.of<PillProvider>(context, listen: false);
+
     // Only allow elder to mark pills
-    if (_isReadOnly) {
+    if (pillProvider.isReadOnly) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content:
@@ -206,41 +137,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     }
 
     try {
-      // Get current user role
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) return;
-
-      print('Marking pill as taken: ${pill.name} (ID: ${pill.id})');
-
-      final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
-      final userRole = userData['role'] ?? '';
-      final userName = userData['name'] ?? 'User';
-      final sharedUserEmail = userData['sharedUsers'] ?? '';
-
-      print(
-          'Current user: $userName, Role: $userRole, SharedUser: $sharedUserEmail');
-
-      // Only elders should be able to mark pills as taken
-      if (userRole == 'guardian') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Guardians cannot mark pills as taken.'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        return;
-      }
-
-      // Get the original pill from Firebase
-      final pillsList = await FirebaseManager.getPills();
-      final originalPill = pillsList.firstWhere((p) => p.id == pill.id);
-
       // Get the time key for this specific dose
       final timeKey = _getTimeKeyForPill(pill);
-
-      // Create a copy of the original pill with updated taken status for this time
-      final updatedPill = originalPill.copyWith();
-      updatedPill.markTimeTaken(timeKey, DateTime.now());
 
       // Update local state immediately for better performance
       if (mounted) {
@@ -273,8 +171,11 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
         ),
       );
 
-      // Sync with Firebase in the background
-      _syncPillToFirebase(updatedPill, sharedUserEmail);
+      // Mark the pill as taken through the provider - this handles all the Firebase operations
+      await pillProvider.markPillAsTaken(pill, timeKey);
+
+      // Update today's pills list after the provider has updated
+      _updateTodayPills();
     } catch (e) {
       print('Error marking pill as taken: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -303,52 +204,6 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     final minute = time.minute.toString().padLeft(2, '0');
     final period = time.hour >= 12 ? 'PM' : 'AM';
     return '$hour:$minute $period';
-  }
-
-  // Sync pill to Firebase in background using compute
-  Future<void> _syncPillToFirebase(
-      PillModel pill, String sharedUserEmail) async {
-    try {
-      await compute(_updatePillInFirebase, pill);
-      print('Pill synced to Firebase successfully: ${pill.name}');
-
-      // Check if notification was sent to guardian
-      if (sharedUserEmail.isNotEmpty) {
-        print(
-            'Guardian email found: $sharedUserEmail. Notification should be sent.');
-
-        // Get guardian details for verification
-        final guardianData =
-            await FirebaseManager.getUserByEmail(sharedUserEmail);
-        if (guardianData != null) {
-          final guardianId = guardianData['id'] ?? '';
-          print('Guardian ID: $guardianId');
-        } else {
-          print('Warning: Could not find guardian with email $sharedUserEmail');
-        }
-      } else {
-        print('No guardian email found. No notification will be sent.');
-      }
-    } catch (e) {
-      print('Error syncing pill to Firebase: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Warning: Changes may not be saved',
-              style: TextStyle(fontSize: 12),
-            ),
-            backgroundColor: Colors.orange,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    }
-  }
-
-  // Static method for compute to run on separate isolate
-  static Future<void> _updatePillInFirebase(PillModel pill) async {
-    await FirebaseManager.updatePill(pill);
   }
 
   String _getTimeStatus(PillModel pill) {
@@ -442,11 +297,10 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   // Check for missed pills
   Future<void> _checkForMissedPills() async {
     try {
-      await FirebaseManager.checkForMissedPills();
-      // Reload pills after checking to reflect any status changes
-      if (mounted) {
-        _loadPills(_displayUserId);
-      }
+      final pillProvider = Provider.of<PillProvider>(context, listen: false);
+      await pillProvider.checkForMissedPills();
+      // Update UI with latest data
+      _updateTodayPills();
     } catch (e) {
       print('Error checking for missed pills: $e');
     }
@@ -461,11 +315,15 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final provider = Provider.of<MyProvider>(context);
+    final pillProvider = Provider.of<PillProvider>(context);
 
     return SafeArea(
       child: Scaffold(
         body: RefreshIndicator(
-          onRefresh: _checkUserRoleAndLoadData,
+          onRefresh: () async {
+            await pillProvider.checkUserRoleAndLoadData();
+            await _updateTodayPills();
+          },
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
@@ -485,8 +343,6 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                               Image.asset(
                                 "assets/images/Amanaklogo2.png",
                                 height: screenHeight * 0.07,
-                                cacheHeight: (screenHeight * 0.07).toInt(),
-                                cacheWidth: (screenHeight * 0.07).toInt(),
                               ),
                               Text(
                                 localizations.home,
@@ -528,8 +384,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                         children: [
                           Expanded(
                             child: Text(
-                              _isReadOnly
-                                  ? "${_displayName}'s ${localizations.pillReminder}"
+                              pillProvider.isReadOnly
+                                  ? "${pillProvider.displayName}'s ${localizations.pillReminder}"
                                   : localizations.pillReminder,
                               style: Theme.of(context)
                                   .textTheme
@@ -568,7 +424,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               ),
 
               // Today's Pills with optimized builder
-              _isLoading
+              pillProvider.isLoading
                   ? SliverToBoxAdapter(
                       child: Center(
                         child: CircularProgressIndicator(
@@ -794,7 +650,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             ),
           ),
           // Add checkbox for elder or status icon for guardian
-          _isReadOnly
+          Provider.of<PillProvider>(context, listen: false).isReadOnly
               ? Padding(
                   // For guardians - show status icon instead of checkbox
                   padding: const EdgeInsets.only(right: 16.0),

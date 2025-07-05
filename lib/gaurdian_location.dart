@@ -6,6 +6,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class GuardianLiveTracking extends StatefulWidget {
   const GuardianLiveTracking({super.key});
@@ -24,21 +26,21 @@ class _GuardianLiveTrackingState extends State<GuardianLiveTracking> {
   late double elderlyLongitude = 0.0;
 
   // Replace this with the elderly's userId (e.g., from Firebase Authentication or another source)
-  final String elderlyUserId = 'a';  // Example elderly ID
+  final String elderlyUserId = 'a'; // Example elderly ID
 
   @override
   void initState() {
     super.initState();
-    Firebase.initializeApp();  // Initialize Firebase here
+    Firebase.initializeApp(); // Initialize Firebase here
     listenForElderlyLocation(); // Listen to the elderly's location from Firestore
   }
 
   // Listen to the location changes of the elderly in Firestore
   void listenForElderlyLocation() {
     FirebaseFirestore.instance
-        .collection('amanak_location')  // Collection name is 'amanak_location'
-        .doc(elderlyUserId)  // Document ID of the elderly user
-        .snapshots()  // Listen to real-time updates for this document
+        .collection('amanak_location') // Collection name is 'amanak_location'
+        .doc(elderlyUserId) // Document ID of the elderly user
+        .snapshots() // Listen to real-time updates for this document
         .listen((snapshot) {
       if (snapshot.exists) {
         setState(() {
@@ -73,24 +75,24 @@ class _GuardianLiveTrackingState extends State<GuardianLiveTracking> {
         children: <Widget>[
           conditionMap
               ? GoogleMap(
-            mapType: MapType.normal,
-            markers: {
-              Marker(
-                position: LatLng(elderlyLatitude, elderlyLongitude),
-                markerId: MarkerId('elderlyLocation'),
-                icon: BitmapDescriptor.defaultMarkerWithHue(
-                  BitmapDescriptor.hueMagenta,
-                ),
-              ),
-            },
-            initialCameraPosition: CameraPosition(
-              target: LatLng(elderlyLatitude, elderlyLongitude),
-              zoom: zoomClose,
-            ),
-            onMapCreated: (GoogleMapController controller) {
-              _controller.complete(controller);
-            },
-          )
+                  mapType: MapType.normal,
+                  markers: {
+                    Marker(
+                      position: LatLng(elderlyLatitude, elderlyLongitude),
+                      markerId: MarkerId('elderlyLocation'),
+                      icon: BitmapDescriptor.defaultMarkerWithHue(
+                        BitmapDescriptor.hueMagenta,
+                      ),
+                    ),
+                  },
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(elderlyLatitude, elderlyLongitude),
+                    zoom: zoomClose,
+                  ),
+                  onMapCreated: (GoogleMapController controller) {
+                    _controller.complete(controller);
+                  },
+                )
               : loadingContainer(),
           Positioned(
             bottom: 0,
@@ -109,24 +111,27 @@ class _GuardianLiveTrackingState extends State<GuardianLiveTracking> {
                   border: Border.all(color: Colors.black12, width: 1.5)),
               child: conditionMap
                   ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Elderly Latitude: $elderlyLatitude',
-                      style: TextStyle(color: Colors.black, fontSize: 18.0),
-                    ),
-                    SizedBox(
-                      height: 2.0,
-                    ),
-                    Text(
-                      'Elderly Longitude: $elderlyLongitude',
-                      style: TextStyle(color: Colors.black, fontSize: 18.0),
-                    ),
-                  ],
-                ),
-              )
-                  : Center(child: const Text('Getting the elderly location...')),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Elderly Latitude: $elderlyLatitude',
+                            style:
+                                TextStyle(color: Colors.black, fontSize: 18.0),
+                          ),
+                          SizedBox(
+                            height: 2.0,
+                          ),
+                          Text(
+                            'Elderly Longitude: $elderlyLongitude',
+                            style:
+                                TextStyle(color: Colors.black, fontSize: 18.0),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Center(
+                      child: const Text('Getting the elderly location...')),
             ),
           ),
         ],
@@ -156,5 +161,35 @@ class _GuardianLiveTrackingState extends State<GuardianLiveTracking> {
         ),
       ),
     );
+  }
+
+  // Add this to the elder's login flow or app initialization
+  Future<void> requestNotificationsAndSaveToken() async {
+    // Request permission first
+    final settings = await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized ||
+        settings.authorizationStatus == AuthorizationStatus.provisional) {
+      // Permission granted, get and save token
+      final token = await FirebaseMessaging.instance.getToken();
+
+      // Save to Firestore
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && token != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({'fcmToken': token});
+        print('FCM token saved successfully: $token');
+      }
+    }
   }
 }

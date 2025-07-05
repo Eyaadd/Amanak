@@ -7,6 +7,7 @@ import 'package:amanak/l10n/app_localizations.dart';
 import 'package:amanak/models/pill_model.dart';
 import 'package:amanak/notifications/noti_service.dart';
 import 'package:amanak/provider/my_provider.dart';
+import 'package:amanak/provider/pill_provider.dart';
 import 'package:amanak/services/database_service.dart';
 import 'package:amanak/services/encryption_service.dart';
 import 'package:amanak/services/ocr_service.dart';
@@ -45,136 +46,100 @@ class _CalendarTabState extends State<CalendarTab> {
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
-    _checkUserRoleAndLoadData();
+
+    // Initialize the pill provider if not already initialized
+    Future.microtask(() async {
+      final pillProvider = Provider.of<PillProvider>(context, listen: false);
+      if (!pillProvider.pills.isNotEmpty) {
+        await pillProvider.initialize();
+      }
+      _updatePillsFromProvider();
+    });
   }
 
   // Helper method to refresh data safely
   void refreshData() {
-    _checkUserRoleAndLoadData();
+    final pillProvider = Provider.of<PillProvider>(context, listen: false);
+    pillProvider
+        .checkUserRoleAndLoadData()
+        .then((_) => _updatePillsFromProvider());
   }
 
-  // Check user role and load appropriate data
-  Future<void> _checkUserRoleAndLoadData() async {
+  // Update pills from provider data
+  void _updatePillsFromProvider() {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+      final pillProvider = Provider.of<PillProvider>(context, listen: false);
+      final pillsList = pillProvider.pills;
 
-      if (currentUserId != null) {
-        // Get user data for the current user
-        final userData = await FirebaseManager.getNameAndRole(currentUserId);
-        final userRole = userData['role'] ?? '';
-        final sharedUserEmail = userData['sharedUsers'] ?? '';
+      // Update read-only status and display name from provider
+      _isReadOnly = pillProvider.isReadOnly;
+      _displayName = pillProvider.displayName;
+      _currentUserRole = pillProvider.currentUserRole;
+      _displayUserId = pillProvider.displayUserId;
 
-        _currentUserRole = userRole;
-        _displayUserId = currentUserId;
-        _displayName = userData['name'] ?? 'User';
+      // Group pills by date and mark all days in duration
+      final Map<DateTime, List<PillModel>> groupedPills = {};
+      for (var pill in pillsList) {
+        // Add pill to its start date
+        final startDate = DateTime(
+            pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
 
-        if (userRole.toLowerCase() == 'guardian' &&
-            sharedUserEmail.isNotEmpty) {
-          // If guardian, find the elder user's ID by their email
-          final elderData =
-              await FirebaseManager.getUserByEmail(sharedUserEmail);
-          if (elderData != null) {
-            _displayUserId = elderData['id'] ?? '';
-            if (_displayUserId.isNotEmpty) {
-              setState(() {
-                _isReadOnly = true;
-              });
-              _displayName = elderData['name'] ?? 'Elder';
+        // For each time in the pill, create a separate entry
+        for (int i = 0; i < pill.times.length; i++) {
+          // Create a copy of the pill with a single time
+          final timeOfDay = pill.times[i];
+          final singleTimePill = pill.copyWith(
+            times: [timeOfDay],
+            timesPerDay: 1, // Set to 1 since we're showing one time per card
+          );
+
+          if (groupedPills[startDate] == null) {
+            groupedPills[startDate] = [];
+          }
+          groupedPills[startDate]!.add(singleTimePill);
+
+          // Mark all days in the duration with the pill
+          for (int j = 1; j < pill.duration; j++) {
+            final nextDate = startDate.add(Duration(days: j));
+            final nextDateKey =
+                DateTime(nextDate.year, nextDate.month, nextDate.day);
+
+            if (groupedPills[nextDateKey] == null) {
+              groupedPills[nextDateKey] = [];
             }
+            groupedPills[nextDateKey]!.add(singleTimePill);
           }
         }
-
-        // Load pills for either current user (elder) or shared user (for guardian)
-        _loadPills(
-            _displayUserId); // Don't await here as _loadPills handles its own state
       }
-    } catch (e) {
-      print('Error checking user role: $e');
+
+      // Sort pills for each day by time
+      groupedPills.forEach((date, pills) {
+        pills.sort((a, b) {
+          if (a.times.isEmpty || b.times.isEmpty) return 0;
+
+          final aTime = a.times.first;
+          final bTime = b.times.first;
+
+          // Compare hours first
+          if (aTime.hour != bTime.hour) {
+            return aTime.hour.compareTo(bTime.hour);
+          }
+
+          // If hours are the same, compare minutes
+          return aTime.minute.compareTo(bTime.minute);
+        });
+      });
+
       setState(() {
+        _pills = groupedPills;
         _isLoading = false;
       });
-    }
-  }
-
-  // Separated into its own function to handle state internally
-  Future<void> _loadPills([String? userId]) async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final targetUserId = userId ?? FirebaseAuth.instance.currentUser?.uid;
-      if (targetUserId != null) {
-        final pillsList = await FirebaseManager.getPills(userId: targetUserId);
-
-        // Group pills by date and mark all days in duration
-        final Map<DateTime, List<PillModel>> groupedPills = {};
-        for (var pill in pillsList) {
-          // Add pill to its start date
-          final startDate = DateTime(
-              pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
-
-          // For each time in the pill, create a separate entry
-          for (int i = 0; i < pill.times.length; i++) {
-            // Create a copy of the pill with a single time
-            final timeOfDay = pill.times[i];
-            final singleTimePill = pill.copyWith(
-              times: [timeOfDay],
-              timesPerDay: 1, // Set to 1 since we're showing one time per card
-            );
-
-            if (groupedPills[startDate] == null) {
-              groupedPills[startDate] = [];
-            }
-            groupedPills[startDate]!.add(singleTimePill);
-
-            // Mark all days in the duration with the pill
-            for (int j = 1; j < pill.duration; j++) {
-              final nextDate = startDate.add(Duration(days: j));
-              final nextDateKey =
-                  DateTime(nextDate.year, nextDate.month, nextDate.day);
-
-              if (groupedPills[nextDateKey] == null) {
-                groupedPills[nextDateKey] = [];
-              }
-              groupedPills[nextDateKey]!.add(singleTimePill);
-            }
-          }
-        }
-
-        // Sort pills for each day by time
-        groupedPills.forEach((date, pills) {
-          pills.sort((a, b) {
-            if (a.times.isEmpty || b.times.isEmpty) return 0;
-
-            final aTime = a.times.first;
-            final bTime = b.times.first;
-
-            // Compare hours first
-            if (aTime.hour != bTime.hour) {
-              return aTime.hour.compareTo(bTime.hour);
-            }
-
-            // If hours are the same, compare minutes
-            return aTime.minute.compareTo(bTime.minute);
-          });
-        });
-
-        setState(() {
-          _pills = groupedPills;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     } catch (e) {
-      print('Error loading pills: $e');
+      print('Error updating pills from provider: $e');
       setState(() {
         _isLoading = false;
       });
@@ -223,43 +188,17 @@ class _CalendarTabState extends State<CalendarTab> {
           child: ModernAddPillForm(
             onSubmit: (pillModel) async {
               try {
-                // Add to Firebase
-                final pillId = await FirebaseManager.addPill(pillModel);
+                // Use the provider to add the pill
+                final pillProvider =
+                    Provider.of<PillProvider>(context, listen: false);
+                final pillId = await pillProvider.addPill(pillModel);
 
                 if (pillId.isEmpty) {
                   throw Exception("Invalid pill ID returned from Firebase");
                 }
 
-                // Update local state with the returned ID
-                final updatedPillModel = pillModel.copyWith(id: pillId);
-
-                // Update UI - mark all days in the duration
-                setState(() {
-                  final startDate = DateTime(
-                      updatedPillModel.dateTime.year,
-                      updatedPillModel.dateTime.month,
-                      updatedPillModel.dateTime.day);
-
-                  // Add pill to its start date
-                  if (_pills[startDate] != null) {
-                    _pills[startDate]!.add(updatedPillModel);
-                  } else {
-                    _pills[startDate] = [updatedPillModel];
-                  }
-
-                  // Mark all days in the duration
-                  for (int i = 1; i < updatedPillModel.duration; i++) {
-                    final nextDate = startDate.add(Duration(days: i));
-                    final nextDateKey =
-                        DateTime(nextDate.year, nextDate.month, nextDate.day);
-
-                    if (_pills[nextDateKey] != null) {
-                      _pills[nextDateKey]!.add(updatedPillModel);
-                    } else {
-                      _pills[nextDateKey] = [updatedPillModel];
-                    }
-                  }
-                });
+                // Update local calendar display
+                _updatePillsFromProvider();
 
                 Navigator.of(context).pop();
               } catch (e) {
@@ -1152,8 +1091,10 @@ class _CalendarTabState extends State<CalendarTab> {
 
   // Mark a pill as taken or not taken
   Future<void> _markPillAsTaken(PillModel pill, bool isTaken) async {
+    final pillProvider = Provider.of<PillProvider>(context, listen: false);
+
     // Only allow elder to mark pills
-    if (_isReadOnly) {
+    if (pillProvider.isReadOnly) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content:
@@ -1164,45 +1105,8 @@ class _CalendarTabState extends State<CalendarTab> {
     }
 
     try {
-      // Get current user role
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) return;
-
-      // Ensure Firebase Auth is properly initialized before making any calls
-      await FirebaseManager.ensureAuthInitialized();
-
-      final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
-      final userRole = userData['role'] ?? '';
-      final elderName = userData['name'] ?? 'User';
-      final sharedUserEmail = userData['sharedUsers'] ?? '';
-
-      // Only elders should be able to mark pills as taken
-      if (userRole == 'guardian') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Guardians cannot mark pills as taken.'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        return;
-      }
-
-      // Get the original pill from Firebase
-      final pillsList = await FirebaseManager.getPills();
-      final originalPill = pillsList.firstWhere((p) => p.id == pill.id);
-
       // Get the time key for this specific dose
       final timeKey = _getTimeKeyForPill(pill);
-
-      // Create a copy of the original pill with updated taken status for this time
-      final updatedPill = originalPill.copyWith();
-
-      if (isTaken) {
-        updatedPill.markTimeTaken(timeKey, DateTime.now());
-        updatedPill.missed = false;
-      } else {
-        updatedPill.markTimeNotTaken(timeKey);
-      }
 
       // Update local state immediately for better performance
       setState(() {
@@ -1239,14 +1143,26 @@ class _CalendarTabState extends State<CalendarTab> {
         ),
       );
 
-      // Sync with Firebase in the background
-      await _syncPillToFirebase(updatedPill);
+      // Find the original pill in the provider's list
+      final originalPill =
+          pillProvider.pills.firstWhere((p) => p.id == pill.id);
 
-      // If pill is marked as taken, immediately send a notification to the guardian
-      if (isTaken && sharedUserEmail.isNotEmpty) {
-        print('Calling Cloud Function directly for pill notification');
-        await _sendInstantPillNotification(pill);
+      // Create a copy with the updated taken status
+      final updatedPill = originalPill.copyWith();
+
+      if (isTaken) {
+        updatedPill.markTimeTaken(timeKey, DateTime.now());
+        updatedPill.missed = false;
+      } else {
+        updatedPill.markTimeNotTaken(timeKey);
       }
+
+      // Update the pill through the provider
+      await pillProvider.updatePill(updatedPill);
+
+      // Refresh data after a short delay to ensure consistency
+      await Future.delayed(Duration(milliseconds: 300));
+      _updatePillsFromProvider();
     } catch (e) {
       print('Error updating pill status: $e');
       ScaffoldMessenger.of(context).showSnackBar(

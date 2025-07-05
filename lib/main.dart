@@ -32,6 +32,7 @@ import 'package:amanak/home/messaging_tab.dart';
 import 'package:amanak/provider/fall_detection_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:amanak/provider/notification_provider.dart';
+import 'package:amanak/provider/pill_provider.dart';
 import 'package:amanak/screens/notifications_screen.dart';
 import 'package:amanak/gaurdian_location.dart';
 import 'package:amanak/screens/simple_splash_screen.dart';
@@ -177,6 +178,10 @@ void main() async {
   final bool onboardingCompleted =
       prefs.getBool('onboarding_completed') ?? false;
 
+  // Create and initialize the pill provider
+  final pillProvider = PillProvider();
+  // Don't await here as we'll initialize it after auth is checked
+
   runApp(
     MultiProvider(
       providers: [
@@ -184,6 +189,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => localizationService),
         ChangeNotifierProvider(create: (_) => FallDetectionProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => pillProvider),
       ],
       child: MyApp(
         languageSelected: languageSelected,
