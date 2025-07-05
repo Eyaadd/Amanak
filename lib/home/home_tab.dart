@@ -180,8 +180,25 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       // Update the pill through the provider
       await pillProvider.updatePill(updatedPill);
 
-      // Send an instant notification to the guardian
-      await _sendInstantPillNotification(updatedPill);
+      // Check if the pill is being taken before its scheduled time
+      final now = DateTime.now();
+      final pillTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        pill.times.first.hour,
+        pill.times.first.minute,
+      );
+
+      // Only send notification if the pill is being taken at or after its scheduled time
+      // or if it's within 15 minutes before the scheduled time (reasonable early window)
+      if (now.isAfter(pillTime) || now.difference(pillTime).inMinutes > -15) {
+        // Send an instant notification to the guardian
+        await _sendInstantPillNotification(updatedPill);
+      } else {
+        print(
+            'Pill marked as taken before scheduled time - no notification sent');
+      }
 
       // Update today's pills list after the provider has updated
       await _updateTodayPills();
@@ -278,14 +295,33 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
         return;
       }
 
+      // Import FCMService
+      final fcmService = FCMService();
+
+      // For pill taken notifications, use the dedicated endpoint
+      if (isTaken) {
+        print('🔔 Using dedicated pill taken notification endpoint');
+        bool success = await fcmService.sendPillTakenNotification(
+          token: fcmToken,
+          elderName: elderName,
+          pillName: pillName,
+          guardianId: guardianId,
+        );
+
+        if (success) {
+          print(
+              '✅ Pill taken notification sent successfully via dedicated endpoint');
+          return;
+        } else {
+          print('⚠️ Dedicated endpoint failed, falling back to other methods');
+        }
+      }
+
       // Prepare notification data
       final title = isTaken ? "Medicine Taken" : "Pill Missed Alert";
       final body = isTaken
           ? "$elderName marked $pillName as taken."
           : "$elderName missed their medicine: $pillName.";
-
-      // Import FCMService
-      final fcmService = FCMService();
 
       // Try to send notification directly using FCM API
       bool fcmSuccess = await fcmService.sendDirectNotification(
@@ -323,6 +359,25 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
           'attempts': 1,
           'lastAttempt': FieldValue.serverTimestamp(),
         });
+
+        // Also try the Firestore trigger approach as a final fallback
+        if (isTaken) {
+          await FirebaseFirestore.instance
+              .collection('pill_notifications')
+              .add({
+            'token': fcmToken,
+            'title': title,
+            'body': body,
+            'pillName': pillName,
+            'elderName': elderName,
+            'guardianId': guardianId,
+            'type': 'pill_taken',
+            'createdAt': FieldValue.serverTimestamp(),
+            'processed': false,
+          });
+          print(
+              '📝 Pill notification stored in pill_notifications for Firestore trigger');
+        }
       } else {
         print('Direct pill notification sent successfully to guardian');
 

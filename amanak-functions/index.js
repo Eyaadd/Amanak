@@ -167,6 +167,129 @@ exports.sendPillNotificationPublic = functions.https.onRequest(async (req, res) 
   }
 });
 
+// Dedicated function for pill taken notifications
+exports.pillTakenNotification = functions.https.onRequest(async (req, res) => {
+  // Set CORS headers
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+  
+  // Only allow POST
+  if (req.method !== 'POST') {
+    res.status(405).send('Method Not Allowed');
+    return;
+  }
+  
+  try {
+    const { token, elderName, pillName, guardianId, apiKey } = req.body;
+    
+    // Very basic API key validation
+    const validApiKey = "amanak_pill_notification_key_2025";
+    
+    if (apiKey !== validApiKey) {
+      console.error('Invalid API key');
+      res.status(403).send({ error: 'Unauthorized' });
+      return;
+    }
+    
+    if (!token) {
+      console.error('No FCM token provided');
+      res.status(400).send({ error: 'Token is required' });
+      return;
+    }
+    
+    // Prepare notification content
+    const title = "Medicine Taken";
+    const body = `${elderName} marked ${pillName} as taken.`;
+    
+    // Create high priority message
+    const message = {
+      token: token,
+      notification: {
+        title: title,
+        body: body,
+      },
+      data: {
+        type: 'pill_taken',
+        pillName: pillName || '',
+        elderName: elderName || '',
+        timestamp: Date.now().toString(),
+      },
+      android: {
+        priority: "high",
+        ttl: 60 * 1000, // 1 minute expiration
+        notification: {
+          channel_id: "taken_pill_channel", // Specific channel for taken pills
+          priority: "high",
+          default_vibrate_timings: true,
+          default_sound: true,
+        },
+      },
+      apns: {
+        headers: {
+          "apns-priority": "10", // Immediate delivery
+          "apns-push-type": "alert"
+        },
+        payload: {
+          aps: {
+            sound: "default",
+            badge: 1,
+            content_available: 1,
+            mutable_content: 1,
+          },
+        },
+      },
+    };
+    
+    console.log(`Sending pill taken notification: ${elderName} took ${pillName}`);
+    
+    // Send the notification
+    const response = await admin.messaging().send(message);
+    console.log(`Successfully sent pill taken notification: ${response}`);
+    
+    // Store notification in Firestore for tracking
+    const notificationRef = await admin.firestore().collection('sent_notifications').add({
+      token: token,
+      title: title,
+      body: body,
+      data: {
+        type: 'pill_taken',
+        pillName: pillName || '',
+        elderName: elderName || '',
+      },
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+      messageId: response,
+      method: 'pill_taken_endpoint'
+    });
+    
+    // Also store in guardian's notifications collection
+    if (guardianId) {
+      await admin.firestore().collection('users').doc(guardianId).collection('notifications').add({
+        title: title,
+        message: body,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        isRead: false,
+        type: 'pill_taken',
+        data: {
+          pillName: pillName || '',
+          elderName: elderName || '',
+        },
+      });
+    }
+    
+    res.status(200).send({ success: true, messageId: response, notificationId: notificationRef.id });
+  } catch (error) {
+    console.error('Error sending pill taken notification:', error);
+    res.status(500).send({ error: error.message });
+  }
+});
+
 // Firestore trigger to send pill notifications immediately
 exports.sendPillNotification = functions.firestore
   .onDocumentCreated("pill_notifications/{notificationId}", async (event) => {
@@ -184,7 +307,7 @@ exports.sendPillNotification = functions.firestore
         return null;
       }
       
-      const { token, title, body, pillName, elderName, type, guardianId } = notificationData;
+      const { token, title, body, data, pillName, elderName, type, guardianId } = notificationData;
       
       if (!token) {
         console.error('No FCM token provided in notification data');
@@ -195,15 +318,13 @@ exports.sendPillNotification = functions.firestore
       const message = {
         token: token,
         notification: {
-          title: title,
-          body: body,
+          title: title || "Medication Reminder",
+          body: body || "Medication notification",
         },
-        data: {
+        data: data || {
           type: type || 'pill_taken',
           pillName: pillName || '',
           elderName: elderName || '',
-          title: title,
-          body: body,
           timestamp: Date.now().toString(),
         },
         android: {
@@ -232,7 +353,7 @@ exports.sendPillNotification = functions.firestore
         },
       };
       
-      console.log(`Sending pill notification to ${guardianId}: ${title} - ${body}`);
+      console.log(`Sending pill notification from Firestore trigger: ${title || "Medication Reminder"}`);
       
       // Send the notification
       const response = await admin.messaging().send(message);

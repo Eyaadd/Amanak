@@ -680,4 +680,83 @@ class FCMService {
       return false;
     }
   }
+
+  /// Send a pill taken notification using the dedicated endpoint
+  Future<bool> sendPillTakenNotification({
+    required String token,
+    required String elderName,
+    required String pillName,
+    String? guardianId,
+  }) async {
+    try {
+      // Dedicated pill taken notification endpoint
+      const String functionUrl =
+          'https://us-central1-amanak-9c6d0.cloudfunctions.net/pillTakenNotification';
+
+      // API key for basic security
+      const String apiKey = 'amanak_pill_notification_key_2025';
+
+      // Prepare the request body
+      final requestBody = {
+        'token': token,
+        'elderName': elderName,
+        'pillName': pillName,
+        'guardianId': guardianId,
+        'apiKey': apiKey,
+      };
+
+      print('📤 Sending pill taken notification for ${pillName}');
+
+      // Send the HTTP request
+      final response = await http.post(
+        Uri.parse(functionUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(requestBody),
+      );
+
+      // Check response
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        final success = responseData['success'] ?? false;
+
+        print('✅ Pill taken notification sent successfully. Success: $success');
+        print('📊 Response: ${response.body}');
+
+        return success;
+      } else {
+        print(
+            '❌ Failed to send pill taken notification. Status: ${response.statusCode}');
+        print('📊 Error Response: ${response.body}');
+
+        // Fall back to storing in Firestore for the Firestore trigger
+        try {
+          final currentUser = FirebaseAuth.instance.currentUser;
+          if (currentUser != null && guardianId != null) {
+            await FirebaseFirestore.instance
+                .collection('pill_notifications')
+                .add({
+              'token': token,
+              'title': "Medicine Taken",
+              'body': "${elderName} marked ${pillName} as taken.",
+              'pillName': pillName,
+              'elderName': elderName,
+              'guardianId': guardianId,
+              'type': 'pill_taken',
+              'createdAt': FieldValue.serverTimestamp(),
+              'processed': false,
+            });
+            print(
+                '📝 Pill notification stored in Firestore for later delivery');
+          }
+        } catch (e) {
+          print('❌ Error storing pill notification in Firestore: $e');
+        }
+
+        return false;
+      }
+    } catch (e) {
+      print('❌ Error sending pill taken notification: $e');
+      return false;
+    }
+  }
 }
