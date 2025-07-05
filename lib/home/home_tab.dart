@@ -180,9 +180,25 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       // Update the pill through the provider
       await pillProvider.updatePill(updatedPill);
 
-      // Note: We're removing this direct notification call to avoid duplicate notifications
-      // The FirebaseManager.updatePill method will handle sending notifications
-      // await _sendInstantPillNotification(updatedPill);
+      // Check if the pill is being taken before its scheduled time
+      final now = DateTime.now();
+      final pillTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        pill.times.first.hour,
+        pill.times.first.minute,
+      );
+
+      // Only send notification if the pill is being taken at or after its scheduled time
+      // or if it's within 15 minutes before the scheduled time (reasonable early window)
+      if (now.isAfter(pillTime) || now.difference(pillTime).inMinutes > -15) {
+        // Send an instant notification to the guardian
+        await _sendInstantPillNotification(updatedPill);
+      } else {
+        print(
+            'Pill marked as taken before scheduled time - no notification sent');
+      }
 
       // Update today's pills list after the provider has updated
       await _updateTodayPills();

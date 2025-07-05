@@ -109,25 +109,6 @@ exports.sendPillNotificationPublic = functions.https.onRequest(async (req, res) 
       return;
     }
     
-    // Check for duplicate notifications within the last 30 seconds
-    const notificationKey = `${token}_${title}_${body}`;
-    const currentTime = Date.now();
-    const thirtySecondsAgo = currentTime - 30000;
-    
-    // Query for recent notifications with the same key
-    const recentNotificationsQuery = await admin.firestore()
-      .collection('sent_notifications')
-      .where('notificationKey', '==', notificationKey)
-      .where('sentAt', '>=', new Date(thirtySecondsAgo))
-      .limit(1)
-      .get();
-    
-    if (!recentNotificationsQuery.empty) {
-      console.log('Duplicate notification prevented: ', title);
-      res.status(200).send({ success: true, duplicate: true });
-      return;
-    }
-    
     // Create high priority message
     const message = {
       token: token,
@@ -174,7 +155,6 @@ exports.sendPillNotificationPublic = functions.https.onRequest(async (req, res) 
       title: title,
       body: body,
       data: data,
-      notificationKey: notificationKey,
       sentAt: admin.firestore.FieldValue.serverTimestamp(),
       messageId: response,
       method: 'public_endpoint'
@@ -208,32 +188,6 @@ exports.sendPillNotification = functions.firestore
       
       if (!token) {
         console.error('No FCM token provided in notification data');
-        return null;
-      }
-      
-      // Check for duplicate notifications within the last 30 seconds
-      const notificationKey = `${token}_${title}_${body}`;
-      const currentTime = Date.now();
-      const thirtySecondsAgo = currentTime - 30000;
-      
-      // Query for recent notifications with the same key
-      const recentNotificationsQuery = await admin.firestore()
-        .collection('sent_notifications')
-        .where('notificationKey', '==', notificationKey)
-        .where('sentAt', '>=', new Date(thirtySecondsAgo))
-        .limit(1)
-        .get();
-      
-      if (!recentNotificationsQuery.empty) {
-        console.log('Duplicate notification prevented by Firestore trigger: ', title);
-        
-        // Mark as processed to avoid future attempts
-        await snapshot.ref.update({ 
-          processed: true,
-          processedAt: admin.firestore.FieldValue.serverTimestamp(),
-          duplicate: true
-        });
-        
         return null;
       }
       
@@ -282,18 +236,6 @@ exports.sendPillNotification = functions.firestore
       
       // Send the notification
       const response = await admin.messaging().send(message);
-      
-      // Store notification in Firestore for tracking
-      await admin.firestore().collection('sent_notifications').add({
-        token: token,
-        title: title,
-        body: body,
-        data: message.data,
-        notificationKey: notificationKey,
-        sentAt: admin.firestore.FieldValue.serverTimestamp(),
-        messageId: response,
-        method: 'firestore_trigger'
-      });
       
       // Mark as processed
       await snapshot.ref.update({ 
