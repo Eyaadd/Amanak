@@ -293,41 +293,6 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
           elderName: elderName,
           isTaken: true);
 
-      // Always store in Firestore as a reliable fallback
-      try {
-        final guardianDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(guardianId)
-            .get();
-
-        if (guardianDoc.exists) {
-          final guardianData = guardianDoc.data();
-          if (guardianData != null) {
-            final fcmToken = guardianData['fcmToken'];
-            if (fcmToken != null && fcmToken.isNotEmpty) {
-              // Store in pill_notifications for the Firestore trigger
-              await FirebaseFirestore.instance
-                  .collection('pill_notifications')
-                  .add({
-                'token': fcmToken,
-                'title': title,
-                'body': body,
-                'pillName': pill.name,
-                'elderName': elderName,
-                'guardianId': guardianId,
-                'type': 'pill_taken',
-                'createdAt': FieldValue.serverTimestamp(),
-                'processed': false,
-              });
-              print(
-                  '📝 Pill notification stored in pill_notifications for Firestore trigger as backup');
-            }
-          }
-        }
-      } catch (e) {
-        print('❌ Error storing backup notification in Firestore: $e');
-      }
-
       print('✅ INSTANT NOTIFICATION SENT');
     } catch (e) {
       print('❌ Error sending instant notification: $e');
@@ -365,21 +330,39 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       final fcmService = FCMService();
 
       // For pill taken notifications, use the dedicated endpoint
+      bool sent = false;
       if (isTaken) {
         print('🔔 Using dedicated pill taken notification endpoint');
-        bool success = await fcmService.sendPillTakenNotification(
+        sent = await fcmService.sendPillTakenNotification(
           token: fcmToken,
           elderName: elderName,
           pillName: pillName,
           guardianId: guardianId,
         );
-
-        if (success) {
+        if (sent) {
           print(
               '✅ Pill taken notification sent successfully via dedicated endpoint');
-          return;
+
+          // Store in notification history since it was sent successfully
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(guardianId)
+              .collection('notifications')
+              .add({
+            'title': "Medicine Taken",
+            'message': "$elderName marked $pillName as taken.",
+            'timestamp': FieldValue.serverTimestamp(),
+            'isRead': false,
+            'type': 'pill_taken',
+            'data': {
+              'pillName': pillName,
+              'elderName': elderName,
+            },
+          });
+
+          return; // Exit early since notification was sent successfully
         } else {
-          print('⚠️ Dedicated endpoint failed, falling back to other methods');
+          print('⚠️ Dedicated endpoint failed, trying direct FCM API');
         }
       }
 
@@ -389,8 +372,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
           ? "$elderName marked $pillName as taken."
           : "$elderName missed their medicine: $pillName.";
 
-      // Try to send notification directly using FCM API
-      bool fcmSuccess = await fcmService.sendDirectNotification(
+      // Try to send notification directly using FCM API if not sent yet
+      sent = await fcmService.sendDirectNotification(
         token: fcmToken,
         title: title,
         body: body,
@@ -403,51 +386,10 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
         highPriority: true,
       );
 
-      if (!fcmSuccess) {
-        print(
-            'Direct FCM notification failed, storing in Firestore for later delivery');
+      if (sent) {
+        print('Direct pill notification sent successfully via FCM API');
 
-        // Store for later delivery
-        await FirebaseFirestore.instance
-            .collection('pending_notifications')
-            .add({
-          'userId': guardianId,
-          'title': title,
-          'body': body,
-          'data': {
-            'type': isTaken ? 'pill_taken' : 'pill_missed',
-            'pillName': pillName,
-            'elderName': elderName,
-            'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
-          },
-          'timestamp': FieldValue.serverTimestamp(),
-          'delivered': false,
-          'attempts': 1,
-          'lastAttempt': FieldValue.serverTimestamp(),
-        });
-
-        // Also try the Firestore trigger approach as a final fallback
-        if (isTaken) {
-          await FirebaseFirestore.instance
-              .collection('pill_notifications')
-              .add({
-            'token': fcmToken,
-            'title': title,
-            'body': body,
-            'pillName': pillName,
-            'elderName': elderName,
-            'guardianId': guardianId,
-            'type': 'pill_taken',
-            'createdAt': FieldValue.serverTimestamp(),
-            'processed': false,
-          });
-          print(
-              '📝 Pill notification stored in pill_notifications for Firestore trigger');
-        }
-      } else {
-        print('Direct pill notification sent successfully to guardian');
-
-        // Also store in Firestore for history
+        // Store in notification history since it was sent successfully
         await FirebaseFirestore.instance
             .collection('users')
             .doc(guardianId)
@@ -463,9 +405,49 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             'elderName': elderName,
           },
         });
+
+        return; // Exit early since notification was sent successfully
+      }
+
+      // If we get here, both notification attempts failed
+      print(
+          'All direct notification methods failed, storing for backup delivery');
+
+      // Store in pending_notifications for retry
+      await FirebaseFirestore.instance.collection('pending_notifications').add({
+        'userId': guardianId,
+        'title': title,
+        'body': body,
+        'data': {
+          'type': isTaken ? 'pill_taken' : 'pill_missed',
+          'pillName': pillName,
+          'elderName': elderName,
+          'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
+        },
+        'timestamp': FieldValue.serverTimestamp(),
+        'delivered': false,
+        'attempts': 1,
+        'lastAttempt': FieldValue.serverTimestamp(),
+      });
+
+      // Only store in pill_notifications as last resort if both direct methods failed
+      if (isTaken) {
+        await FirebaseFirestore.instance.collection('pill_notifications').add({
+          'token': fcmToken,
+          'title': title,
+          'body': body,
+          'pillName': pillName,
+          'elderName': elderName,
+          'guardianId': guardianId,
+          'type': 'pill_taken',
+          'createdAt': FieldValue.serverTimestamp(),
+          'processed': false,
+        });
+        print(
+            '📝 Pill notification stored in pill_notifications for Firestore trigger as final fallback');
       }
     } catch (e) {
-      print('Error in _sendDirectPillNotification: $e');
+      print('Error sending direct pill notification: $e');
     }
   }
 

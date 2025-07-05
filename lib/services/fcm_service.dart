@@ -685,31 +685,6 @@ class FCMService {
         print(
             '❌ Failed to send pill taken notification. Status: ${response.statusCode}');
         print('📊 Error Response: ${response.body}');
-
-        // Fall back to storing in Firestore for the Firestore trigger
-        try {
-          final currentUser = FirebaseAuth.instance.currentUser;
-          if (currentUser != null && guardianId != null) {
-            await FirebaseFirestore.instance
-                .collection('pill_notifications')
-                .add({
-              'token': token,
-              'title': "Medicine Taken",
-              'body': "${elderName} marked ${pillName} as taken.",
-              'pillName': pillName,
-              'elderName': elderName,
-              'guardianId': guardianId,
-              'type': 'pill_taken',
-              'createdAt': FieldValue.serverTimestamp(),
-              'processed': false,
-            });
-            print(
-                '📝 Pill notification stored in Firestore for later delivery');
-          }
-        } catch (e) {
-          print('❌ Error storing pill notification in Firestore: $e');
-        }
-
         return false;
       }
     } catch (e) {

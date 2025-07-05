@@ -211,26 +211,6 @@ class FirebaseManager {
             // Always cancel notifications for this specific time slot when marked as taken
             await notiService.cancelPillTimeNotifications(
                 pill.id, dayDifference, i);
-
-            // Only notify if the pill was taken at or after its scheduled time
-            // or within 15 minutes before the scheduled time (reasonable early window)
-            if (takenTime.isAfter(pillTime) ||
-                pillTime.difference(takenTime).inMinutes <= 15) {
-              // Notify guardian about the pill being taken
-              final sharedUserEmail = userData['sharedUsers'] ?? '';
-              if (sharedUserEmail.isNotEmpty) {
-                print(
-                    'Elder marked pill as taken: ${pill.name} at time $timeKey. Notifying guardian...');
-                await notiService.notifyGuardianOfTakenPill(
-                    currentUser.uid, pill);
-              } else {
-                print(
-                    'No shared user (guardian) found for elder. Cannot send notification.');
-              }
-            } else {
-              print(
-                  'Pill marked as taken before scheduled time - no notification sent from Firebase Manager');
-            }
           }
         }
 
