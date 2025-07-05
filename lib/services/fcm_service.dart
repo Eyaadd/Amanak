@@ -186,30 +186,28 @@ class FCMService {
     }
   }
 
-  /// Send FCM notification to a specific user
+  /// Send a notification to a specific user
   Future<bool> sendNotification({
     required String userId,
     required String title,
     required String body,
     Map<String, dynamic>? data,
-    String? imageUrl,
-    bool highPriority = true,
+    bool highPriority = false,
   }) async {
     try {
-      // Ensure service is initialized
-      if (!await ensureInitialized()) {
-        print('Cannot send notification: FCM service not initialized');
-        return false;
+      // Ensure we're initialized
+      if (!_isInitialized) {
+        await initialize();
       }
 
-      // Get user document to retrieve FCM token
+      // Get the FCM token for this user
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
           .get();
 
       if (!userDoc.exists) {
-        print('User document not found for FCM notification');
+        print('User document not found for ID: $userId');
         return false;
       }
 
@@ -218,24 +216,18 @@ class FCMService {
 
       final fcmToken = userData['fcmToken'];
       if (fcmToken == null || fcmToken.isEmpty) {
-        print('FCM token not found for user $userId');
+        print('FCM token not found for user: $userId');
         return false;
       }
 
-      // Prepare notification message with high priority settings
+      // Prepare the message
       final message = {
         'token': fcmToken,
         'notification': {
           'title': title,
           'body': body,
-          if (imageUrl != null) 'imageUrl': imageUrl,
         },
-        'data': {
-          ...data ?? {},
-          'title': title, // Duplicate in data for data-only messages
-          'body': body, // Duplicate in data for data-only messages
-          'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
-        },
+        'data': data ?? {},
         'android': {
           'priority': highPriority ? 'high' : 'normal',
           'ttl': 60 * 1000, // 1 minute expiration for high priority
@@ -273,10 +265,23 @@ class FCMService {
         }
 
         // Force token refresh to ensure we have a valid token
-        await currentUser.getIdToken(true);
+        print('Refreshing Firebase Auth token in FCM service...');
+        try {
+          await currentUser.getIdToken(true);
+          print('Token refreshed successfully in FCM service');
+        } catch (authError) {
+          print('Error refreshing auth token in FCM service: $authError');
+          throw Exception('Authentication token refresh failed: $authError');
+        }
 
+        // Wait a moment to ensure token propagation
+        await Future.delayed(Duration(milliseconds: 500));
+
+        // Get a fresh instance of Firebase Functions
         final functions = FirebaseFunctions.instance;
         final callable = functions.httpsCallable('sendNotification');
+
+        print('Calling Cloud Function with fresh authentication...');
         final result = await callable.call(message);
         print('FCM notification sent via Cloud Functions: ${result.data}');
 

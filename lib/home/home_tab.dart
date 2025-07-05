@@ -258,8 +258,28 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       required String elderName,
       required bool isTaken}) async {
     try {
+      // Ensure user is authenticated before proceeding
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        print('Cannot send notification: User not authenticated');
+        return;
+      }
+
+      // Force token refresh to ensure we have a valid token
+      print('Refreshing Firebase Auth token...');
+      try {
+        await currentUser.getIdToken(true);
+        print('Token refreshed successfully');
+      } catch (authError) {
+        print('Error refreshing auth token: $authError');
+        // Continue anyway, the FCM service will handle authentication errors
+      }
+
       // Import FCMService
       final fcmService = FCMService();
+
+      // Ensure FCM service is initialized
+      await fcmService.ensureInitialized();
 
       // Prepare notification data
       final title = isTaken ? "Medicine Taken" : "Pill Missed Alert";

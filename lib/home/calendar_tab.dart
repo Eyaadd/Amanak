@@ -1220,8 +1220,28 @@ class _CalendarTabState extends State<CalendarTab> {
       required String elderName,
       required bool isTaken}) async {
     try {
-      // Use the centralized FCM service
+      // Ensure user is authenticated before proceeding
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        print('Cannot send notification: User not authenticated');
+        return;
+      }
+
+      // Force token refresh to ensure we have a valid token
+      print('Refreshing Firebase Auth token...');
+      try {
+        await currentUser.getIdToken(true);
+        print('Token refreshed successfully');
+      } catch (authError) {
+        print('Error refreshing auth token: $authError');
+        // Continue anyway, the FCM service will handle authentication errors
+      }
+
+      // Import FCMService
       final fcmService = FCMService();
+
+      // Ensure FCM service is initialized
+      await fcmService.ensureInitialized();
 
       // Prepare notification data
       final title = isTaken ? "Medicine Taken" : "Pill Missed Alert";
@@ -1229,27 +1249,20 @@ class _CalendarTabState extends State<CalendarTab> {
           ? "$elderName marked $pillName as taken."
           : "$elderName missed their medicine: $pillName.";
 
-      // Try to send notification using FCM service
-      bool fcmSuccess = false;
-      try {
-        fcmSuccess = await fcmService.sendNotification(
-          userId: guardianId,
-          title: title,
-          body: body,
-          data: {
-            'type': isTaken ? 'pill_taken' : 'pill_missed',
-            'pillName': pillName,
-            'elderName': elderName,
-            'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
-          },
-          highPriority: true,
-        );
-      } catch (fcmError) {
-        print('Error sending FCM notification: $fcmError');
-        fcmSuccess = false;
-      }
+      // Send notification using FCM service
+      bool fcmSuccess = await fcmService.sendNotification(
+        userId: guardianId,
+        title: title,
+        body: body,
+        data: {
+          'type': isTaken ? 'pill_taken' : 'pill_missed',
+          'pillName': pillName,
+          'elderName': elderName,
+          'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
+        },
+        highPriority: true,
+      );
 
-      // If FCM failed, fall back to storing in Firestore directly
       if (!fcmSuccess) {
         print(
             'FCM notification failed, storing in Firestore for later delivery');
@@ -1274,6 +1287,23 @@ class _CalendarTabState extends State<CalendarTab> {
         });
       } else {
         print('Pill notification sent successfully to guardian');
+
+        // Also store in Firestore for history
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(guardianId)
+            .collection('notifications')
+            .add({
+          'title': title,
+          'message': body,
+          'timestamp': FieldValue.serverTimestamp(),
+          'isRead': false,
+          'type': isTaken ? 'pill_taken' : 'pill_missed',
+          'data': {
+            'pillName': pillName,
+            'elderName': elderName,
+          },
+        });
       }
     } catch (e) {
       print('Error in _sendDirectPillNotification: $e');
@@ -1401,10 +1431,15 @@ class _CalendarTabState extends State<CalendarTab> {
         return;
       }
 
-      // Ensure user is authenticated with Firebase Functions
+      // Force token refresh to ensure we have a valid token
       print('🔑 Refreshing Firebase Auth token...');
-      await currentUser.getIdToken(true); // Force refresh the token
-      print('✅ Token refreshed successfully');
+      try {
+        await currentUser.getIdToken(true);
+        print('✅ Token refreshed successfully');
+      } catch (authError) {
+        print('❌ Error refreshing auth token: $authError');
+        // Continue anyway as the FCM service will handle authentication errors
+      }
 
       final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
       final elderName = userData['name'] ?? 'User';
@@ -1430,103 +1465,16 @@ class _CalendarTabState extends State<CalendarTab> {
         return;
       }
 
-      // Get guardian's FCM token directly
-      print('📱 Fetching FCM token for guardian: $guardianId');
-      final guardianDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(guardianId)
-          .get();
+      // Use the direct pill notification method
+      await _sendDirectPillNotification(
+          guardianId: guardianId,
+          pillName: pill.name,
+          elderName: elderName,
+          isTaken: true);
 
-      if (!guardianDoc.exists) {
-        print('Guardian document not found');
-        return;
-      }
-
-      final guardianDataMap = guardianDoc.data();
-      if (guardianDataMap == null) return;
-
-      final fcmToken = guardianDataMap['fcmToken'];
-      if (fcmToken == null || fcmToken.isEmpty) {
-        print('FCM token not found for guardian');
-        return;
-      }
-
-      // Create notification message
-      final title = "Medicine Taken";
-      final body = "$elderName marked ${pill.name} as taken.";
-
-      print('⚡ SENDING INSTANT NOTIFICATION: $title - $body');
-
-      // Call Firebase Cloud Function directly
-      final functions = FirebaseFunctions.instance;
-      print('🔥 Getting Cloud Function reference...');
-      final callable = functions.httpsCallable('sendNotification');
-
-      // Prepare notification payload with all necessary fields
-      final message = {
-        'token': fcmToken,
-        'notification': {
-          'title': title,
-          'body': body,
-        },
-        'data': {
-          'type': 'pill_taken',
-          'pillName': pill.name,
-          'elderName': elderName,
-          'title': title,
-          'body': body,
-          'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
-        },
-        'android': {
-          'priority': 'high',
-          'notification': {
-            'channel_id': 'high_importance_channel',
-            'priority': 'high',
-          }
-        },
-        'apns': {
-          'payload': {
-            'aps': {
-              'sound': 'default',
-              'badge': 1,
-              'content-available': 1,
-            }
-          }
-        }
-      };
-
-      print('📤 Calling Cloud Function with payload...');
-      // Send notification
-      final result = await callable.call(message);
-      print('✅ INSTANT NOTIFICATION SENT: ${result.data}');
-
-      // Also store in Firestore for history
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(guardianId)
-          .collection('notifications')
-          .add({
-        'title': title,
-        'message': body,
-        'timestamp': FieldValue.serverTimestamp(),
-        'isRead': false,
-        'type': 'pill_taken',
-        'data': {
-          'pillName': pill.name,
-          'elderName': elderName,
-        },
-      });
-
-      print('📝 Notification stored in Firestore');
+      print('✅ INSTANT NOTIFICATION SENT');
     } catch (e) {
       print('❌ Error sending instant notification: $e');
-
-      // Try to get more details about the error
-      if (e is FirebaseFunctionsException) {
-        print('Firebase Functions Error Code: ${e.code}');
-        print('Firebase Functions Error Details: ${e.details}');
-        print('Firebase Functions Error Message: ${e.message}');
-      }
     }
   }
 }
