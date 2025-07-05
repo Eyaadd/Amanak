@@ -170,6 +170,12 @@ abstract class AppLocalizations {
   /// **'Choose Role'**
   String get chooseRole;
 
+  /// No description provided for @chooseYourRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Your Role'**
+  String get chooseYourRole;
+
   /// No description provided for @elder.
   ///
   /// In en, this message translates to:
@@ -181,6 +187,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Guardian'**
   String get guardian;
+
+  /// No description provided for @user.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get user;
+
+  /// No description provided for @assignUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign User'**
+  String get assignUser;
+
+  /// No description provided for @assignUserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'As a guardian, you need to assign yourself to a user'**
+  String get assignUserTitle;
+
+  /// No description provided for @assignUserSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter the email of the user you want to monitor'**
+  String get assignUserSubtitle;
+
+  /// No description provided for @enterUserEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter user\'s email'**
+  String get enterUserEmail;
+
+  /// No description provided for @completeRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Registration'**
+  String get completeRegistration;
+
+  /// No description provided for @noUserFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No user found with this email or the user is not a regular user'**
+  String get noUserFound;
+
+  /// No description provided for @userAlreadyLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'This user is already linked to another guardian'**
+  String get userAlreadyLinked;
+
+  /// No description provided for @errorValidatingEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Error validating user email'**
+  String get errorValidatingEmail;
+
+  /// No description provided for @pleaseEnterUserEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a user email'**
+  String get pleaseEnterUserEmail;
+
+  /// No description provided for @errorAssigningUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Error assigning user'**
+  String get errorAssigningUser;
+
+  /// No description provided for @mainAmbulance.
+  ///
+  /// In en, this message translates to:
+  /// **'Main Ambulance'**
+  String get mainAmbulance;
+
+  /// No description provided for @trafficPolice.
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic Police'**
+  String get trafficPolice;
+
+  /// No description provided for @emergencyPolice.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Police'**
+  String get emergencyPolice;
+
+  /// No description provided for @fireDepartment.
+  ///
+  /// In en, this message translates to:
+  /// **'Fire Department'**
+  String get fireDepartment;
+
+  /// No description provided for @civilDefence.
+  ///
+  /// In en, this message translates to:
+  /// **'Civil Defence'**
+  String get civilDefence;
+
+  /// No description provided for @naturalGasEmergency.
+  ///
+  /// In en, this message translates to:
+  /// **'Natural Gas Emergency'**
+  String get naturalGasEmergency;
+
+  /// No description provided for @waterEmergency.
+  ///
+  /// In en, this message translates to:
+  /// **'Water Emergency'**
+  String get waterEmergency;
+
+  /// No description provided for @electricityEmergency.
+  ///
+  /// In en, this message translates to:
+  /// **'Electricity Emergency'**
+  String get electricityEmergency;
+
+  /// No description provided for @goBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Go Back'**
+  String get goBack;
+
+  /// No description provided for @couldNotLaunchDialer.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not launch phone dialer'**
+  String get couldNotLaunchDialer;
+
+  /// No description provided for @errorOpeningDialer.
+  ///
+  /// In en, this message translates to:
+  /// **'Error opening phone dialer'**
+  String get errorOpeningDialer;
+
+  /// No description provided for @editField.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit {field}'**
+  String editField(Object field);
+
+  /// No description provided for @enterNewField.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter new {field}'**
+  String enterNewField(Object field);
 
   /// No description provided for @home.
   ///

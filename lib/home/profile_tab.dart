@@ -97,7 +97,8 @@ class _ProfileTabState extends State<ProfileTab> {
     }
   }
 
-  Future<void> _showEditDialog(String field, String currentValue) async {
+  Future<void> _showEditDialog(
+      String field, String currentValue, AppLocalizations localizations) async {
     final controller = TextEditingController(text: currentValue);
     final result = await showDialog<String>(
       context: context,
@@ -122,7 +123,7 @@ class _ProfileTabState extends State<ProfileTab> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Edit $field',
+                    localizations.editField(field),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).primaryColor,
@@ -141,7 +142,7 @@ class _ProfileTabState extends State<ProfileTab> {
                     ? TextInputType.number
                     : TextInputType.text,
                 decoration: InputDecoration(
-                  hintText: 'Enter new $field',
+                  hintText: localizations.enterNewField(field),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -269,7 +270,7 @@ class _ProfileTabState extends State<ProfileTab> {
                       width: screenWidth, fit: BoxFit.cover),
                   showEmergencyContacts
                       ? _buildEmergencyContactsInterface(
-                          screenWidth, screenHeight)
+                          screenWidth, screenHeight, localizations)
                       : showEditInformation
                           ? _buildEditInformationInterface(
                               screenWidth, screenHeight, localizations)
@@ -331,8 +332,8 @@ class _ProfileTabState extends State<ProfileTab> {
                                         children: [
                                           _buildProfileOption(
                                               assetName: "emergencyic",
-                                              title:
-                                                  localizations.emergencyContacts,
+                                              title: localizations
+                                                  .emergencyContacts,
                                               onTap: () {
                                                 setState(() {
                                                   showEmergencyContacts = true;
@@ -348,7 +349,8 @@ class _ProfileTabState extends State<ProfileTab> {
                                           ),
                                           _buildProfileOption(
                                             assetName: "editic",
-                                            title: localizations.editInformation,
+                                            title:
+                                                localizations.editInformation,
                                             onTap: () async {
                                               setState(() {
                                                 _isLoading = true;
@@ -372,85 +374,152 @@ class _ProfileTabState extends State<ProfileTab> {
                                             assetName: "language",
                                             title: localizations.language,
                                             onTap: () async {
-                                              final localizationService = Provider
-                                                  .of<LocalizationService>(
+                                              final localizationService =
+                                                  Provider.of<
+                                                          LocalizationService>(
                                                       context,
                                                       listen: false);
                                               showDialog(
                                                 context: context,
                                                 barrierDismissible: true,
-                                                builder: (context) => FocusScope(
+                                                builder: (context) =>
+                                                    FocusScope(
                                                   canRequestFocus: false,
                                                   child: GestureDetector(
                                                     onTap: () {
                                                       Navigator.pop(context);
                                                     },
                                                     child: Dialog(
-                                                      shape: RoundedRectangleBorder(
+                                                      shape:
+                                                          RoundedRectangleBorder(
                                                         borderRadius:
-                                                            BorderRadius.circular(20),
+                                                            BorderRadius
+                                                                .circular(20),
                                                       ),
                                                       child: GestureDetector(
                                                         onTap: () {
                                                           // Prevent dialog from closing when tapping inside
                                                         },
                                                         child: Padding(
-                                                          padding: const EdgeInsets.symmetric(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .symmetric(
                                                             horizontal: 24,
                                                             vertical: 28,
                                                           ),
                                                           child: Column(
-                                                            mainAxisSize: MainAxisSize.min,
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
                                                             crossAxisAlignment:
-                                                                CrossAxisAlignment.center,
+                                                                CrossAxisAlignment
+                                                                    .center,
                                                             children: [
                                                               Text(
-                                                                localizations.language,
-                                                                style: Theme.of(context)
+                                                                localizations
+                                                                    .language,
+                                                                style: Theme.of(
+                                                                        context)
                                                                     .textTheme
                                                                     .titleLarge
                                                                     ?.copyWith(
                                                                       fontWeight:
-                                                                          FontWeight.bold,
-                                                                      color: Theme.of(context)
+                                                                          FontWeight
+                                                                              .bold,
+                                                                      color: Theme.of(
+                                                                              context)
                                                                           .primaryColor,
                                                                     ),
-                                                                textAlign: TextAlign.center,
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
                                                               ),
-                                                              SizedBox(height: 24),
+                                                              SizedBox(
+                                                                  height: 24),
                                                               ListTile(
-                                                                focusColor: Colors.transparent,
-                                                                hoverColor: Theme.of(context).primaryColor.withOpacity(0.08),
-                                                                leading: Text('🇺🇸', style: TextStyle(fontSize: 32)),
+                                                                focusColor: Colors
+                                                                    .transparent,
+                                                                hoverColor: Theme.of(
+                                                                        context)
+                                                                    .primaryColor
+                                                                    .withOpacity(
+                                                                        0.08),
+                                                                leading: Text(
+                                                                    '🇺🇸',
+                                                                    style: TextStyle(
+                                                                        fontSize:
+                                                                            32)),
                                                                 title: Text(
-                                                                  localizations.english,
-                                                                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                                                                  localizations
+                                                                      .english,
+                                                                  style: TextStyle(
+                                                                      fontSize:
+                                                                          20,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w600),
                                                                 ),
                                                                 onTap: () {
-                                                                  localizationService.changeLanguage('en');
-                                                                  Navigator.pop(context);
+                                                                  localizationService
+                                                                      .changeLanguage(
+                                                                          'en');
+                                                                  Navigator.pop(
+                                                                      context);
                                                                 },
-                                                                contentPadding: EdgeInsets.symmetric(horizontal: 8),
-                                                                shape: RoundedRectangleBorder(
-                                                                  borderRadius: BorderRadius.circular(12),
+                                                                contentPadding:
+                                                                    EdgeInsets.symmetric(
+                                                                        horizontal:
+                                                                            8),
+                                                                shape:
+                                                                    RoundedRectangleBorder(
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              12),
                                                                 ),
                                                               ),
-                                                              SizedBox(height: 12),
+                                                              SizedBox(
+                                                                  height: 12),
                                                               ListTile(
-                                                                focusColor: Colors.transparent,
-                                                                hoverColor: Theme.of(context).primaryColor.withOpacity(0.08),
-                                                                leading: Text('🇪🇬', style: TextStyle(fontSize: 32)),
+                                                                focusColor: Colors
+                                                                    .transparent,
+                                                                hoverColor: Theme.of(
+                                                                        context)
+                                                                    .primaryColor
+                                                                    .withOpacity(
+                                                                        0.08),
+                                                                leading: Text(
+                                                                    '🇪🇬',
+                                                                    style: TextStyle(
+                                                                        fontSize:
+                                                                            32)),
                                                                 title: Text(
-                                                                  localizations.arabic,
-                                                                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                                                                  localizations
+                                                                      .arabic,
+                                                                  style: TextStyle(
+                                                                      fontSize:
+                                                                          20,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w600),
                                                                 ),
                                                                 onTap: () {
-                                                                  localizationService.changeLanguage('ar');
-                                                                  Navigator.pop(context);
+                                                                  localizationService
+                                                                      .changeLanguage(
+                                                                          'ar');
+                                                                  Navigator.pop(
+                                                                      context);
                                                                 },
-                                                                contentPadding: EdgeInsets.symmetric(horizontal: 8),
-                                                                shape: RoundedRectangleBorder(
-                                                                  borderRadius: BorderRadius.circular(12),
+                                                                contentPadding:
+                                                                    EdgeInsets.symmetric(
+                                                                        horizontal:
+                                                                            8),
+                                                                shape:
+                                                                    RoundedRectangleBorder(
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              12),
                                                                 ),
                                                               ),
                                                             ],
@@ -478,7 +547,8 @@ class _ProfileTabState extends State<ProfileTab> {
                                                 Navigator.push(
                                                   context,
                                                   MaterialPageRoute(
-                                                    builder: (context) => FallDetectionTab(),
+                                                    builder: (context) =>
+                                                        FallDetectionTab(),
                                                   ),
                                                 );
                                               },
@@ -563,7 +633,7 @@ class _ProfileTabState extends State<ProfileTab> {
   }
 
   Widget _buildEmergencyContactsInterface(
-      double screenWidth, double screenHeight) {
+      double screenWidth, double screenHeight, AppLocalizations localizations) {
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -581,58 +651,64 @@ class _ProfileTabState extends State<ProfileTab> {
               padding: EdgeInsets.all(screenWidth * 0.04),
               child: Column(
                 children: [
-                  _buildContactTile("Main Ambulance", "123", screenWidth),
+                  _buildContactTile(localizations.mainAmbulance, "123",
+                      screenWidth, localizations),
                   Divider(
                     color: Color(0xFFE8F3F1),
                     thickness: 2,
                     endIndent: screenWidth * 0.025,
                     indent: screenWidth * 0.025,
                   ),
-                  _buildContactTile("Traffic Police", "128", screenWidth),
+                  _buildContactTile(localizations.trafficPolice, "128",
+                      screenWidth, localizations),
                   Divider(
                     color: Color(0xFFE8F3F1),
                     thickness: 2,
                     endIndent: screenWidth * 0.025,
                     indent: screenWidth * 0.025,
                   ),
-                  _buildContactTile("Emergency Police", "122", screenWidth),
+                  _buildContactTile(localizations.emergencyPolice, "122",
+                      screenWidth, localizations),
                   Divider(
                     color: Color(0xFFE8F3F1),
                     thickness: 2,
                     endIndent: screenWidth * 0.025,
                     indent: screenWidth * 0.025,
                   ),
-                  _buildContactTile("Fire Department", "128", screenWidth),
+                  _buildContactTile(localizations.fireDepartment, "128",
+                      screenWidth, localizations),
                   Divider(
                     color: Color(0xFFE8F3F1),
                     thickness: 2,
                     endIndent: screenWidth * 0.025,
                     indent: screenWidth * 0.025,
                   ),
-                  _buildContactTile("Civil Defence", "180", screenWidth),
+                  _buildContactTile(localizations.civilDefence, "180",
+                      screenWidth, localizations),
                   Divider(
                     color: Color(0xFFE8F3F1),
                     thickness: 2,
                     endIndent: screenWidth * 0.025,
                     indent: screenWidth * 0.025,
                   ),
-                  _buildContactTile(
-                      "Natural Gas Emergency", "129", screenWidth),
+                  _buildContactTile(localizations.naturalGasEmergency, "129",
+                      screenWidth, localizations),
                   Divider(
                     color: Color(0xFFE8F3F1),
                     thickness: 2,
                     endIndent: screenWidth * 0.025,
                     indent: screenWidth * 0.025,
                   ),
-                  _buildContactTile("Water Emergency", "125", screenWidth),
+                  _buildContactTile(localizations.waterEmergency, "125",
+                      screenWidth, localizations),
                   Divider(
                     color: Color(0xFFE8F3F1),
                     thickness: 2,
                     endIndent: screenWidth * 0.025,
                     indent: screenWidth * 0.025,
                   ),
-                  _buildContactTile(
-                      "Electricity Emergency", "121", screenWidth),
+                  _buildContactTile(localizations.electricityEmergency, "121",
+                      screenWidth, localizations),
                   Divider(
                     color: Color(0xFFE8F3F1),
                     thickness: 2,
@@ -645,7 +721,7 @@ class _ProfileTabState extends State<ProfileTab> {
                         showEmergencyContacts = false;
                       });
                     },
-                    child: Text("Go Back",
+                    child: Text(localizations.goBack,
                         style: GoogleFonts.albertSans(
                             color: Theme.of(context).primaryColor,
                             fontWeight: FontWeight.w700,
@@ -660,9 +736,10 @@ class _ProfileTabState extends State<ProfileTab> {
     );
   }
 
-  Widget _buildContactTile(String name, String num, double screenWidth) {
+  Widget _buildContactTile(String name, String num, double screenWidth,
+      AppLocalizations localizations) {
     return InkWell(
-      onTap: () => _launchDialer(num),
+      onTap: () => _launchDialer(num, localizations),
       borderRadius: BorderRadius.circular(screenWidth * 0.03),
       child: Padding(
         padding: EdgeInsets.symmetric(
@@ -719,20 +796,21 @@ class _ProfileTabState extends State<ProfileTab> {
     );
   }
 
-  Future<void> _launchDialer(String phoneNumber) async {
+  Future<void> _launchDialer(
+      String phoneNumber, AppLocalizations localizations) async {
     final Uri uri = Uri(scheme: 'tel', path: phoneNumber);
     try {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not launch phone dialer')),
+          SnackBar(content: Text(localizations.couldNotLaunchDialer)),
         );
       }
     } catch (e) {
       print('Error launching phone dialer: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error opening phone dialer')),
+        SnackBar(content: Text(localizations.errorOpeningDialer)),
       );
     }
   }
@@ -763,7 +841,8 @@ class _ProfileTabState extends State<ProfileTab> {
                     _buildProfileOption(
                       assetName: "name",
                       title: '$userName',
-                      onTap: () => _showEditDialog('Name', userName),
+                      onTap: () =>
+                          _showEditDialog('Name', userName, localizations),
                       screenWidth: screenWidth,
                     ),
                     Divider(
@@ -774,7 +853,8 @@ class _ProfileTabState extends State<ProfileTab> {
                     _buildProfileOption(
                       assetName: "age",
                       title: '$userAge',
-                      onTap: () => _showEditDialog('Age', userAge.toString()),
+                      onTap: () => _showEditDialog(
+                          'Age', userAge.toString(), localizations),
                       screenWidth: screenWidth,
                     ),
                     Divider(
@@ -785,8 +865,8 @@ class _ProfileTabState extends State<ProfileTab> {
                     _buildProfileOption(
                       assetName: "height",
                       title: 'Height: $userHeight',
-                      onTap: () =>
-                          _showEditDialog('Height', userHeight.toString()),
+                      onTap: () => _showEditDialog(
+                          'Height', userHeight.toString(), localizations),
                       screenWidth: screenWidth,
                     ),
                     Divider(

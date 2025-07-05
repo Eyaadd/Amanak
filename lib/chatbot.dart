@@ -237,7 +237,7 @@ class _ChatBotState extends State<ChatBot> {
                         : Theme.of(context).primaryColor,
                     shape: BoxShape.circle,
                   ),
-                  child:  InkWell(
+                  child: InkWell(
                     child: IconButton(
                       icon: Icon(_isListening ? Icons.mic : Icons.mic_none,
                           size: baseFontSize * 1.2, color: Colors.white),

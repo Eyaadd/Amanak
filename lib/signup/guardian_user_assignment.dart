@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:amanak/models/user_model.dart';
 import 'package:amanak/firebase/firebase_manager.dart';
 import 'package:amanak/widgets/success_dialog.dart';
-import 'package:amanak/login_screen.dart';
+import 'package:amanak/l10n/app_localizations.dart';
 
 class GuardianUserAssignment extends StatefulWidget {
   static const routeName = "GuardianUserAssignment";
@@ -32,16 +31,17 @@ class _GuardianUserAssignmentState extends State<GuardianUserAssignment> {
 
       if (querySnapshot.docs.isEmpty) {
         setState(() {
-          _errorMessage = 'No user found with this email or the user is not a regular user';
+          _errorMessage = AppLocalizations.of(context)!.noUserFound;
         });
         return false;
       }
 
       // Check if user is already linked to another guardian
       final userData = querySnapshot.docs.first.data();
-      if (userData['sharedUsers'] != null && userData['sharedUsers'].toString().isNotEmpty) {
+      if (userData['sharedUsers'] != null &&
+          userData['sharedUsers'].toString().isNotEmpty) {
         setState(() {
-          _errorMessage = 'This user is already linked to another guardian';
+          _errorMessage = AppLocalizations.of(context)!.userAlreadyLinked;
         });
         return false;
       }
@@ -49,7 +49,7 @@ class _GuardianUserAssignmentState extends State<GuardianUserAssignment> {
       return true;
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error validating user email';
+        _errorMessage = AppLocalizations.of(context)!.errorValidatingEmail;
       });
       return false;
     }
@@ -57,10 +57,10 @@ class _GuardianUserAssignmentState extends State<GuardianUserAssignment> {
 
   Future<void> _assignUser() async {
     final userEmail = _userEmailController.text.trim();
-    
+
     if (userEmail.isEmpty) {
       setState(() {
-        _errorMessage = 'Please enter a user email';
+        _errorMessage = AppLocalizations.of(context)!.pleaseEnterUserEmail;
       });
       return;
     }
@@ -105,7 +105,8 @@ class _GuardianUserAssignmentState extends State<GuardianUserAssignment> {
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error assigning user: ${e.toString()}';
+        _errorMessage =
+            '${AppLocalizations.of(context)!.errorAssigningUser}: ${e.toString()}';
         _isLoading = false;
       });
     }
@@ -113,13 +114,15 @@ class _GuardianUserAssignmentState extends State<GuardianUserAssignment> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         actionsIconTheme: const IconThemeData(color: Color(0xFF101623)),
         centerTitle: true,
         title: Text(
-          "Assign User",
+          localizations.assignUser,
           style: Theme.of(context)
               .textTheme
               .titleMedium!
@@ -134,12 +137,12 @@ class _GuardianUserAssignmentState extends State<GuardianUserAssignment> {
             children: [
               const SizedBox(height: 20),
               Text(
-                "As a guardian, you need to assign yourself to a user",
+                localizations.assignUserTitle,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
               Text(
-                "Please enter the email of the user you want to monitor",
+                localizations.assignUserSubtitle,
                 style: Theme.of(context)
                     .textTheme
                     .bodyMedium!
@@ -149,7 +152,7 @@ class _GuardianUserAssignmentState extends State<GuardianUserAssignment> {
               TextField(
                 controller: _userEmailController,
                 decoration: InputDecoration(
-                  hintText: "Enter user's email",
+                  hintText: localizations.enterUserEmail,
                   errorText: _errorMessage,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
@@ -173,7 +176,7 @@ class _GuardianUserAssignmentState extends State<GuardianUserAssignment> {
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Complete Registration"),
+                      : Text(localizations.completeRegistration),
                 ),
               ),
             ],
@@ -188,4 +191,4 @@ class _GuardianUserAssignmentState extends State<GuardianUserAssignment> {
     _userEmailController.dispose();
     super.dispose();
   }
-} 
+}
