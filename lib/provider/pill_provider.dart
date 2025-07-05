@@ -160,7 +160,7 @@ class PillProvider extends ChangeNotifier {
 
       // Create a copy with the updated taken status
       final updatedPill = originalPill.copyWith();
-      updatedPill.markTimeTaken(timeKey, DateTime.now());
+      updatedPill.markTimeTaken(timeKey, DateTime.now().toUtc());
 
       // Update the pill in our local list immediately
       final index = _pills.indexWhere((p) => p.id == pill.id);

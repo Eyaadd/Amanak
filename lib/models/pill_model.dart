@@ -139,7 +139,8 @@ class PillModel {
   void markTakenOnDate(DateTime date, bool taken) {
     final dateStr = '${date.year}-${date.month}-${date.day}';
     if (taken) {
-      takenDates[dateStr] = DateTime.now();
+      // Store in UTC to prevent timezone issues
+      takenDates[dateStr] = DateTime.now().toUtc();
       // When marking as taken, clear any missed status
       missed = false;
       // Clear missed times for this date
@@ -154,7 +155,8 @@ class PillModel {
 
   // Helper method to mark a specific time as taken
   void markTimeTaken(String timeKey, DateTime takenTime) {
-    takenDates[timeKey] = takenTime;
+    // Store in UTC to prevent timezone issues
+    takenDates[timeKey] = takenTime.toUtc();
     // When marking a specific time as taken, clear its missed status
     missedTimes.remove(timeKey);
 
