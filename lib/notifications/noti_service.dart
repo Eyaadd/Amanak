@@ -241,18 +241,22 @@ class NotiService {
   void _handleMissedCheck(String payload) {
     try {
       final parts = payload.split(':');
-      if (parts.length >= 3) {
+      if (parts.length >= 4) {
         final pillId = parts[1];
         final day = int.tryParse(parts[2]) ?? 0;
         final timeIndex = int.tryParse(parts[3]) ?? 0;
         print(
             'Handling missed check for pill ID: $pillId, day: $day, timeIndex: $timeIndex');
-        // In a real implementation, navigate to pill detail or take action
-        // Could show a dialog to mark this specific dose as missed
+
+        // Call the new specific time missed check
+        checkSpecificTimeMissed(pillId, day, timeIndex);
       } else if (parts.length >= 2) {
         // Backward compatibility for old format
         final pillId = parts[1];
         print('Handling missed check for pill ID: $pillId (old format)');
+
+        // Call the old general missed check
+        checkMissedPill(pillId);
       }
     } catch (e) {
       print('Error handling missed check: $e');
@@ -327,18 +331,35 @@ class NotiService {
   static Future<void> _handleBackgroundMissedCheck(String payload) async {
     try {
       final parts = payload.split(':');
-      if (parts.length >= 3) {
+      if (parts.length >= 4) {
         final pillId = parts[1];
         final day = int.tryParse(parts[2]) ?? 0;
         final timeIndex = int.tryParse(parts[3]) ?? 0;
-        // In a real implementation, you would use a background Isolate or WorkManager
-        // to handle database operations in the background
+
         print(
             'Background missed check for pill ID: $pillId, day: $day, timeIndex: $timeIndex');
+
+        // Create an instance to call the method
+        final notiService = NotiService();
+        if (!notiService.isInitialized) {
+          await notiService.initNotification();
+        }
+
+        // Call the new specific time missed check
+        await notiService.checkSpecificTimeMissed(pillId, day, timeIndex);
       } else if (parts.length >= 2) {
         // Backward compatibility for old format
         final pillId = parts[1];
         print('Background missed check for pill ID: $pillId (old format)');
+
+        // Create an instance to call the method
+        final notiService = NotiService();
+        if (!notiService.isInitialized) {
+          await notiService.initNotification();
+        }
+
+        // Call the old general missed check
+        await notiService.checkMissedPill(pillId);
       }
     } catch (e) {
       print('Error handling background missed check: $e');
@@ -474,6 +495,17 @@ class NotiService {
           for (int timeIndex = 0; timeIndex < pill.times.length; timeIndex++) {
             final time = pill.times[timeIndex];
 
+            // Check if this specific time is already marked as taken
+            final timeKey = pill.getTimeKey(pillDate, timeIndex);
+            final isAlreadyTaken = pill.takenDates.containsKey(timeKey);
+
+            // Skip scheduling notifications if this time is already taken
+            if (isAlreadyTaken) {
+              print(
+                  'Skipping notifications for ${pill.name} at time $timeKey - already taken');
+              continue;
+            }
+
             // Calculate the exact time for this pill dose on this day
             final pillTime = tz.TZDateTime(
               tzLocation,
@@ -547,6 +579,20 @@ class NotiService {
   Future<void> _scheduleMissedPillCheck(PillModel pill, int day,
       tz.TZDateTime checkTime, int notificationId, int timeIndex) async {
     try {
+      // Calculate the date for this day
+      final pillDate = pill.dateTime.add(Duration(days: day));
+
+      // Check if this specific time is already marked as taken
+      final timeKey = pill.getTimeKey(pillDate, timeIndex);
+      final isAlreadyTaken = pill.takenDates.containsKey(timeKey);
+
+      // Skip scheduling missed pill check if this time is already taken
+      if (isAlreadyTaken) {
+        print(
+            'Skipping missed pill check for ${pill.name} at time $timeKey - already taken');
+        return;
+      }
+
       await _scheduleNotification(
         id: notificationId,
         title: "Check Missed Pill",
@@ -585,7 +631,16 @@ class NotiService {
       final todayStr = '${today.year}-${today.month}-${today.day}';
 
       // Check if pill was taken today
-      if (!pill.takenDates.containsKey(todayStr)) {
+      bool anyTimeTakenToday = false;
+      for (int i = 0; i < pill.times.length; i++) {
+        final timeKey = '$todayStr-$i';
+        if (pill.takenDates.containsKey(timeKey)) {
+          anyTimeTakenToday = true;
+          break;
+        }
+      }
+
+      if (!anyTimeTakenToday) {
         // Pill was missed - mark it as missed in Firebase
         final missedPill = pill.copyWith(missed: true);
         await FirebaseManager.updatePill(missedPill);
@@ -595,9 +650,62 @@ class NotiService {
           // Notify guardian about the missed pill
           await notifyGuardianOfMissedPill(currentUser.uid, missedPill);
         }
+      } else {
+        print('Pill ${pill.name} already taken today, not marking as missed');
       }
     } catch (e) {
       print('Error checking missed pill: $e');
+    }
+  }
+
+  // Check if a specific pill time was missed
+  Future<void> checkSpecificTimeMissed(
+      String pillId, int day, int timeIndex) async {
+    try {
+      // Get current user
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      // Get the pill from Firebase
+      final pillsCollection =
+          FirebaseManager.getPillsCollection(currentUser.uid);
+      final pillDoc = await pillsCollection.doc(pillId).get();
+
+      if (!pillDoc.exists) return;
+
+      final pill = pillDoc.data()!;
+
+      // Get user data to check role
+      final userData = await FirebaseManager.getNameAndRole(currentUser.uid);
+      final userRole = userData['role'] ?? '';
+
+      // Calculate the date for this day
+      final pillDate = pill.dateTime.add(Duration(days: day));
+
+      // Check if this specific time is already marked as taken
+      final timeKey = pill.getTimeKey(pillDate, timeIndex);
+      final isAlreadyTaken = pill.takenDates.containsKey(timeKey);
+
+      // Skip marking as missed if this time is already taken
+      if (isAlreadyTaken) {
+        print(
+            'Pill ${pill.name} at time $timeKey already taken, not marking as missed');
+        return;
+      }
+
+      // Mark this specific time as missed
+      pill.markTimeMissed(timeKey, true);
+
+      // Update the pill in Firebase
+      await FirebaseManager.updatePill(pill);
+
+      // Only notify guardian, not the elder themselves
+      if (userRole != 'guardian') {
+        // Notify guardian about the missed pill
+        await notifyGuardianOfMissedPill(currentUser.uid, pill);
+      }
+    } catch (e) {
+      print('Error checking specific time missed: $e');
     }
   }
 
@@ -732,19 +840,60 @@ class NotiService {
     );
   }
 
-  // Cancel all notifications for a specific pill
+  // Cancel all notifications for a pill
   Future<void> cancelPillNotifications(String pillId) async {
-    // Calculate ID ranges for this pill using a safe hash code
-    final int safeHashCode = pillId.hashCode % 10000; // Limit to 4 digits
-    final int reminderIdBase = PILL_REMINDER_ID_PREFIX + safeHashCode;
-    final int dueIdBase = PILL_ADVANCE_REMINDER_ID_PREFIX + safeHashCode;
-    final int missedIdBase = MISSED_NOTIFICATION_ID_PREFIX + safeHashCode;
+    try {
+      // Calculate ID ranges for this pill using a safe hash code
+      final int safeHashCode = pillId.hashCode % 10000; // Limit to 4 digits
+      final int reminderIdBase = PILL_REMINDER_ID_PREFIX + safeHashCode;
+      final int dueIdBase = PILL_ADVANCE_REMINDER_ID_PREFIX + safeHashCode;
+      final int missedIdBase = MISSED_NOTIFICATION_ID_PREFIX + safeHashCode;
 
-    // Cancel all potential notifications for this pill (up to 30 days)
-    for (int day = 0; day < 30; day++) {
-      await notificationsPlugin.cancel(reminderIdBase + day);
-      await notificationsPlugin.cancel(dueIdBase + day);
-      await notificationsPlugin.cancel(missedIdBase + day);
+      // Cancel all notifications in these ranges (up to 100 days, 10 times per day)
+      for (int day = 0; day < 100; day++) {
+        for (int timeIndex = 0; timeIndex < 10; timeIndex++) {
+          final timeSlotId = timeIndex * 1000;
+          final reminderId = dueIdBase + day + timeSlotId;
+          final exactTimeId = reminderIdBase + day + timeSlotId;
+          final missedId = missedIdBase + day + timeSlotId;
+
+          await notificationsPlugin.cancel(reminderId);
+          await notificationsPlugin.cancel(exactTimeId);
+          await notificationsPlugin.cancel(missedId);
+        }
+      }
+
+      print('Canceled all notifications for pill ID: $pillId');
+    } catch (e) {
+      print('Error canceling pill notifications: $e');
+    }
+  }
+
+  // Cancel notifications for a specific pill time slot
+  Future<void> cancelPillTimeNotifications(
+      String pillId, int day, int timeIndex) async {
+    try {
+      // Calculate ID ranges for this pill using a safe hash code
+      final int safeHashCode = pillId.hashCode % 10000; // Limit to 4 digits
+      final int reminderIdBase = PILL_REMINDER_ID_PREFIX + safeHashCode;
+      final int dueIdBase = PILL_ADVANCE_REMINDER_ID_PREFIX + safeHashCode;
+      final int missedIdBase = MISSED_NOTIFICATION_ID_PREFIX + safeHashCode;
+
+      // Calculate IDs for this specific time slot
+      final timeSlotId = timeIndex * 1000;
+      final reminderId = dueIdBase + day + timeSlotId;
+      final exactTimeId = reminderIdBase + day + timeSlotId;
+      final missedId = missedIdBase + day + timeSlotId;
+
+      // Cancel notifications for this specific time slot
+      await notificationsPlugin.cancel(reminderId);
+      await notificationsPlugin.cancel(exactTimeId);
+      await notificationsPlugin.cancel(missedId);
+
+      print(
+          'Canceled notifications for pill ID: $pillId, day: $day, timeIndex: $timeIndex');
+    } catch (e) {
+      print('Error canceling pill time notifications: $e');
     }
   }
 

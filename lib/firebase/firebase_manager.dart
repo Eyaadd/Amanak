@@ -167,13 +167,10 @@ class FirebaseManager {
         final today = DateTime.now();
         final todayStr = '${today.year}-${today.month}-${today.day}';
 
-        // Check if any time was taken today
-        bool anyTimeTakenToday = false;
+        // Check for newly taken times
         for (int i = 0; i < pill.times.length; i++) {
           final timeKey = '$todayStr-$i';
           if (pill.takenDates.containsKey(timeKey)) {
-            anyTimeTakenToday = true;
-
             // Check if the pill was taken before its scheduled time
             final pillTime = DateTime(
               today.year,
@@ -189,14 +186,19 @@ class FirebaseManager {
             // or within 15 minutes before the scheduled time (reasonable early window)
             if (takenTime.isAfter(pillTime) ||
                 pillTime.difference(takenTime).inMinutes <= 15) {
-              // Cancel notifications if pill is taken today
-              await notiService.cancelPillNotifications(pill.id);
+              // Calculate the day index from the start date
+              final startDate = pill.dateTime;
+              final dayDifference = today.difference(startDate).inDays;
+
+              // Cancel notifications only for this specific time slot
+              await notiService.cancelPillTimeNotifications(
+                  pill.id, dayDifference, i);
 
               // Notify guardian about the pill being taken
               final sharedUserEmail = userData['sharedUsers'] ?? '';
               if (sharedUserEmail.isNotEmpty) {
                 print(
-                    'Elder marked pill as taken: ${pill.name}. Notifying guardian...');
+                    'Elder marked pill as taken: ${pill.name} at time $timeKey. Notifying guardian...');
                 await notiService.notifyGuardianOfTakenPill(
                     currentUser.uid, pill);
               } else {
@@ -210,10 +212,35 @@ class FirebaseManager {
           }
         }
 
-        // If no time was taken today but pill is missed, handle missed notifications
-        if (!anyTimeTakenToday && pill.missed) {
-          // Cancel regular notifications and notify guardian
-          await notiService.cancelPillNotifications(pill.id);
+        // If all times for today are taken, clear missed status
+        bool allTimesTaken = true;
+        for (int i = 0; i < pill.times.length; i++) {
+          final timeKey = '$todayStr-$i';
+          if (!pill.takenDates.containsKey(timeKey)) {
+            allTimesTaken = false;
+            break;
+          }
+        }
+
+        if (allTimesTaken && pill.missed) {
+          // Update pill to clear missed status
+          final updatedPill = pill.copyWith(missed: false);
+          await getPillsCollection(currentUser.uid)
+              .doc(pill.id)
+              .update(updatedPill.toJson());
+        }
+
+        // If pill is newly marked as missed, notify guardian
+        if (pill.missed) {
+          // Cancel regular notifications for today
+          final startDate = pill.dateTime;
+          final dayDifference = today.difference(startDate).inDays;
+
+          // Cancel notifications for all time slots today
+          for (int i = 0; i < pill.times.length; i++) {
+            await notiService.cancelPillTimeNotifications(
+                pill.id, dayDifference, i);
+          }
 
           // Notify guardian about missed pill
           final sharedUserEmail = userData['sharedUsers'] ?? '';
@@ -224,9 +251,6 @@ class FirebaseManager {
             print(
                 'No shared user (guardian) found for elder. Cannot send notification.');
           }
-        } else if (!anyTimeTakenToday && !pill.missed) {
-          // Reschedule notifications if pill is reset
-          await notiService.schedulePillNotifications(pill);
         }
       } else {
         print('Guardian user updating pill - not sending notifications');
