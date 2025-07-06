@@ -401,8 +401,8 @@ abstract class AppLocalizations {
   /// No description provided for @dosage.
   ///
   /// In en, this message translates to:
-  /// **'Dosage'**
-  String get dosage;
+  /// **'Dosage: {dosage}'**
+  String dosage(Object dosage);
 
   /// No description provided for @frequency.
   ///
@@ -1045,6 +1045,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error loading medicine data: {error}'**
   String errorLoadingMedicineData(Object error);
+
+  /// No description provided for @pillReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pill Reminder'**
+  String get pillReminderTitle;
+
+  /// No description provided for @guardianViewReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardian view is read-only. You cannot add medications.'**
+  String get guardianViewReadOnly;
+
+  /// No description provided for @errorSavingPill.
+  ///
+  /// In en, this message translates to:
+  /// **'Error saving pill: {error}'**
+  String errorSavingPill(Object error);
+
+  /// No description provided for @errorPickingImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Error picking image: {error}'**
+  String errorPickingImage(Object error);
+
+  /// No description provided for @noMedicinesFoundInPrescription.
+  ///
+  /// In en, this message translates to:
+  /// **'No medicines found in the prescription'**
+  String get noMedicinesFoundInPrescription;
+
+  /// No description provided for @errorProcessingPrescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Error processing prescription: {error}'**
+  String errorProcessingPrescription(Object error);
+
+  /// No description provided for @scanPrescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Prescription'**
+  String get scanPrescription;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Photo'**
+  String get takePhoto;
+
+  /// No description provided for @chooseFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from Gallery'**
+  String get chooseFromGallery;
+
+  /// No description provided for @medicineAddedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Medicine added successfully!'**
+  String get medicineAddedSuccessfully;
+
+  /// No description provided for @pillDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Pill deleted'**
+  String get pillDeleted;
+
+  /// No description provided for @errorDeletingPill.
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting pill: {error}'**
+  String errorDeletingPill(Object error);
+
+  /// No description provided for @guardianViewReadOnlyMarkTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardian view is read-only. Cannot mark pills as taken.'**
+  String get guardianViewReadOnlyMarkTaken;
+
+  /// No description provided for @guardianViewReadOnlyEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardian view is read-only. Cannot edit medications.'**
+  String get guardianViewReadOnlyEdit;
+
+  /// No description provided for @errorUpdatingPill.
+  ///
+  /// In en, this message translates to:
+  /// **'Error updating pill: {error}'**
+  String errorUpdatingPill(Object error);
+
+  /// No description provided for @prescriptionResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Prescription Results'**
+  String get prescriptionResults;
+
+  /// No description provided for @foundMedicinesInPrescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {count} medications in your prescription. Tap on a medicine to add it to your calendar.'**
+  String foundMedicinesInPrescription(Object count);
+
+  /// No description provided for @confidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence: {confidence}%'**
+  String confidence(Object confidence);
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @invalidPillIdReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid pill ID returned from Firebase'**
+  String get invalidPillIdReturned;
+
+  /// No description provided for @calendarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get calendarTitle;
+
+  /// No description provided for @displayNameMedications.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s Medications'**
+  String displayNameMedications(Object name);
+
+  /// No description provided for @dontForgetScheduleTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t forget schedule for tomorrow'**
+  String get dontForgetScheduleTomorrow;
+
+  /// No description provided for @noRemindersForTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'No reminders for tomorrow'**
+  String get noRemindersForTomorrow;
+
+  /// No description provided for @selectDayToSeePills.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a day to see pills'**
+  String get selectDayToSeePills;
+
+  /// No description provided for @addPillsManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Pills Manually'**
+  String get addPillsManually;
+
+  /// No description provided for @pleaseWaitScanningPrescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait while we scan your prescription'**
+  String get pleaseWaitScanningPrescription;
+
+  /// No description provided for @noMedicationsForThisDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No medications for this day'**
+  String get noMedicationsForThisDay;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @editFromStartDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit from the start date ({date})'**
+  String editFromStartDate(Object date);
+
+  /// No description provided for @markedAsTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked as taken'**
+  String get markedAsTaken;
+
+  /// No description provided for @markAsTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as taken'**
+  String get markAsTaken;
+
+  /// No description provided for @errorUpdatingPillStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Error updating pill status'**
+  String get errorUpdatingPillStatus;
+
+  /// No description provided for @medicineTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Medicine Taken'**
+  String get medicineTaken;
+
+  /// No description provided for @pillMissedAlert.
+  ///
+  /// In en, this message translates to:
+  /// **'Pill Missed Alert'**
+  String get pillMissedAlert;
+
+  /// No description provided for @invalidGuardianId.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid guardian ID'**
+  String get invalidGuardianId;
+
+  /// No description provided for @editMedication.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Medication'**
+  String get editMedication;
+
+  /// No description provided for @addNewMedication.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Medication'**
+  String get addNewMedication;
+
+  /// No description provided for @medicationName.
+  ///
+  /// In en, this message translates to:
+  /// **'Medication Name'**
+  String get medicationName;
+
+  /// No description provided for @pleaseEnterMedicationName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter medication name'**
+  String get pleaseEnterMedicationName;
+
+  /// No description provided for @dosageExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Dosage (e.g., 500mg)'**
+  String get dosageExample;
+
+  /// No description provided for @pleaseEnterDosage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter dosage'**
+  String get pleaseEnterDosage;
+
+  /// No description provided for @timesPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Times per day'**
+  String get timesPerDay;
+
+  /// No description provided for @treatmentPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Treatment Period'**
+  String get treatmentPeriod;
+
+  /// No description provided for @days.
+  ///
+  /// In en, this message translates to:
+  /// **'day(s)'**
+  String get days;
+
+  /// No description provided for @notesOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes (optional)'**
+  String get notesOptional;
+
+  /// No description provided for @update.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get update;
+
+  /// No description provided for @addMedication.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Medication'**
+  String get addMedication;
 }
 
 class _AppLocalizationsDelegate

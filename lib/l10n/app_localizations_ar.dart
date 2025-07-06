@@ -165,7 +165,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get medicineName => 'اسم الدواء';
 
   @override
-  String get dosage => 'الجرعة';
+  String dosage(Object dosage) {
+    return 'الجرعة: $dosage';
+  }
 
   @override
   String get frequency => 'التكرار';
@@ -500,4 +502,171 @@ class AppLocalizationsAr extends AppLocalizations {
   String errorLoadingMedicineData(Object error) {
     return 'خطأ في تحميل بيانات الدواء: $error';
   }
+
+  @override
+  String get pillReminderTitle => 'تذكير بالدواء';
+
+  @override
+  String get guardianViewReadOnly =>
+      'عرض الوصي للقراءة فقط. لا يمكنك إضافة أدوية.';
+
+  @override
+  String errorSavingPill(Object error) {
+    return 'خطأ في حفظ الدواء: $error';
+  }
+
+  @override
+  String errorPickingImage(Object error) {
+    return 'خطأ في اختيار الصورة: $error';
+  }
+
+  @override
+  String get noMedicinesFoundInPrescription =>
+      'لم يتم العثور على أدوية في الوصفة الطبية';
+
+  @override
+  String errorProcessingPrescription(Object error) {
+    return 'خطأ في معالجة الوصفة الطبية: $error';
+  }
+
+  @override
+  String get scanPrescription => 'مسح الوصفة الطبية';
+
+  @override
+  String get takePhoto => 'التقاط صورة';
+
+  @override
+  String get chooseFromGallery => 'اختيار من المعرض';
+
+  @override
+  String get medicineAddedSuccessfully => 'تم إضافة الدواء بنجاح!';
+
+  @override
+  String get pillDeleted => 'تم حذف الدواء';
+
+  @override
+  String errorDeletingPill(Object error) {
+    return 'خطأ في حذف الدواء: $error';
+  }
+
+  @override
+  String get guardianViewReadOnlyMarkTaken =>
+      'عرض الوصي للقراءة فقط. لا يمكن تحديد الأدوية كمؤخذة.';
+
+  @override
+  String get guardianViewReadOnlyEdit =>
+      'عرض الوصي للقراءة فقط. لا يمكن تعديل الأدوية.';
+
+  @override
+  String errorUpdatingPill(Object error) {
+    return 'خطأ في تحديث الدواء: $error';
+  }
+
+  @override
+  String get prescriptionResults => 'نتائج الوصفة الطبية';
+
+  @override
+  String foundMedicinesInPrescription(Object count) {
+    return 'تم العثور على $count دواء في وصفتك الطبية. انقر على الدواء لإضافته إلى تقويمك.';
+  }
+
+  @override
+  String confidence(Object confidence) {
+    return 'الثقة: $confidence%';
+  }
+
+  @override
+  String get close => 'إغلاق';
+
+  @override
+  String get invalidPillIdReturned => 'معرف الدواء غير صحيح من Firebase';
+
+  @override
+  String get calendarTitle => 'التقويم';
+
+  @override
+  String displayNameMedications(Object name) {
+    return 'أدوية $name';
+  }
+
+  @override
+  String get dontForgetScheduleTomorrow => 'لا تنس الجدول الزمني للغد';
+
+  @override
+  String get noRemindersForTomorrow => 'لا توجد تذكيرات للغد';
+
+  @override
+  String get selectDayToSeePills => 'اختر يومًا لرؤية الأدوية';
+
+  @override
+  String get addPillsManually => 'إضافة الأدوية يدويًا';
+
+  @override
+  String get pleaseWaitScanningPrescription =>
+      'يرجى الانتظار بينما نمسح وصفتك الطبية';
+
+  @override
+  String get noMedicationsForThisDay => 'لا توجد أدوية لهذا اليوم';
+
+  @override
+  String get confirm => 'تأكيد';
+
+  @override
+  String editFromStartDate(Object date) {
+    return 'تعديل من تاريخ البدء ($date)';
+  }
+
+  @override
+  String get markedAsTaken => 'محدد كمؤخذ';
+
+  @override
+  String get markAsTaken => 'تحديد كمؤخذ';
+
+  @override
+  String get errorUpdatingPillStatus => 'خطأ في تحديث حالة الدواء';
+
+  @override
+  String get medicineTaken => 'تم تناول الدواء';
+
+  @override
+  String get pillMissedAlert => 'تنبيه الدواء المفقود';
+
+  @override
+  String get invalidGuardianId => 'معرف الوصي غير صحيح';
+
+  @override
+  String get editMedication => 'تعديل الدواء';
+
+  @override
+  String get addNewMedication => 'إضافة دواء جديد';
+
+  @override
+  String get medicationName => 'اسم الدواء';
+
+  @override
+  String get pleaseEnterMedicationName => 'يرجى إدخال اسم الدواء';
+
+  @override
+  String get dosageExample => 'الجرعة (مثل 500 ملغ)';
+
+  @override
+  String get pleaseEnterDosage => 'يرجى إدخال الجرعة';
+
+  @override
+  String get timesPerDay => 'المرات في اليوم';
+
+  @override
+  String get treatmentPeriod => 'فترة العلاج الإجمالية';
+
+  @override
+  String get days => 'يوم(أيام)';
+
+  @override
+  String get notesOptional => 'ملاحظات (اختياري)';
+
+  @override
+  String get update => 'تحديث';
+
+  @override
+  String get addMedication => 'إضافة دواء';
 }

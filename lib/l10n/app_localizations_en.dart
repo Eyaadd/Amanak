@@ -167,7 +167,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get medicineName => 'Medicine Name';
 
   @override
-  String get dosage => 'Dosage';
+  String dosage(Object dosage) {
+    return 'Dosage: $dosage';
+  }
 
   @override
   String get frequency => 'Frequency';
@@ -503,4 +505,172 @@ class AppLocalizationsEn extends AppLocalizations {
   String errorLoadingMedicineData(Object error) {
     return 'Error loading medicine data: $error';
   }
+
+  @override
+  String get pillReminderTitle => 'Pill Reminder';
+
+  @override
+  String get guardianViewReadOnly =>
+      'Guardian view is read-only. You cannot add medications.';
+
+  @override
+  String errorSavingPill(Object error) {
+    return 'Error saving pill: $error';
+  }
+
+  @override
+  String errorPickingImage(Object error) {
+    return 'Error picking image: $error';
+  }
+
+  @override
+  String get noMedicinesFoundInPrescription =>
+      'No medicines found in the prescription';
+
+  @override
+  String errorProcessingPrescription(Object error) {
+    return 'Error processing prescription: $error';
+  }
+
+  @override
+  String get scanPrescription => 'Scan Prescription';
+
+  @override
+  String get takePhoto => 'Take Photo';
+
+  @override
+  String get chooseFromGallery => 'Choose from Gallery';
+
+  @override
+  String get medicineAddedSuccessfully => 'Medicine added successfully!';
+
+  @override
+  String get pillDeleted => 'Pill deleted';
+
+  @override
+  String errorDeletingPill(Object error) {
+    return 'Error deleting pill: $error';
+  }
+
+  @override
+  String get guardianViewReadOnlyMarkTaken =>
+      'Guardian view is read-only. Cannot mark pills as taken.';
+
+  @override
+  String get guardianViewReadOnlyEdit =>
+      'Guardian view is read-only. Cannot edit medications.';
+
+  @override
+  String errorUpdatingPill(Object error) {
+    return 'Error updating pill: $error';
+  }
+
+  @override
+  String get prescriptionResults => 'Prescription Results';
+
+  @override
+  String foundMedicinesInPrescription(Object count) {
+    return 'Found $count medications in your prescription. Tap on a medicine to add it to your calendar.';
+  }
+
+  @override
+  String confidence(Object confidence) {
+    return 'Confidence: $confidence%';
+  }
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get invalidPillIdReturned => 'Invalid pill ID returned from Firebase';
+
+  @override
+  String get calendarTitle => 'Calendar';
+
+  @override
+  String displayNameMedications(Object name) {
+    return '$name\'s Medications';
+  }
+
+  @override
+  String get dontForgetScheduleTomorrow =>
+      'Don\'t forget schedule for tomorrow';
+
+  @override
+  String get noRemindersForTomorrow => 'No reminders for tomorrow';
+
+  @override
+  String get selectDayToSeePills => 'Select a day to see pills';
+
+  @override
+  String get addPillsManually => 'Add Pills Manually';
+
+  @override
+  String get pleaseWaitScanningPrescription =>
+      'Please wait while we scan your prescription';
+
+  @override
+  String get noMedicationsForThisDay => 'No medications for this day';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String editFromStartDate(Object date) {
+    return 'Edit from the start date ($date)';
+  }
+
+  @override
+  String get markedAsTaken => 'Marked as taken';
+
+  @override
+  String get markAsTaken => 'Mark as taken';
+
+  @override
+  String get errorUpdatingPillStatus => 'Error updating pill status';
+
+  @override
+  String get medicineTaken => 'Medicine Taken';
+
+  @override
+  String get pillMissedAlert => 'Pill Missed Alert';
+
+  @override
+  String get invalidGuardianId => 'Invalid guardian ID';
+
+  @override
+  String get editMedication => 'Edit Medication';
+
+  @override
+  String get addNewMedication => 'Add New Medication';
+
+  @override
+  String get medicationName => 'Medication Name';
+
+  @override
+  String get pleaseEnterMedicationName => 'Please enter medication name';
+
+  @override
+  String get dosageExample => 'Dosage (e.g., 500mg)';
+
+  @override
+  String get pleaseEnterDosage => 'Please enter dosage';
+
+  @override
+  String get timesPerDay => 'Times per day';
+
+  @override
+  String get treatmentPeriod => 'Total Treatment Period';
+
+  @override
+  String get days => 'day(s)';
+
+  @override
+  String get notesOptional => 'Notes (optional)';
+
+  @override
+  String get update => 'Update';
+
+  @override
+  String get addMedication => 'Add Medication';
 }
