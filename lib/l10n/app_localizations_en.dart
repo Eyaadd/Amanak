@@ -485,4 +485,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noHospitalsFound => 'No hospitals found nearby';
+
+  @override
+  String errorLoadingMedicineDetails(Object error) {
+    return 'Error loading medicine details: $error';
+  }
+
+  @override
+  String get invalidMedicineId => 'Invalid medicine ID';
+
+  @override
+  String errorSearchingMedicines(Object error) {
+    return 'Error searching medicines: $error';
+  }
+
+  @override
+  String errorLoadingMedicineData(Object error) {
+    return 'Error loading medicine data: $error';
+  }
 }

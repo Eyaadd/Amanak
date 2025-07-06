@@ -482,4 +482,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noHospitalsFound => 'لم يتم العثور على مستشفيات قريبة';
+
+  @override
+  String errorLoadingMedicineDetails(Object error) {
+    return 'خطأ في تحميل تفاصيل الدواء: $error';
+  }
+
+  @override
+  String get invalidMedicineId => 'معرف الدواء غير صحيح';
+
+  @override
+  String errorSearchingMedicines(Object error) {
+    return 'خطأ في البحث عن الأدوية: $error';
+  }
+
+  @override
+  String errorLoadingMedicineData(Object error) {
+    return 'خطأ في تحميل بيانات الدواء: $error';
+  }
 }

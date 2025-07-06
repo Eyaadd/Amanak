@@ -180,5 +180,11 @@
   "showAll": "عرض الكل",
   "searchHospitals": "ابحث عن المستشفيات...",
   "noHospitalsFound": "لم يتم العثور على مستشفيات قريبة",
-  "retry": "إعادة المحاولة"
+  "retry": "إعادة المحاولة",
+  
+  "@errors": {},
+  "errorLoadingMedicineDetails": "خطأ في تحميل تفاصيل الدواء: {error}",
+  "invalidMedicineId": "معرف الدواء غير صحيح",
+  "errorSearchingMedicines": "خطأ في البحث عن الأدوية: {error}",
+  "errorLoadingMedicineData": "خطأ في تحميل بيانات الدواء: {error}"
 } 

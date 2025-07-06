@@ -24,6 +24,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   }
 
   Future<void> _loadMedicineData() async {
+    final localizations = AppLocalizations.of(context)!;
     final dynamic args = ModalRoute.of(context)?.settings.arguments;
 
     if (args is String) {
@@ -44,12 +45,12 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading medicine details: $e')),
+          SnackBar(content: Text(localizations.errorLoadingMedicineDetails(e))),
         );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid medicine ID')),
+        SnackBar(content: Text(localizations.invalidMedicineId)),
       );
     }
   }
@@ -67,27 +68,43 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _medicine == null
-              ? Center(child: Text(localizations.medicineDetailNotFound, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)))
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildMedicineHeader(localizations),
-                      const Divider(height: 30, thickness: 1),
-                      _buildInfoSection(localizations.medicineDetailDescription, _medicine!.description),
-                      _buildListSection(localizations.medicineDetailSideEffects, _medicine!.sideEffects),
-                      _buildListSection(localizations.medicineDetailUses, _medicine!.uses),
-                      _buildListSection(localizations.medicineDetailContraindications, _medicine!.contraindications),
-                      _buildListSection(localizations.medicineDetailPrecautions, _medicine!.precautions),
-                      _buildListSection(localizations.medicineDetailInteractions, _medicine!.interactions),
-                      _buildInfoSection(localizations.medicineDetailDosage, _medicine!.dosage),
-                      _buildListSection(localizations.medicineDetailDosageForms, _medicine!.dosageForms),
-                      _buildInfoSection(localizations.medicineDetailStorage, _medicine!.storage),
-                      _buildListSection(localizations.medicineDetailUsageInstructions, _medicine!.usageInstructions),
-                    ],
-                  ),
-                ),
+          ? Center(
+          child: Text(localizations.medicineDetailNotFound,
+              style: const TextStyle(
+                  fontSize: 22, fontWeight: FontWeight.bold)))
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildMedicineHeader(localizations),
+            const Divider(height: 30, thickness: 1),
+            _buildInfoSection(localizations.medicineDetailDescription,
+                _medicine!.description, localizations),
+            _buildListSection(localizations.medicineDetailSideEffects,
+                _medicine!.sideEffects),
+            _buildListSection(
+                localizations.medicineDetailUses, _medicine!.uses),
+            _buildListSection(
+                localizations.medicineDetailContraindications,
+                _medicine!.contraindications),
+            _buildListSection(localizations.medicineDetailPrecautions,
+                _medicine!.precautions),
+            _buildListSection(
+                localizations.medicineDetailInteractions,
+                _medicine!.interactions),
+            _buildInfoSection(localizations.medicineDetailDosage,
+                _medicine!.dosage, localizations),
+            _buildListSection(localizations.medicineDetailDosageForms,
+                _medicine!.dosageForms),
+            _buildInfoSection(localizations.medicineDetailStorage,
+                _medicine!.storage, localizations),
+            _buildListSection(
+                localizations.medicineDetailUsageInstructions,
+                _medicine!.usageInstructions),
+          ],
+        ),
+      ),
     );
   }
 
@@ -147,14 +164,15 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     );
   }
 
-  Widget _buildInfoSection(String title, String content) {
+  Widget _buildInfoSection(
+      String title, String content, AppLocalizations localizations) {
     if (content.isEmpty) {
       return const SizedBox.shrink();
     }
 
     bool isArabic = _isArabicText(content);
     TextDirection textDirection =
-        isArabic ? TextDirection.rtl : TextDirection.ltr;
+    isArabic ? TextDirection.rtl : TextDirection.ltr;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -164,7 +182,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
           title,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
         ),
-        initiallyExpanded: title == 'Description',
+        initiallyExpanded: title == localizations.medicineDetailDescription,
         children: [
           Padding(
             padding: const EdgeInsets.all(20.0),
@@ -189,7 +207,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
 
     bool isArabic = items.isNotEmpty && _isArabicText(items.first);
     TextDirection textDirection =
-        isArabic ? TextDirection.rtl : TextDirection.ltr;
+    isArabic ? TextDirection.rtl : TextDirection.ltr;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -210,14 +228,14 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                     : CrossAxisAlignment.start,
                 children: items
                     .map((item) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Text(
-                            item,
-                            style: const TextStyle(fontSize: 20),
-                            textAlign:
-                                isArabic ? TextAlign.right : TextAlign.left,
-                          ),
-                        ))
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    item,
+                    style: const TextStyle(fontSize: 20),
+                    textAlign:
+                    isArabic ? TextAlign.right : TextAlign.left,
+                  ),
+                ))
                     .toList(),
               ),
             ),

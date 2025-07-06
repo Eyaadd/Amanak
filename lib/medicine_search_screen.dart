@@ -29,6 +29,7 @@ class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
   }
 
   Future<void> _initializeMedicinesService() async {
+    final localizations = AppLocalizations.of(context)!;
     setState(() {
       _isLoading = true;
     });
@@ -38,7 +39,7 @@ class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
     } catch (e) {
       print('Error initializing medicines service: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading medicine data: $e')),
+        SnackBar(content: Text(localizations.errorLoadingMedicineData(e))),
       );
     } finally {
       setState(() {
@@ -63,6 +64,7 @@ class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
   }
 
   Future<void> _performSearch(String query) async {
+    final localizations = AppLocalizations.of(context)!;
     if (query.trim().isEmpty) {
       setState(() {
         _searchResults = [];
@@ -88,7 +90,7 @@ class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error searching medicines: $e')),
+        SnackBar(content: Text(localizations.errorSearchingMedicines(e))),
       );
     }
   }
@@ -115,7 +117,7 @@ class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
               decoration: InputDecoration(
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                    color: Theme.of(context).primaryColor
+                      color: Theme.of(context).primaryColor
                   ),
                   borderRadius: BorderRadius.circular(30),
                 ),
@@ -153,22 +155,22 @@ class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _searchResults.isEmpty
-                    ? Center(
-                        child: Text(
-                          _searchController.text.isEmpty
-                              ? localizations.medicineSearchEmpty
-                              : localizations.medicineSearchNotFound,
-                          style: const TextStyle(fontSize: 22, color: Colors.grey, fontWeight: FontWeight.w600),
-                          textAlign: TextAlign.center,
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: _searchResults.length,
-                        itemBuilder: (context, index) {
-                          final result = _searchResults[index];
-                          return MedicineCard(result: result);
-                        },
-                      ),
+                ? Center(
+              child: Text(
+                _searchController.text.isEmpty
+                    ? localizations.medicineSearchEmpty
+                    : localizations.medicineSearchNotFound,
+                style: const TextStyle(fontSize: 22, color: Colors.grey, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
+              ),
+            )
+                : ListView.builder(
+              itemCount: _searchResults.length,
+              itemBuilder: (context, index) {
+                final result = _searchResults[index];
+                return MedicineCard(result: result);
+              },
+            ),
           ),
         ],
       ),
@@ -219,7 +221,7 @@ class MedicineCard extends StatelessWidget {
               if (result.description.isNotEmpty)
                 Directionality(
                   textDirection:
-                      result.isArabic ? TextDirection.rtl : TextDirection.ltr,
+                  result.isArabic ? TextDirection.rtl : TextDirection.ltr,
                   child: Text(
                     result.description,
                     style: TextStyle(
@@ -229,7 +231,7 @@ class MedicineCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     textAlign:
-                        result.isArabic ? TextAlign.right : TextAlign.left,
+                    result.isArabic ? TextAlign.right : TextAlign.left,
                   ),
                 ),
             ],

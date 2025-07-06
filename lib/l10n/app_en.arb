@@ -179,5 +179,11 @@
   "showAll": "Show All",
   "searchHospitals": "Search hospitals...",
   "noHospitalsFound": "No hospitals found nearby",
-  "retry": "Retry"
+  "retry": "Retry",
+  
+  "@errors": {},
+  "errorLoadingMedicineDetails": "Error loading medicine details: {error}",
+  "invalidMedicineId": "Invalid medicine ID",
+  "errorSearchingMedicines": "Error searching medicines: {error}",
+  "errorLoadingMedicineData": "Error loading medicine data: {error}"
 } 

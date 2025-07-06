@@ -1021,6 +1021,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No hospitals found nearby'**
   String get noHospitalsFound;
+
+  /// No description provided for @errorLoadingMedicineDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading medicine details: {error}'**
+  String errorLoadingMedicineDetails(Object error);
+
+  /// No description provided for @invalidMedicineId.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid medicine ID'**
+  String get invalidMedicineId;
+
+  /// No description provided for @errorSearchingMedicines.
+  ///
+  /// In en, this message translates to:
+  /// **'Error searching medicines: {error}'**
+  String errorSearchingMedicines(Object error);
+
+  /// No description provided for @errorLoadingMedicineData.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading medicine data: {error}'**
+  String errorLoadingMedicineData(Object error);
 }
 
 class _AppLocalizationsDelegate

@@ -1,5 +1,6 @@
 import 'package:amanak/medicine_search_screen.dart';
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
 class PillSearchField extends StatelessWidget {
   final TextEditingController controller;
@@ -13,6 +14,7 @@ class PillSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
@@ -29,7 +31,7 @@ class PillSearchField extends StatelessWidget {
           borderRadius: BorderRadius.circular(screenWidth * 0.06),
           borderSide: const BorderSide(color: Color(0xFFE8F3F1)),
         ),
-        hintText: "Search for medicines",
+        hintText: localizations.medicineSearchHint,
         hintStyle: Theme.of(context).textTheme.titleSmall!.copyWith(
               color: const Color(0xFFA1A8B0),
               fontSize: screenWidth * 0.032,
