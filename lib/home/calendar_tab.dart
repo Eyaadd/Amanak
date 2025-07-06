@@ -504,6 +504,15 @@ class _CalendarTabState extends State<CalendarTab> {
         .replaceAll('٩', '9')
         .replaceAll('٠', '0');
 
+    // Pattern for duration (اسبوعين، شهر، etc.)
+    if (dosage.contains('اسبوعين') || dosage.contains('لمدة اسبوعين')) {
+      durationInDays = 14;
+    } else if (dosage.contains('شهر') || dosage.contains('لمدة شهر')) {
+      durationInDays = 30;
+    } else if (dosage.contains('اسبوع') || dosage.contains('لمدة اسبوع')) {
+      durationInDays = 7;
+    }
+
     // Pattern for every X hours (كل X ساعات)
     RegExp everyXHoursPattern = RegExp(r'كل (\d+) ساعات');
     var match = everyXHoursPattern.firstMatch(dosage);
@@ -516,16 +525,15 @@ class _CalendarTabState extends State<CalendarTab> {
         final hour = (startHour + (i * hourlyInterval!)) % 24;
         specificTimes.add(TimeOfDay(hour: hour, minute: 0));
       }
-    }
-    // Pattern for X times per day (مرات يوميا)
-    else {
+    } else {
+      // Pattern for X times per day (مرات/مرتين يوميا)
       RegExp timesPerDayPattern = RegExp(r'(\d+)\s*مرات?\s*(يوميا|في\s*اليوم|يومياً)');
       match = timesPerDayPattern.firstMatch(dosage);
       if (match != null) {
         timesPerDay = int.parse(match.group(1)!);
-      }
-      // Pattern for once daily (مرة يوميا)
-      else if (dosage.contains('مرة يوميا') || dosage.contains('مره يوميا')) {
+      } else if (dosage.contains('مرتين') || dosage.contains('مرتان')) {
+        timesPerDay = 2;
+      } else if (dosage.contains('مرة يوميا') || dosage.contains('مره يوميا')) {
         timesPerDay = 1;
       }
     }
@@ -548,13 +556,6 @@ class _CalendarTabState extends State<CalendarTab> {
     RegExp daysPattern = RegExp(r'يوم (السبت|الأحد|الاثنين|الثلاثاء|الأربعاء|الخميس|الجمعة)');
     for (Match match in daysPattern.allMatches(dosage)) {
       daysOfWeek.add(match.group(1)!);
-    }
-
-    // Pattern for duration (اسبوعين، شهر، etc.)
-    if (dosage.contains('اسبوعين')) {
-      durationInDays = 14;
-    } else if (dosage.contains('شهر')) {
-      durationInDays = 30;
     }
 
     // Pattern for as needed (عند الحاجة، عند اللزوم)
@@ -2325,10 +2326,10 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                           }).toList(),
                           onChanged: (newValue) {
                             if (newValue != null) {
-                              setState(() {
+                            setState(() {
                                 _timesPerDay = newValue;
                                 _updateTimesForCount(_timesPerDay);
-                              });
+                            });
                             }
                           },
                           underline: Container(),
@@ -2446,10 +2447,10 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                           }).toList(),
                           onChanged: (newValue) {
                             if (newValue != null) {
-                              setState(() {
+                            setState(() {
                                 _treatmentPeriod = newValue;
                                 _duration = newValue;
-                              });
+                            });
                             }
                           },
                           underline: Container(),
