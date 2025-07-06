@@ -23,6 +23,23 @@ import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+// Helper class for parsed dosage information
+class DosageInfo {
+  final int timesPerDay;
+  final List<TimeOfDay> specificTimes;
+  final List<String> daysOfWeek;
+  final int durationInDays;
+  final String note;
+
+  DosageInfo({
+    this.timesPerDay = 1,
+    this.specificTimes = const [],
+    this.daysOfWeek = const [],
+    this.durationInDays = 7,
+    this.note = '',
+  });
+}
+
 class CalendarTab extends StatefulWidget {
   const CalendarTab({super.key});
 
@@ -359,7 +376,7 @@ class _CalendarTabState extends State<CalendarTab> {
 
     showDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (BuildContext dialogContext) => Dialog( // Store dialog context
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: ConstrainedBox(
           constraints: BoxConstraints(
@@ -389,9 +406,9 @@ class _CalendarTabState extends State<CalendarTab> {
                 Expanded(
                   child: SingleChildScrollView(
                     child: ListView.builder(
-                      itemCount: medicines.length,
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
+                      itemCount: medicines.length,
                       itemBuilder: (context, index) {
                         final medicine = medicines[index];
                         final medicineName = medicine['medicine'] as String;
@@ -430,12 +447,9 @@ class _CalendarTabState extends State<CalendarTab> {
                             trailing: Icon(Icons.add_circle,
                                 color: Color(0xFF015C92)),
                             onTap: () {
-                              // Close the dialog
-                              Navigator.pop(context);
-
                               // Show add pill form pre-filled with the medicine info
                               _showAddPillDialogWithOCRData(
-                                  medicineName, dosage);
+                                  medicineName, dosage, dialogContext);
                             },
                           ),
                         );
@@ -466,17 +480,124 @@ class _CalendarTabState extends State<CalendarTab> {
     );
   }
 
-  // Show add pill dialog pre-filled with OCR data
-  void _showAddPillDialogWithOCRData(String medicineName, String dosage) {
-    // Parse times per day from Arabic text
-    int timesPerDay = 1; // Default value
+  // Parse Arabic dosage text to extract timing information
+  DosageInfo _parseDosageText(String dosage) {
+    dosage = dosage.trim();
     
-    // Check for Arabic numbers followed by مرات في اليوم
-    RegExp arabicTimesPattern = RegExp(r'(\d+)\s*مرات?\s*في\s*اليوم');
-    var match = arabicTimesPattern.firstMatch(dosage);
+    // Default values
+    int timesPerDay = 1;
+    List<TimeOfDay> specificTimes = [];
+    List<String> daysOfWeek = [];
+    int durationInDays = 7;
+    String note = '';
+    int? hourlyInterval;
+
+    // Convert Arabic numerals to English
+    dosage = dosage.replaceAll('١', '1')
+        .replaceAll('٢', '2')
+        .replaceAll('٣', '3')
+        .replaceAll('٤', '4')
+        .replaceAll('٥', '5')
+        .replaceAll('٦', '6')
+        .replaceAll('٧', '7')
+        .replaceAll('٨', '8')
+        .replaceAll('٩', '9')
+        .replaceAll('٠', '0');
+
+    // Pattern for every X hours (كل X ساعات)
+    RegExp everyXHoursPattern = RegExp(r'كل (\d+) ساعات');
+    var match = everyXHoursPattern.firstMatch(dosage);
     if (match != null) {
-      timesPerDay = int.parse(match.group(1)!);
+      hourlyInterval = int.parse(match.group(1)!);
+      timesPerDay = (24 / hourlyInterval!).floor();
+      // Generate times based on hourly interval
+      final startHour = 8; // Start at 8 AM
+      for (int i = 0; i < timesPerDay; i++) {
+        final hour = (startHour + (i * hourlyInterval!)) % 24;
+        specificTimes.add(TimeOfDay(hour: hour, minute: 0));
+      }
     }
+    // Pattern for X times per day (مرات يوميا)
+    else {
+      RegExp timesPerDayPattern = RegExp(r'(\d+)\s*مرات?\s*(يوميا|في\s*اليوم|يومياً)');
+      match = timesPerDayPattern.firstMatch(dosage);
+      if (match != null) {
+        timesPerDay = int.parse(match.group(1)!);
+      }
+      // Pattern for once daily (مرة يوميا)
+      else if (dosage.contains('مرة يوميا') || dosage.contains('مره يوميا')) {
+        timesPerDay = 1;
+      }
+    }
+
+    // Pattern for specific times (بعد الفطار، بعد العشاء، etc.)
+    if (dosage.contains('بعد الفطار')) {
+      specificTimes.add(TimeOfDay(hour: 9, minute: 0));
+      note += 'بعد الفطار ';
+    }
+    if (dosage.contains('بعد الغداء')) {
+      specificTimes.add(TimeOfDay(hour: 15, minute: 0));
+      note += 'بعد الغداء ';
+    }
+    if (dosage.contains('بعد العشاء')) {
+      specificTimes.add(TimeOfDay(hour: 21, minute: 0));
+      note += 'بعد العشاء ';
+    }
+
+    // Pattern for specific days (يوم السبت، الاثنين، etc.)
+    RegExp daysPattern = RegExp(r'يوم (السبت|الأحد|الاثنين|الثلاثاء|الأربعاء|الخميس|الجمعة)');
+    for (Match match in daysPattern.allMatches(dosage)) {
+      daysOfWeek.add(match.group(1)!);
+    }
+
+    // Pattern for duration (اسبوعين، شهر، etc.)
+    if (dosage.contains('اسبوعين')) {
+      durationInDays = 14;
+    } else if (dosage.contains('شهر')) {
+      durationInDays = 30;
+    }
+
+    // Pattern for as needed (عند الحاجة، عند اللزوم)
+    if (dosage.contains('عند الحاجة') || dosage.contains('عند اللزوم')) {
+      note = 'عند الحاجة';
+      timesPerDay = 1;
+    }
+
+    return DosageInfo(
+      timesPerDay: timesPerDay,
+      specificTimes: specificTimes.isEmpty && hourlyInterval == null 
+          ? _generateDefaultTimes(timesPerDay) 
+          : specificTimes,
+      daysOfWeek: daysOfWeek,
+      durationInDays: durationInDays,
+      note: note.trim(),
+    );
+  }
+
+  // Helper method to generate evenly distributed times
+  List<TimeOfDay> _generateDefaultTimes(int count) {
+    List<TimeOfDay> times = [];
+    if (count == 1) {
+      times.add(TimeOfDay(hour: 8, minute: 0));
+    } else {
+      // Distribute times between 8 AM and 8 PM
+      final startHour = 8;
+      final endHour = 20;
+      final interval = (endHour - startHour) / (count - 1);
+      
+      for (int i = 0; i < count; i++) {
+        final hour = (startHour + (i * interval)).floor();
+        final minute = ((startHour + (i * interval) - hour) * 60).round();
+        times.add(TimeOfDay(hour: hour, minute: minute));
+      }
+    }
+    return times;
+  }
+
+  // Show add pill dialog pre-filled with OCR data
+  void _showAddPillDialogWithOCRData(String medicineName, String dosage, BuildContext ocrDialogContext) {
+    // Parse the dosage information
+    final dosageInfo = _parseDosageText(dosage);
 
     showDialog(
       context: context,
@@ -490,7 +611,14 @@ class _CalendarTabState extends State<CalendarTab> {
           child: ModernAddPillForm(
             initialMedicineName: medicineName,
             initialDosage: dosage,
-            initialTimesPerDay: timesPerDay, // Pass the parsed times per day
+            initialTimesPerDay: dosageInfo.timesPerDay,
+            initialDuration: dosageInfo.durationInDays,
+            initialTimes: dosageInfo.specificTimes.isEmpty 
+                ? null 
+                : dosageInfo.specificTimes,
+            initialNote: dosageInfo.note.isNotEmpty 
+                ? dosageInfo.note 
+                : null,
             onSubmit: (pillModel) async {
               try {
                 // Add to Firebase
@@ -531,6 +659,7 @@ class _CalendarTabState extends State<CalendarTab> {
                   }
                 });
 
+                // Close only the add pill dialog, not the OCR results dialog
                 Navigator.of(context).pop();
 
                 // Show success message
@@ -1952,6 +2081,9 @@ class ModernAddPillForm extends StatefulWidget {
   final String? initialMedicineName;
   final String? initialDosage;
   final int initialTimesPerDay;
+  final int initialDuration;
+  final List<TimeOfDay>? initialTimes;
+  final String? initialNote;
 
   const ModernAddPillForm({
     Key? key,
@@ -1960,6 +2092,9 @@ class ModernAddPillForm extends StatefulWidget {
     this.initialMedicineName,
     this.initialDosage,
     this.initialTimesPerDay = 1,
+    this.initialDuration = 7,
+    this.initialTimes,
+    this.initialNote,
   }) : super(key: key);
 
   @override
@@ -1990,21 +2125,48 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
     _dosageController = TextEditingController(
       text: widget.initialDosage ?? existingPill?.dosage ?? '',
     );
-    _noteController = TextEditingController(text: existingPill?.note ?? '');
-    _timesPerDay = widget.initialTimesPerDay;
-    _duration = existingPill?.duration ?? 7;
-    _treatmentPeriod =
-        existingPill?.duration ?? 7; // Initialize with duration if existing
+    _noteController = TextEditingController(
+      text: widget.initialNote ?? existingPill?.note ?? '',
+    );
+    
+    // Initialize times per day from OCR data or existing pill
+    // Ensure times per day is within valid range
+    _timesPerDay = (existingPill?.timesPerDay ?? widget.initialTimesPerDay).clamp(1, 6);
+    _duration = existingPill?.duration ?? widget.initialDuration;
+    _treatmentPeriod = existingPill?.duration ?? widget.initialDuration;
     _selectedDate = existingPill?.dateTime ?? DateTime.now();
 
-    // Initialize times - use existing pill times or default times
+    // Initialize times based on times per day
     if (existingPill != null && existingPill.times.isNotEmpty) {
       _selectedTimes = List.from(existingPill.times);
+    } else if (widget.initialTimes != null && widget.initialTimes!.isNotEmpty) {
+      _selectedTimes = List.from(widget.initialTimes!);
     } else {
-      _selectedTimes = [TimeOfDay(hour: 8, minute: 0)];
+      // Create evenly distributed times throughout the day based on times per day
+      _selectedTimes = _generateDefaultTimes(_timesPerDay);
     }
 
     _allowSnooze = existingPill?.allowSnooze ?? true;
+  }
+
+  // Helper method to generate evenly distributed times
+  List<TimeOfDay> _generateDefaultTimes(int count) {
+    List<TimeOfDay> times = [];
+    if (count == 1) {
+      times.add(TimeOfDay(hour: 8, minute: 0));
+    } else {
+      // Distribute times between 8 AM and 8 PM
+      final startHour = 8;
+      final endHour = 20;
+      final interval = (endHour - startHour) / (count - 1);
+      
+      for (int i = 0; i < count; i++) {
+        final hour = (startHour + (i * interval)).floor();
+        final minute = ((startHour + (i * interval) - hour) * 60).round();
+        times.add(TimeOfDay(hour: hour, minute: minute));
+      }
+    }
+    return times;
   }
 
   @override
@@ -2150,7 +2312,9 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                         SizedBox(width: 3.w),
                         DropdownButton<int>(
                           value: _timesPerDay,
-                          items: [1, 2, 3, 4, 5].map((int value) {
+                          isDense: true,
+                          isExpanded: false,
+                          items: [1, 2, 3, 4, 5, 6].map((int value) {
                             return DropdownMenuItem<int>(
                               value: value,
                               child: Text(
@@ -2160,14 +2324,15 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                             );
                           }).toList(),
                           onChanged: (newValue) {
-                            setState(() {
-                              _timesPerDay = newValue!;
-                              _updateTimesForCount(_timesPerDay);
-                            });
+                            if (newValue != null) {
+                              setState(() {
+                                _timesPerDay = newValue;
+                                _updateTimesForCount(_timesPerDay);
+                              });
+                            }
                           },
                           underline: Container(),
-                          icon:
-                              Icon(Icons.arrow_drop_down, color: primaryColor),
+                          icon: Icon(Icons.arrow_drop_down, color: primaryColor),
                         ),
                       ],
                     ),
@@ -2267,6 +2432,8 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                         SizedBox(width: 3.w),
                         DropdownButton<int>(
                           value: _treatmentPeriod,
+                          isDense: true,
+                          isExpanded: false,
                           items: [1, 3, 5, 7, 14, 21, 28, 30, 60, 90]
                               .map((int value) {
                             return DropdownMenuItem<int>(
@@ -2278,15 +2445,15 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                             );
                           }).toList(),
                           onChanged: (newValue) {
-                            setState(() {
-                              _treatmentPeriod = newValue!;
-                              _duration =
-                                  newValue; // Set duration to match treatment period
-                            });
+                            if (newValue != null) {
+                              setState(() {
+                                _treatmentPeriod = newValue;
+                                _duration = newValue;
+                              });
+                            }
                           },
                           underline: Container(),
-                          icon:
-                              Icon(Icons.arrow_drop_down, color: primaryColor),
+                          icon: Icon(Icons.arrow_drop_down, color: primaryColor),
                         ),
                       ],
                     ),
