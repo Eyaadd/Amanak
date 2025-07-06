@@ -998,6 +998,36 @@ abstract class AppLocalizations {
   /// **'Tracking'**
   String get trackingSharedUser;
 
+  /// No description provided for @youGuardian.
+  ///
+  /// In en, this message translates to:
+  /// **'You (Guardian)'**
+  String get youGuardian;
+
+  /// No description provided for @showBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Both'**
+  String get showBoth;
+
+  /// No description provided for @directions.
+  ///
+  /// In en, this message translates to:
+  /// **'Directions'**
+  String get directions;
+
+  /// No description provided for @waitingForLocationUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for location updates...'**
+  String get waitingForLocationUpdates;
+
+  /// No description provided for @loadingMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading Map...'**
+  String get loadingMap;
+
   /// No description provided for @nearestHospitalsTitle.
   ///
   /// In en, this message translates to:

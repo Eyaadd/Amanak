@@ -173,6 +173,11 @@
   "liveTrackingTitle": "Live Tracking",
   "yourLocation": "Your Location",
   "trackingSharedUser": "Tracking",
+  "youGuardian": "You (Guardian)",
+  "showBoth": "Show Both",
+  "directions": "Directions",
+  "waitingForLocationUpdates": "Waiting for location updates...",
+  "loadingMap": "Loading Map...",
   
   "@nearestHospitals": {},
   "nearestHospitalsTitle": "Nearest Hospitals",

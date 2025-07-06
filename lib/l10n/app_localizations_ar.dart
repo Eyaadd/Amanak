@@ -474,6 +474,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trackingSharedUser => 'تتبع';
 
   @override
+  String get youGuardian => 'أنت (الوصي)';
+
+  @override
+  String get showBoth => 'عرض كلاهما';
+
+  @override
+  String get directions => 'الاتجاهات';
+
+  @override
+  String get waitingForLocationUpdates => 'في انتظار تحديثات الموقع...';
+
+  @override
+  String get loadingMap => 'جاري تحميل الخريطة...';
+
+  @override
   String get nearestHospitalsTitle => 'أقرب المستشفيات';
 
   @override

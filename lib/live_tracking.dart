@@ -43,9 +43,14 @@ class _LiveTrackingState extends State<LiveTracking> {
   double? sharedUserLng;
   bool _locationPermissionGranted = false;
 
+  // Custom marker icons
+  BitmapDescriptor? _currentUserIcon;
+  BitmapDescriptor? _sharedUserIcon;
+
   @override
   void initState() {
     super.initState();
+    _createCustomMarkers();
     _initializeTracking();
   }
 
@@ -54,6 +59,14 @@ class _LiveTrackingState extends State<LiveTracking> {
     _locationSubscription?.cancel();
     _positionStreamSubscription?.cancel();
     super.dispose();
+  }
+
+  Future<void> _createCustomMarkers() async {
+    // Create custom marker icons with different colors and labels
+    _currentUserIcon =
+        BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
+    _sharedUserIcon =
+        BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
   }
 
   Future<bool> _handleLocationPermission() async {
@@ -672,11 +685,12 @@ class _LiveTrackingState extends State<LiveTracking> {
                                 _currentPosition!.longitude,
                               ),
                               markerId: const MarkerId('current_location'),
-                              icon: BitmapDescriptor.defaultMarkerWithHue(
-                                BitmapDescriptor.hueMagenta,
-                              ),
+                              icon: _currentUserIcon ??
+                                  BitmapDescriptor.defaultMarkerWithHue(
+                                      BitmapDescriptor.hueGreen),
                               infoWindow: InfoWindow(
-                                title: 'Your Location',
+                                title:
+                                    '📍 ${AppLocalizations.of(context)!.youGuardian}',
                                 snippet: currentLocationName,
                               ),
                               onTap: () => _navigateToUserLocation(),
@@ -685,12 +699,13 @@ class _LiveTrackingState extends State<LiveTracking> {
                             Marker(
                               position: LatLng(sharedUserLat!, sharedUserLng!),
                               markerId: const MarkerId('shared_user'),
-                              icon: BitmapDescriptor.defaultMarkerWithHue(
-                                BitmapDescriptor.hueBlue,
-                              ),
+                              icon: _sharedUserIcon ??
+                                  BitmapDescriptor.defaultMarkerWithHue(
+                                      BitmapDescriptor.hueRed),
                               infoWindow: InfoWindow(
-                                title: sharedUserName ?? '',
-                                snippet: '',
+                                title:
+                                    '👤 ${sharedUserName ?? AppLocalizations.of(context)!.user}',
+                                snippet: sharedLocationName,
                               ),
                               onTap: () => _navigateToSharedUserLocation(),
                             ),
@@ -710,6 +725,63 @@ class _LiveTrackingState extends State<LiveTracking> {
                         },
                       )
                     : loadingContainer(),
+                // Map Legend
+                if (hasCurrentLocation && hasSharedLocation)
+                  Positioned(
+                    top: 16,
+                    left: 16,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.location_on,
+                                color: Colors.green,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                AppLocalizations.of(context)!.youGuardian,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.location_on,
+                                color: Colors.red,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                sharedUserName ??
+                                    AppLocalizations.of(context)!.user,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                 // Zoom and refresh controls
                 Positioned(
                   right: 16,
@@ -783,80 +855,80 @@ class _LiveTrackingState extends State<LiveTracking> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               if (hasCurrentLocation) ...[
-                                Text(
-                                  AppLocalizations.of(context)!.yourLocation,
-                                  style: TextStyle(
-                                    color: primaryBlue,
-                                    fontSize:
-                                        MediaQuery.of(context).size.width *
-                                            0.04,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
                                 Row(
                                   children: [
                                     Icon(
                                       Icons.location_on,
-                                      color: primaryBlue,
+                                      color: Colors.green,
                                       size: MediaQuery.of(context).size.width *
                                           0.04,
                                     ),
                                     const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        currentLocationName,
-                                        style: TextStyle(
-                                          color: Colors.black87,
-                                          fontSize: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.03,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                    Text(
+                                      '📍 ${AppLocalizations.of(context)!.youGuardian}',
+                                      style: TextStyle(
+                                        color: Colors.green,
+                                        fontSize:
+                                            MediaQuery.of(context).size.width *
+                                                0.04,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ],
+                                ),
+                                const SizedBox(height: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 28),
+                                  child: Text(
+                                    currentLocationName,
+                                    style: TextStyle(
+                                      color: Colors.black87,
+                                      fontSize:
+                                          MediaQuery.of(context).size.width *
+                                              0.03,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                               if (hasSharedLocation) ...[
                                 const SizedBox(height: 12),
-                                Text(
-                                  '${AppLocalizations.of(context)!.trackingSharedUser}: ${sharedUserEmail ?? ""}',
-                                  style: TextStyle(
-                                    color: primaryBlue,
-                                    fontSize:
-                                        MediaQuery.of(context).size.width *
-                                            0.04,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
                                 Row(
                                   children: [
                                     Icon(
                                       Icons.location_on,
-                                      color: primaryBlue,
+                                      color: Colors.red,
                                       size: MediaQuery.of(context).size.width *
                                           0.04,
                                     ),
                                     const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        sharedLocationName,
-                                        style: TextStyle(
-                                          color: Colors.black87,
-                                          fontSize: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.03,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                    Text(
+                                      '👤 ${sharedUserName ?? AppLocalizations.of(context)!.user}',
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontSize:
+                                            MediaQuery.of(context).size.width *
+                                                0.04,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ],
+                                ),
+                                const SizedBox(height: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 28),
+                                  child: Text(
+                                    sharedLocationName,
+                                    style: TextStyle(
+                                      color: Colors.black87,
+                                      fontSize:
+                                          MediaQuery.of(context).size.width *
+                                              0.03,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                               const SizedBox(height: 16),
@@ -875,7 +947,7 @@ class _LiveTrackingState extends State<LiveTracking> {
                                                 0.05,
                                       ),
                                       label: Text(
-                                        'Show Both',
+                                        AppLocalizations.of(context)!.showBoth,
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: MediaQuery.of(context)
@@ -915,7 +987,8 @@ class _LiveTrackingState extends State<LiveTracking> {
                                                 0.05,
                                       ),
                                       label: Text(
-                                        'Directions',
+                                        AppLocalizations.of(context)!
+                                            .directions,
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: MediaQuery.of(context)
@@ -947,10 +1020,11 @@ class _LiveTrackingState extends State<LiveTracking> {
                               ),
                             ],
                           )
-                        : const Center(
+                        : Center(
                             child: Text(
-                              'Waiting for location updates...',
-                              style: TextStyle(
+                              AppLocalizations.of(context)!
+                                  .waitingForLocationUpdates,
+                              style: const TextStyle(
                                 color: Colors.black54,
                                 fontSize: 16,
                               ),
@@ -973,8 +1047,8 @@ class _LiveTrackingState extends State<LiveTracking> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              "Loading Map...",
+            Text(
+              AppLocalizations.of(context)!.loadingMap,
               style: TextStyle(
                 color: primaryBlue,
                 fontSize: 18,

@@ -477,6 +477,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackingSharedUser => 'Tracking';
 
   @override
+  String get youGuardian => 'You (Guardian)';
+
+  @override
+  String get showBoth => 'Show Both';
+
+  @override
+  String get directions => 'Directions';
+
+  @override
+  String get waitingForLocationUpdates => 'Waiting for location updates...';
+
+  @override
+  String get loadingMap => 'Loading Map...';
+
+  @override
   String get nearestHospitalsTitle => 'Nearest Hospitals';
 
   @override
