@@ -34,22 +34,35 @@ class _ChatBotState extends State<ChatBot> {
 
   void _listen() async {
     if (!_isListening) {
-      bool available = await _speech.initialize();
-      if (available) {
-        setState(() => _isListening = true);
-        // Use app's current language for speech recognition
-        String localeId = Localizations.localeOf(context).languageCode == 'ar'
-            ? 'ar_EG' // Arabic (Egypt)
-            : 'en_US'; // English (US)
-        _speech.listen(
-          localeId: localeId,
-          onResult: (val) {
-            setState(() {
-              _controller.text = val.recognizedWords;
-              _lastWords = val.recognizedWords;
-            });
-          },
-        );
+      try {
+        bool available = await _speech.initialize();
+        print('Speech recognition available: $available');
+
+        if (available) {
+          setState(() => _isListening = true);
+          // Use app's current language for speech recognition
+          String localeId = Localizations.localeOf(context).languageCode == 'ar'
+              ? 'ar_EG' // Arabic (Egypt)
+              : 'en_US'; // English (US)
+
+          print('Using locale: $localeId');
+
+          _speech.listen(
+            localeId: localeId,
+            onResult: (val) {
+              print('Speech result: ${val.recognizedWords}');
+              setState(() {
+                _controller.text = val.recognizedWords;
+                _lastWords = val.recognizedWords;
+              });
+            },
+          );
+        } else {
+          print('Speech recognition not available');
+        }
+      } catch (e) {
+        print('Error initializing speech recognition: $e');
+        setState(() => _isListening = false);
       }
     } else {
       setState(() => _isListening = false);
@@ -237,13 +250,10 @@ class _ChatBotState extends State<ChatBot> {
                         : Theme.of(context).primaryColor,
                     shape: BoxShape.circle,
                   ),
-                  child: InkWell(
-                    child: IconButton(
-                      icon: Icon(_isListening ? Icons.mic : Icons.mic_none,
-                          size: baseFontSize * 1.2, color: Colors.white),
-                      onPressed: _listen,
-                    ),
-                    onTap: _listen,
+                  child: IconButton(
+                    icon: Icon(_isListening ? Icons.mic : Icons.mic_none,
+                        size: baseFontSize * 1.2, color: Colors.white),
+                    onPressed: _listen,
                   ),
                 ),
               ],

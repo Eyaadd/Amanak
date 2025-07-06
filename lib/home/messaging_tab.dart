@@ -94,7 +94,7 @@ class _MessagingTabState extends State<MessagingTab>
 
     // Check for arguments passed via navigation
     final args =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (args != null) {
       _notificationChatId = args['chatId'];
       _notificationSenderId = args['senderId'];
@@ -143,7 +143,7 @@ class _MessagingTabState extends State<MessagingTab>
       if (_notificationSenderName == null && _guardianEmail != null) {
         // Get guardian's name and ID
         final guardianData =
-            await FirebaseManager.getUserByEmail(_guardianEmail!);
+        await FirebaseManager.getUserByEmail(_guardianEmail!);
 
         if (guardianData != null) {
           setState(() {
@@ -242,7 +242,7 @@ class _MessagingTabState extends State<MessagingTab>
         if (messageText.isNotEmpty &&
             _encryptionService.isLikelyEncrypted(messageText)) {
           decryptedText =
-              await _encryptionService.decryptMessage(messageText, chatId);
+          await _encryptionService.decryptMessage(messageText, chatId);
         }
 
         // Try to send notification with FCM service first
@@ -312,7 +312,7 @@ class _MessagingTabState extends State<MessagingTab>
 
       // Encrypt the message before sending
       final encryptedText =
-          await _encryptionService.encryptMessage(messageText, chatId);
+      await _encryptionService.encryptMessage(messageText, chatId);
 
       await _firestore
           .collection('chats')
@@ -352,8 +352,21 @@ class _MessagingTabState extends State<MessagingTab>
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            // Set active status to false before navigating
+            setState(() {
+              _isActive = false;
+            });
+
+            // Navigate back to home tab
+            final provider = Provider.of<MyProvider>(context, listen: false);
+            provider.selectedIndexHome = 0; // Set to home tab (index 0)
+          },
+        ),
         title: Text(_chatPartnerName ?? localizations.messages,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
         backgroundColor: theme.primaryColor,
         foregroundColor: Colors.white,
         elevation: 2,
@@ -375,35 +388,35 @@ class _MessagingTabState extends State<MessagingTab>
               child: _messagesStream == null
                   ? Center(child: Text(localizations.loading))
                   : StreamBuilder<QuerySnapshot>(
-                      stream: _messagesStream,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasError) {
-                          return Center(child: Text(localizations.error));
-                        }
-                        if (snapshot.connectionState ==
+                stream: _messagesStream,
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(child: Text(localizations.error));
+                  }
+                  if (snapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  final messages = snapshot.data?.docs ?? [];
+
+                  return FutureBuilder<List<ChatMessage>>(
+                      future: _processMessages(messages),
+                      builder: (context, messagesSnapshot) {
+                        if (messagesSnapshot.connectionState ==
                             ConnectionState.waiting) {
-                          return Center(child: CircularProgressIndicator());
+                          return Center(
+                              child: CircularProgressIndicator());
                         }
-                        final messages = snapshot.data?.docs ?? [];
 
-                        return FutureBuilder<List<ChatMessage>>(
-                            future: _processMessages(messages),
-                            builder: (context, messagesSnapshot) {
-                              if (messagesSnapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return Center(
-                                    child: CircularProgressIndicator());
-                              }
+                        final chatMessages = messagesSnapshot.data ?? [];
 
-                              final chatMessages = messagesSnapshot.data ?? [];
-
-                              // Sort messages by time
-                              chatMessages
-                                  .sort((a, b) => a.time.compareTo(b.time));
-                              return _buildSimpleMessageList(chatMessages);
-                            });
-                      },
-                    ),
+                        // Sort messages by time
+                        chatMessages
+                            .sort((a, b) => a.time.compareTo(b.time));
+                        return _buildSimpleMessageList(chatMessages);
+                      });
+                },
+              ),
             ),
             _buildSimpleMessageInput(),
           ],
@@ -429,7 +442,7 @@ class _MessagingTabState extends State<MessagingTab>
 
       // Decrypt the message
       final decryptedText =
-          await _encryptionService.decryptMessage(encryptedText, chatId);
+      await _encryptionService.decryptMessage(encryptedText, chatId);
 
       result.add(ChatMessage(
         text: decryptedText,
@@ -473,7 +486,7 @@ class _MessagingTabState extends State<MessagingTab>
       margin: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
       child: Row(
         mainAxisAlignment:
-            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
@@ -539,7 +552,7 @@ class _MessagingTabState extends State<MessagingTab>
         .join()
         .toUpperCase();
     final color =
-        Colors.primaries[(name.hashCode.abs()) % Colors.primaries.length];
+    Colors.primaries[(name.hashCode.abs()) % Colors.primaries.length];
     return CircleAvatar(
       radius: 16,
       backgroundColor: color.withOpacity(0.8),
@@ -580,7 +593,7 @@ class _MessagingTabState extends State<MessagingTab>
                   hintText: localizations.askQuestion,
                   border: InputBorder.none,
                   contentPadding:
-                      EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 ),
                 maxLines: null,
                 style: TextStyle(fontSize: 15),
@@ -667,7 +680,7 @@ class _MessagingTabState extends State<MessagingTab>
     try {
       final chatId = _getChatId();
       final decryptedText =
-          await _encryptionService.decryptMessage(encryptedText, chatId);
+      await _encryptionService.decryptMessage(encryptedText, chatId);
 
       // Cache the decrypted message
       _decryptedMessages[messageId] = decryptedText;
