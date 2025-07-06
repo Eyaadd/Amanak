@@ -100,12 +100,12 @@ class _CalendarTabState extends State<CalendarTab> {
       _currentUserRole = pillProvider.currentUserRole;
       _displayUserId = pillProvider.displayUserId;
 
-      // Group pills by date and mark all days in duration
-      final Map<DateTime, List<PillModel>> groupedPills = {};
-      for (var pill in pillsList) {
-        // Add pill to its start date
-        final startDate = DateTime(
-            pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
+        // Group pills by date and mark all days in duration
+        final Map<DateTime, List<PillModel>> groupedPills = {};
+        for (var pill in pillsList) {
+          // Add pill to its start date
+          final startDate = DateTime(
+              pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
 
         // For each time in the pill, create a separate entry
         for (int i = 0; i < pill.times.length; i++) {
@@ -153,16 +153,16 @@ class _CalendarTabState extends State<CalendarTab> {
         });
       });
 
-      setState(() {
-        _pills = groupedPills;
-        _isLoading = false;
-      });
+        setState(() {
+          _pills = groupedPills;
+          _isLoading = false;
+        });
     } catch (e) {
       print('Error updating pills from provider: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
+        setState(() {
+          _isLoading = false;
+        });
+      }
   }
 
   // Helper method to get the time key for a specific pill dose
@@ -236,7 +236,7 @@ class _CalendarTabState extends State<CalendarTab> {
                 _updatePillsFromProvider();
 
                 Navigator.of(context).pop();
-              } catch (e) {
+    } catch (e) {
                 print('Error saving pill: $e');
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Error saving pill: $e')),
@@ -265,7 +265,7 @@ class _CalendarTabState extends State<CalendarTab> {
 
       if (pickedFile != null) {
         // Show loading indicator
-        setState(() {
+      setState(() {
           _isProcessingImage = true;
         });
 
@@ -390,6 +390,8 @@ class _CalendarTabState extends State<CalendarTab> {
                   child: SingleChildScrollView(
                     child: ListView.builder(
                       itemCount: medicines.length,
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
                       itemBuilder: (context, index) {
                         final medicine = medicines[index];
                         final medicineName = medicine['medicine'] as String;
@@ -466,6 +468,16 @@ class _CalendarTabState extends State<CalendarTab> {
 
   // Show add pill dialog pre-filled with OCR data
   void _showAddPillDialogWithOCRData(String medicineName, String dosage) {
+    // Parse times per day from Arabic text
+    int timesPerDay = 1; // Default value
+    
+    // Check for Arabic numbers followed by مرات في اليوم
+    RegExp arabicTimesPattern = RegExp(r'(\d+)\s*مرات?\s*في\s*اليوم');
+    var match = arabicTimesPattern.firstMatch(dosage);
+    if (match != null) {
+      timesPerDay = int.parse(match.group(1)!);
+    }
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -478,6 +490,7 @@ class _CalendarTabState extends State<CalendarTab> {
           child: ModernAddPillForm(
             initialMedicineName: medicineName,
             initialDosage: dosage,
+            initialTimesPerDay: timesPerDay, // Pass the parsed times per day
             onSubmit: (pillModel) async {
               try {
                 // Add to Firebase
@@ -565,17 +578,17 @@ class _CalendarTabState extends State<CalendarTab> {
       body: Stack(
         children: [
           _isLoading
-              ? Center(
-                  child: CircularProgressIndicator(
-                  color: Theme.of(context).primaryColor,
-                ))
+          ? Center(
+              child: CircularProgressIndicator(
+              color: Theme.of(context).primaryColor,
+            ))
               : SafeArea(
                   child: SingleChildScrollView(
                     child: Padding(
                       padding: EdgeInsets.all(5.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                           // Calendar Card - Modern design
                           Container(
                             margin: EdgeInsets.symmetric(vertical: 3.w),
@@ -597,11 +610,11 @@ class _CalendarTabState extends State<CalendarTab> {
                                   spreadRadius: 0,
                                 ),
                               ],
-                            ),
-                            child: Padding(
+                      ),
+                      child: Padding(
                               padding: EdgeInsets.all(4.w),
-                              child: Column(
-                                children: [
+                        child: Column(
+                          children: [
                                   // Calendar Header
                                   Container(
                                     padding: EdgeInsets.symmetric(
@@ -614,14 +627,14 @@ class _CalendarTabState extends State<CalendarTab> {
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
+                              children: [
+                                Text(
                                           DateFormat('MMMM yyyy')
                                               .format(_focusedDay),
-                                          style: TextStyle(
+                                  style: TextStyle(
                                             fontSize: 18.sp,
                                             fontWeight: FontWeight.w700,
-                                            color: Color(0xFF015C92),
+                                    color: Color(0xFF015C92),
                                             letterSpacing: 0.3,
                                           ),
                                         ),
@@ -640,86 +653,86 @@ class _CalendarTabState extends State<CalendarTab> {
                                             ],
                                           ),
                                           child: Row(
-                                            children: [
-                                              IconButton(
-                                                icon: Icon(Icons.chevron_left,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(Icons.chevron_left,
                                                     color: Color(0xFF015C92),
                                                     size: 7.w),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    _focusedDay = DateTime(
-                                                        _focusedDay.year,
-                                                        _focusedDay.month - 1);
-                                                  });
-                                                },
-                                              ),
-                                              IconButton(
-                                                icon: Icon(Icons.chevron_right,
-                                                    color: Color(0xFF015C92),
-                                                    size: 7.w),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    _focusedDay = DateTime(
-                                                        _focusedDay.year,
-                                                        _focusedDay.month + 1);
-                                                  });
-                                                },
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
+                                      onPressed: () {
+                                        setState(() {
+                                          _focusedDay = DateTime(
+                                              _focusedDay.year,
+                                              _focusedDay.month - 1);
+                                        });
+                                      },
                                     ),
+                                    IconButton(
+                                      icon: Icon(Icons.chevron_right,
+                                                    color: Color(0xFF015C92),
+                                                    size: 7.w),
+                                      onPressed: () {
+                                        setState(() {
+                                          _focusedDay = DateTime(
+                                              _focusedDay.year,
+                                              _focusedDay.month + 1);
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                          ),
+                                ),
+                              ],
+                            ),
                                   ),
                                   SizedBox(height: 2.h),
                                   // Calendar Widget
-                                  TableCalendar(
-                                    firstDay: DateTime.utc(2010, 10, 16),
-                                    lastDay: DateTime.utc(2030, 3, 14),
-                                    focusedDay: _focusedDay,
-                                    calendarFormat: _calendarFormat,
-                                    headerVisible: false,
+                            TableCalendar(
+                              firstDay: DateTime.utc(2010, 10, 16),
+                              lastDay: DateTime.utc(2030, 3, 14),
+                              focusedDay: _focusedDay,
+                              calendarFormat: _calendarFormat,
+                              headerVisible: false,
                                     daysOfWeekHeight: 5.h,
                                     rowHeight: 6.h,
-                                    eventLoader: (day) {
+                              eventLoader: (day) {
                                       final date = DateTime(
                                           day.year, day.month, day.day);
-                                      return _pills[date] ?? [];
-                                    },
-                                    selectedDayPredicate: (day) =>
-                                        isSameDay(_selectedDay, day),
-                                    onDaySelected: (selectedDay, focusedDay) {
-                                      setState(() {
-                                        _selectedDay = selectedDay;
-                                        _focusedDay = focusedDay;
-                                      });
-                                    },
-                                    onFormatChanged: (format) {
-                                      if (_calendarFormat != format) {
-                                        setState(() {
-                                          _calendarFormat = format;
-                                        });
-                                      }
-                                    },
-                                    onPageChanged: (focusedDay) {
-                                      setState(() {
-                                        _focusedDay = focusedDay;
-                                      });
-                                    },
-                                    calendarStyle: CalendarStyle(
-                                      selectedDecoration: BoxDecoration(
+                                return _pills[date] ?? [];
+                              },
+                              selectedDayPredicate: (day) =>
+                                  isSameDay(_selectedDay, day),
+                              onDaySelected: (selectedDay, focusedDay) {
+                                setState(() {
+                                  _selectedDay = selectedDay;
+                                  _focusedDay = focusedDay;
+                                });
+                              },
+                              onFormatChanged: (format) {
+                                if (_calendarFormat != format) {
+                                  setState(() {
+                                    _calendarFormat = format;
+                                  });
+                                }
+                              },
+                              onPageChanged: (focusedDay) {
+                                setState(() {
+                                  _focusedDay = focusedDay;
+                                });
+                              },
+                              calendarStyle: CalendarStyle(
+                                selectedDecoration: BoxDecoration(
                                         gradient: LinearGradient(
                                           colors: [
                                             Color(0xFF015C92),
                                             Color(0xFF0077CC)
                                           ],
                                         ),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      todayDecoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                ),
+                                todayDecoration: BoxDecoration(
                                         color:
                                             Color(0xFF015C92).withOpacity(0.2),
-                                        shape: BoxShape.circle,
+                                  shape: BoxShape.circle,
                                         border: Border.all(
                                           color: Color(0xFF015C92),
                                           width: 2,
@@ -739,32 +752,32 @@ class _CalendarTabState extends State<CalendarTab> {
                                         fontWeight: FontWeight.w500,
                                         color: Colors.grey[800],
                                       ),
-                                      markersMaxCount: 3,
-                                      markerDecoration: BoxDecoration(
-                                        color: Colors.redAccent,
-                                        shape: BoxShape.circle,
-                                      ),
+                                markersMaxCount: 3,
+                                markerDecoration: BoxDecoration(
+                                  color: Colors.redAccent,
+                                  shape: BoxShape.circle,
+                                ),
                                       markerSize: 6,
                                       markerMargin:
                                           EdgeInsets.symmetric(horizontal: 1),
-                                    ),
-                                    daysOfWeekStyle: DaysOfWeekStyle(
+                              ),
+                              daysOfWeekStyle: DaysOfWeekStyle(
                                       weekdayStyle: TextStyle(
                                         fontWeight: FontWeight.w700,
                                         fontSize: 14.sp,
                                         color: Color(0xFF015C92),
                                       ),
-                                      weekendStyle: TextStyle(
+                                weekendStyle: TextStyle(
                                         fontWeight: FontWeight.w700,
                                         fontSize: 14.sp,
                                         color: Colors.red[600],
                                       ),
-                                    ),
-                                  ),
-                                ],
                               ),
                             ),
-                          ),
+                          ],
+                        ),
+                      ),
+                    ),
                           SizedBox(height: 3.h),
 
                           // Pill Reminder Section - Modern design
@@ -783,18 +796,18 @@ class _CalendarTabState extends State<CalendarTab> {
                               ],
                             ),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        _isReadOnly
-                                            ? '${_displayName}\'s Medications'
-                                            : 'Pill Reminder',
-                                        style: TextStyle(
+                        children: [
+                          Text(
+                            _isReadOnly
+                                ? '${_displayName}\'s Medications'
+                                : 'Pill Reminder',
+                            style: TextStyle(
                                           fontSize: 18.sp,
                                           fontWeight: FontWeight.w700,
                                           color: Color(0xFF015C92),
@@ -802,32 +815,32 @@ class _CalendarTabState extends State<CalendarTab> {
                                         ),
                                       ),
                                       SizedBox(height: 0.5.h),
-                                      Text(
-                                        hasPillsForTomorrow
-                                            ? 'Don\'t forget schedule for tomorrow'
-                                            : 'No reminders for tomorrow',
-                                        style: TextStyle(
+                          Text(
+                            hasPillsForTomorrow
+                                ? 'Don\'t forget schedule for tomorrow'
+                                : 'No reminders for tomorrow',
+                            style: TextStyle(
                                           fontSize: 15.sp,
-                                          color: Colors.grey[600],
+                              color: Colors.grey[600],
                                           fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
                                 ),
                                 // Add pill button - only show for elders
-                                if (!_isReadOnly)
-                                  Container(
+                      if (!_isReadOnly)
+                        Container(
                                     height: 12.w,
                                     width: 12.w,
-                                    decoration: BoxDecoration(
+                          decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         colors: [
                                           Color(0xFF015C92),
                                           Color(0xFF0077CC)
                                         ],
                                       ),
-                                      shape: BoxShape.circle,
+                            shape: BoxShape.circle,
                                       boxShadow: [
                                         BoxShadow(
                                           color: Color(0xFF015C92)
@@ -836,25 +849,25 @@ class _CalendarTabState extends State<CalendarTab> {
                                           offset: Offset(0, 4),
                                         ),
                                       ],
-                                    ),
-                                    child: IconButton(
+                          ),
+                          child: IconButton(
                                       icon: Icon(Icons.add,
                                           color: Colors.white, size: 6.w),
-                                      onPressed: _showAddPillDialog,
-                                    ),
-                                  ),
-                              ],
-                            ),
+                            onPressed: _showAddPillDialog,
                           ),
+                        ),
+                    ],
+                            ),
+                  ),
 
                           SizedBox(height: 3.h),
 
-                          // Pills List for selected day
+                  // Pills List for selected day
                           Container(
                             height: 42.h, // Slightly increased height
-                            child: _selectedDay != null
-                                ? _buildPillsList()
-                                : Center(
+                    child: _selectedDay != null
+                        ? _buildPillsList()
+                        : Center(
                                     child: Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
@@ -866,7 +879,7 @@ class _CalendarTabState extends State<CalendarTab> {
                                         ),
                                         SizedBox(height: 2.h),
                                         Text(
-                                          'Select a day to see pills',
+                              'Select a day to see pills',
                                           style: TextStyle(
                                             fontSize: 16.sp,
                                             color: Colors.grey[600],
@@ -874,17 +887,17 @@ class _CalendarTabState extends State<CalendarTab> {
                                           ),
                                         ),
                                       ],
-                                    ),
-                                  ),
+                            ),
                           ),
+                  ),
 
                           // Bottom Buttons - Modern design
-                          if (!_isReadOnly)
-                            Padding(
+                  if (!_isReadOnly)
+                    Padding(
                               padding: EdgeInsets.only(top: 4.h, bottom: 3.h),
-                              child: Row(
-                                children: [
-                                  Expanded(
+                      child: Row(
+                        children: [
+                          Expanded(
                                     child: Container(
                                       height: 7.h,
                                       decoration: BoxDecoration(
@@ -894,8 +907,8 @@ class _CalendarTabState extends State<CalendarTab> {
                                           width: 2,
                                         ),
                                       ),
-                                      child: OutlinedButton(
-                                        onPressed: _showAddPillDialog,
+                              child: OutlinedButton(
+                                onPressed: _showAddPillDialog,
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
@@ -920,19 +933,19 @@ class _CalendarTabState extends State<CalendarTab> {
                                             ),
                                           ],
                                         ),
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: Color(0xFF015C92),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Color(0xFF015C92),
                                           side: BorderSide.none,
-                                          shape: RoundedRectangleBorder(
+                                  shape: RoundedRectangleBorder(
                                             borderRadius:
                                                 BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
                                   ),
+                                ),
+                              ),
+                            ),
+                          ),
                                   SizedBox(width: 4.w),
-                                  Expanded(
+                          Expanded(
                                     child: Container(
                                       height: 7.h,
                                       decoration: BoxDecoration(
@@ -952,7 +965,7 @@ class _CalendarTabState extends State<CalendarTab> {
                                           ),
                                         ],
                                       ),
-                                      child: ElevatedButton(
+                              child: ElevatedButton(
                                         onPressed: _showImageSourceDialog,
                                         child: Row(
                                           mainAxisAlignment:
@@ -978,23 +991,23 @@ class _CalendarTabState extends State<CalendarTab> {
                                             ),
                                           ],
                                         ),
-                                        style: ElevatedButton.styleFrom(
+                                style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.transparent,
-                                          foregroundColor: Colors.white,
+                                  foregroundColor: Colors.white,
                                           shadowColor: Colors.transparent,
-                                          shape: RoundedRectangleBorder(
+                                  shape: RoundedRectangleBorder(
                                             borderRadius:
                                                 BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
                                   ),
-                                ],
+                                ),
                               ),
                             ),
+                          ),
                         ],
                       ),
+                    ),
+                ],
+              ),
                     ),
                   ),
                 ),
@@ -1037,7 +1050,7 @@ class _CalendarTabState extends State<CalendarTab> {
               ),
             ),
         ],
-      ),
+            ),
     );
   }
 
@@ -1196,8 +1209,8 @@ class _CalendarTabState extends State<CalendarTab> {
               children: [
                 Padding(
                   padding: EdgeInsets.all(4.w),
-                  child: Row(
-                    children: [
+            child: Row(
+              children: [
                       // Status Icon
                       Container(
                         padding: EdgeInsets.all(3.w),
@@ -1223,7 +1236,7 @@ class _CalendarTabState extends State<CalendarTab> {
                             ),
                           ],
                         ),
-                        child: Icon(
+                      child: Icon(
                           _getPillStatusIcon(pill, isTaken),
                           color: Colors.white,
                           size: 7.w,
@@ -1237,8 +1250,8 @@ class _CalendarTabState extends State<CalendarTab> {
                           children: [
                             // Pill Name
                             Text(
-                              pill.name,
-                              style: TextStyle(
+                      pill.name,
+                      style: TextStyle(
                                 color: isTaken
                                     ? Colors.green[800]
                                     : pill.missed
@@ -1251,9 +1264,9 @@ class _CalendarTabState extends State<CalendarTab> {
                             ),
                             SizedBox(height: 0.5.h),
                             // Dosage
-                            Text(
+                        Text(
                               pill.dosage,
-                              style: TextStyle(
+                          style: TextStyle(
                                 color: isTaken
                                     ? Colors.green[600]
                                     : pill.missed
@@ -1261,14 +1274,14 @@ class _CalendarTabState extends State<CalendarTab> {
                                         : Colors.grey[700],
                                 fontSize: 14.sp,
                                 fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SizedBox(height: 0.5.h),
+                          ),
+                        ),
+                        SizedBox(height: 0.5.h),
                             // Time and Status
-                            Row(
-                              children: [
+                        Row(
+                          children: [
                                 Icon(
-                                  Icons.access_time,
+                                Icons.access_time,
                                   size: 5.w,
                                   color: isTaken
                                       ? Colors.green[600]
@@ -1280,7 +1293,7 @@ class _CalendarTabState extends State<CalendarTab> {
                                 Flexible(
                                   child: Text(
                                     formattedTime,
-                                    style: TextStyle(
+                              style: TextStyle(
                                       color: isTaken
                                           ? Colors.green[600]
                                           : pill.missed
@@ -1295,7 +1308,7 @@ class _CalendarTabState extends State<CalendarTab> {
                                 if (pill.allowSnooze) ...[
                                   SizedBox(width: 3.w),
                                   Icon(
-                                    Icons.snooze,
+                                  Icons.snooze,
                                     color: isTaken
                                         ? Colors.green[600]
                                         : pill.missed
@@ -1328,9 +1341,9 @@ class _CalendarTabState extends State<CalendarTab> {
                                     Flexible(
                                       child: Text(
                                         'Taken at ${DateFormat('h:mm a').format(takenDate.toLocal())}',
-                                        style: TextStyle(
+                            style: TextStyle(
                                           fontSize: 12.sp,
-                                          color: Colors.green[700],
+                              color: Colors.green[700],
                                           fontWeight: FontWeight.w600,
                                         ),
                                         overflow: TextOverflow.ellipsis,
@@ -1360,17 +1373,17 @@ class _CalendarTabState extends State<CalendarTab> {
                                     SizedBox(width: 2.w),
                                     Flexible(
                                       child: Text(
-                                        'Missed!',
-                                        style: TextStyle(
+                            'Missed!',
+                            style: TextStyle(
                                           fontSize: 12.sp,
-                                          color: Colors.red[700],
+                              color: Colors.red[700],
                                           fontWeight: FontWeight.w600,
                                         ),
                                         overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                            ),
+                          ),
+                      ],
+                    ),
                               ),
                             ],
                           ],
@@ -1411,8 +1424,8 @@ class _CalendarTabState extends State<CalendarTab> {
                                 );
                               }
                             },
-                          ),
-                        ),
+                  ),
+                ),
                     ],
                   ),
                 ),
@@ -1432,20 +1445,20 @@ class _CalendarTabState extends State<CalendarTab> {
                       children: [
                         Transform.scale(
                           scale: 1.3,
-                          child: Checkbox(
+                      child: Checkbox(
                             value: isTaken,
                             activeColor: Colors.green[600],
-                            checkColor: Colors.white,
-                            shape: RoundedRectangleBorder(
+                        checkColor: Colors.white,
+                        shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
-                            ),
-                            onChanged: (bool? value) {
-                              if (value != null) {
-                                _markPillAsTaken(pill, value);
-                              }
-                            },
-                          ),
                         ),
+                        onChanged: (bool? value) {
+                          if (value != null) {
+                            _markPillAsTaken(pill, value);
+                          }
+                        },
+                      ),
+                    ),
                         SizedBox(width: 3.w),
                         Flexible(
                           child: Text(
@@ -1454,7 +1467,7 @@ class _CalendarTabState extends State<CalendarTab> {
                               fontSize: 15.sp,
                               fontWeight: FontWeight.w600,
                               color: isTaken
-                                  ? Colors.green[700]
+                          ? Colors.green[700]
                                   : Color(0xFF015C92),
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -1517,15 +1530,15 @@ class _CalendarTabState extends State<CalendarTab> {
           final pillTimeStr =
               '${pillTime.hour.toString().padLeft(2, '0')}:${pillTime.minute.toString().padLeft(2, '0')}';
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
               content: Text(
                 'Cannot mark ${pill.name} as taken outside the allowed time window.\n'
                 'Scheduled time: $pillTimeStr\n'
                 'Allowed window: $earlyTimeStr - $lateTimeStr',
                 style: TextStyle(fontSize: 14.sp),
               ),
-              backgroundColor: Colors.orange,
+            backgroundColor: Colors.orange,
               duration: Duration(seconds: 4),
               action: SnackBarAction(
                 label: 'OK',
@@ -1938,6 +1951,7 @@ class ModernAddPillForm extends StatefulWidget {
   final PillModel? existingPill;
   final String? initialMedicineName;
   final String? initialDosage;
+  final int initialTimesPerDay;
 
   const ModernAddPillForm({
     Key? key,
@@ -1945,6 +1959,7 @@ class ModernAddPillForm extends StatefulWidget {
     this.existingPill,
     this.initialMedicineName,
     this.initialDosage,
+    this.initialTimesPerDay = 1,
   }) : super(key: key);
 
   @override
@@ -1976,7 +1991,7 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
       text: widget.initialDosage ?? existingPill?.dosage ?? '',
     );
     _noteController = TextEditingController(text: existingPill?.note ?? '');
-    _timesPerDay = existingPill?.timesPerDay ?? 1;
+    _timesPerDay = widget.initialTimesPerDay;
     _duration = existingPill?.duration ?? 7;
     _treatmentPeriod =
         existingPill?.duration ?? 7; // Initialize with duration if existing
@@ -2035,8 +2050,8 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
     return Padding(
       padding: EdgeInsets.all(4.w),
       child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
+      child: Form(
+        key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min, // This is key!
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2341,11 +2356,11 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                   contentPadding: EdgeInsets.zero,
                   isThreeLine: true,
                   title: Text(
-                    'Snooze Reminder (5 min before)',
-                    style: TextStyle(fontSize: 15.sp),
+                        'Snooze Reminder (5 min before)',
+                        style: TextStyle(fontSize: 15.sp),
                     overflow: TextOverflow.visible,
                     softWrap: true,
-                  ),
+                      ),
                   subtitle: SizedBox.shrink(),
                   secondary: Icon(Icons.notifications_active,
                       size: 5.w, color: primaryColor),

@@ -137,10 +137,10 @@ class _ProfileTabState extends State<ProfileTab> {
               ),
               SizedBox(height: 16),
               TextFormField(
-                controller: controller,
-                keyboardType: field == 'Age' || field == 'Height'
-                    ? TextInputType.number
-                    : TextInputType.text,
+          controller: controller,
+          keyboardType: field == 'Age' || field == 'Height'
+              ? TextInputType.number
+              : TextInputType.text,
                 decoration: InputDecoration(
                   hintText: localizations.enterNewField(field),
                   border: OutlineInputBorder(
@@ -177,7 +177,7 @@ class _ProfileTabState extends State<ProfileTab> {
                     ),
                     padding: EdgeInsets.symmetric(vertical: 14),
                   ),
-                  onPressed: () => Navigator.pop(context, controller.text),
+            onPressed: () => Navigator.pop(context, controller.text),
                   child: Text(
                     "Save",
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -328,39 +328,39 @@ class _ProfileTabState extends State<ProfileTab> {
                                         color: Colors.white),
                                     padding: EdgeInsets.all(screenWidth * 0.04),
                                     child: SingleChildScrollView(
-                                      child: Column(
-                                        children: [
-                                          _buildProfileOption(
-                                              assetName: "emergencyic",
+                                    child: Column(
+                                      children: [
+                                        _buildProfileOption(
+                                            assetName: "emergencyic",
                                               title: localizations
                                                   .emergencyContacts,
-                                              onTap: () {
-                                                setState(() {
-                                                  showEmergencyContacts = true;
-                                                  showEditInformation = false;
-                                                });
-                                              },
-                                              screenWidth: screenWidth),
-                                          Divider(
-                                            color: Color(0xFFE8F3F1),
-                                            thickness: 2,
-                                            endIndent: screenWidth * 0.025,
-                                            indent: screenWidth * 0.025,
-                                          ),
-                                          _buildProfileOption(
-                                            assetName: "editic",
+                                            onTap: () {
+                                              setState(() {
+                                                showEmergencyContacts = true;
+                                                showEditInformation = false;
+                                              });
+                                            },
+                                            screenWidth: screenWidth),
+                                        Divider(
+                                          color: Color(0xFFE8F3F1),
+                                          thickness: 2,
+                                          endIndent: screenWidth * 0.025,
+                                          indent: screenWidth * 0.025,
+                                        ),
+                                        _buildProfileOption(
+                                          assetName: "editic",
                                             title:
                                                 localizations.editInformation,
-                                            onTap: () async {
-                                              setState(() {
-                                                _isLoading = true;
-                                              });
-                                              await _loadUserDataForEdit();
-                                              setState(() {
-                                                showEditInformation = true;
-                                                showEmergencyContacts = false;
-                                                _isLoading = false;
-                                              });
+                                          onTap: () async {
+                                            setState(() {
+                                              _isLoading = true;
+                                            });
+                                            await _loadUserDataForEdit();
+                                            setState(() {
+                                              showEditInformation = true;
+                                              showEmergencyContacts = false;
+                                              _isLoading = false;
+                                            });
                                             },
                                             screenWidth: screenWidth,
                                           ),
@@ -551,26 +551,26 @@ class _ProfileTabState extends State<ProfileTab> {
                                                         FallDetectionTab(),
                                                   ),
                                                 );
-                                              },
-                                              screenWidth: screenWidth,
-                                            ),
-                                          Divider(
-                                            color: Color(0xFFE8F3F1),
-                                            thickness: 2,
-                                            endIndent: screenWidth * 0.025,
-                                            indent: screenWidth * 0.025,
-                                          ),
-                                          _buildProfileOption(
-                                            assetName: "dangercircle",
+                                          },
+                                          screenWidth: screenWidth,
+                                        ),
+                                        Divider(
+                                          color: Color(0xFFE8F3F1),
+                                          thickness: 2,
+                                          endIndent: screenWidth * 0.025,
+                                          indent: screenWidth * 0.025,
+                                        ),
+                                        _buildProfileOption(
+                                          assetName: "dangercircle",
                                             title: localizations.logout,
-                                            textColor: Color(0xFFFF5C5C),
-                                            onTap: () {
-                                              showLogoutDialog(context);
-                                            },
-                                            screenWidth: screenWidth,
-                                          ),
+                                          textColor: Color(0xFFFF5C5C),
+                                          onTap: () {
+                                            showLogoutDialog(context);
+                                          },
+                                          screenWidth: screenWidth,
+                                        ),
                                           SizedBox(height: 16),
-                                        ],
+                                      ],
                                       ),
                                     ),
                                   ),
@@ -598,30 +598,30 @@ class _ProfileTabState extends State<ProfileTab> {
         child: Row(
           children: [
             Container(
-              width: screenWidth * 0.12,
-              height: screenWidth * 0.12,
-              decoration: BoxDecoration(
-                color: Color(0xFFE8F3F1),
+                width: screenWidth * 0.12,
+                height: screenWidth * 0.12,
+                decoration: BoxDecoration(
+                    color: Color(0xFFE8F3F1),
                 borderRadius: BorderRadius.circular(screenWidth * 0.06),
               ),
-              child: Center(
-                child: SvgPicture.asset(
-                  "assets/svg/$assetName.svg",
-                  width: screenWidth * 0.05,
-                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    "assets/svg/$assetName.svg",
+                    width: screenWidth * 0.05,
+                  ),
               ),
             ),
             SizedBox(width: screenWidth * 0.04),
             Expanded(
               child: Text(
-                title,
-                style: GoogleFonts.albertSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: screenWidth * 0.042,
-                  color: textColor ?? Colors.black,
-                ),
-              ),
-            ),
+                            title,
+                            style: GoogleFonts.albertSans(
+                              fontWeight: FontWeight.w700,
+                              fontSize: screenWidth * 0.042,
+                              color: textColor ?? Colors.black,
+                            ),
+                          ),
+                        ),
             SvgPicture.asset(
               "assets/svg/arrowright.svg",
               width: screenWidth * 0.06,

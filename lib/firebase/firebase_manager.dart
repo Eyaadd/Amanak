@@ -132,11 +132,11 @@ class FirebaseManager {
 
   static Future<String> addPill(PillModel pill, {String? userId}) async {
     try {
-      final currentUserId = userId ?? FirebaseAuth.instance.currentUser!.uid;
-      var collection = getPillsCollection(currentUserId);
+    final currentUserId = userId ?? FirebaseAuth.instance.currentUser!.uid;
+    var collection = getPillsCollection(currentUserId);
 
       // First, add the pill to Firestore
-      DocumentReference docRef = await collection.add(pill);
+    DocumentReference docRef = await collection.add(pill);
       final pillId = docRef.id;
 
       // Update the pill with the new ID
@@ -268,18 +268,18 @@ class FirebaseManager {
 
   static Future<void> deletePill(String pillId, {String? userId}) async {
     try {
-      final currentUserId = userId ?? FirebaseAuth.instance.currentUser!.uid;
-      var collection = getPillsCollection(currentUserId);
+    final currentUserId = userId ?? FirebaseAuth.instance.currentUser!.uid;
+    var collection = getPillsCollection(currentUserId);
 
       // Get the pill data first
-      final pillDoc = await collection.doc(pillId).get();
+    final pillDoc = await collection.doc(pillId).get();
 
       // Delete from Firestore immediately
       await collection.doc(pillId).delete();
 
       // Cancel notifications in the background after deletion
-      if (pillDoc.exists) {
-        final pill = pillDoc.data()!;
+    if (pillDoc.exists) {
+      final pill = pillDoc.data()!;
         _cancelNotificationsInBackground(pill);
       }
     } catch (e) {
@@ -373,7 +373,7 @@ class FirebaseManager {
     if (userRole.toLowerCase() != 'guardian') {
       print('Rescheduling notifications for ${pills.length} pills');
 
-      // Cancel all existing notifications first
+    // Cancel all existing notifications first
       await notiService.cancelAllNotifications();
 
       // Only schedule future pills that haven't been taken or missed
@@ -383,7 +383,7 @@ class FirebaseManager {
       int scheduledCount = 0;
 
       // Schedule new notifications only for active pills
-      for (final pill in pills) {
+    for (final pill in pills) {
         // Skip pills that have already ended their duration
         final pillStartDate = DateTime(
             pill.dateTime.year, pill.dateTime.month, pill.dateTime.day);
@@ -478,9 +478,9 @@ class FirebaseManager {
             // Create pill time using user's timezone
             final pillTime = tz.TZDateTime(
               tzLocation,
-              now.year,
-              now.month,
-              now.day,
+            now.year,
+            now.month,
+            now.day,
               hour,
               minute,
             );

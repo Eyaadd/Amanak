@@ -533,22 +533,22 @@ class NotiService {
             }
 
             // Calculate the exact time for this pill dose on this day
-            final pillTime = tz.TZDateTime(
-              tzLocation,
-              pillDate.year,
-              pillDate.month,
-              pillDate.day,
+          final pillTime = tz.TZDateTime(
+            tzLocation,
+            pillDate.year,
+            pillDate.month,
+            pillDate.day,
               time.hour,
               time.minute,
-            );
+          );
 
             // Skip if the pill time is in the past
             if (pillTime.isBefore(now)) {
               continue;
             }
 
-            // Calculate the reminder time (5 minutes before)
-            final reminderTime = pillTime.subtract(Duration(minutes: 5));
+          // Calculate the reminder time (5 minutes before)
+          final reminderTime = pillTime.subtract(Duration(minutes: 5));
 
             // Create unique IDs for each time slot
             final timeSlotId =
@@ -558,17 +558,17 @@ class NotiService {
             final missedId = missedIdBase + day + timeSlotId;
 
             // Schedule 5-minute advance reminder if it's in the future
-            if (reminderTime.isAfter(now)) {
+          if (reminderTime.isAfter(now)) {
               scheduleTasks.add(_scheduleNotification(
                 id: reminderId,
-                title: "Medicine Reminder",
-                body:
+              title: "Medicine Reminder",
+              body:
                     "${userName}, don't forget to take ${pill.name} (Dose ${timeIndex + 1}) after 5 minutes.",
-                scheduledTime: reminderTime,
-                details: _pillReminderDetails(),
+              scheduledTime: reminderTime,
+              details: _pillReminderDetails(),
                 payload: "reminder:${pill.id}:${day}:${timeIndex}",
               ));
-            }
+          }
 
             // Schedule exact time reminder
             scheduleTasks.add(_scheduleNotification(
@@ -886,11 +886,11 @@ class NotiService {
   // Cancel all notifications for a pill
   Future<void> cancelPillNotifications(String pillId) async {
     try {
-      // Calculate ID ranges for this pill using a safe hash code
-      final int safeHashCode = pillId.hashCode % 10000; // Limit to 4 digits
-      final int reminderIdBase = PILL_REMINDER_ID_PREFIX + safeHashCode;
-      final int dueIdBase = PILL_ADVANCE_REMINDER_ID_PREFIX + safeHashCode;
-      final int missedIdBase = MISSED_NOTIFICATION_ID_PREFIX + safeHashCode;
+    // Calculate ID ranges for this pill using a safe hash code
+    final int safeHashCode = pillId.hashCode % 10000; // Limit to 4 digits
+    final int reminderIdBase = PILL_REMINDER_ID_PREFIX + safeHashCode;
+    final int dueIdBase = PILL_ADVANCE_REMINDER_ID_PREFIX + safeHashCode;
+    final int missedIdBase = MISSED_NOTIFICATION_ID_PREFIX + safeHashCode;
 
       // Cancel all notifications in these ranges (up to 100 days, 10 times per day)
       for (int day = 0; day < 100; day++) {
@@ -1244,28 +1244,28 @@ class NotiService {
         final type = data['type'];
 
         if (type == 'message') {
-          details = messageDetails();
-          // Create a payload for message notifications
-          final chatId = data['chatId'] ?? '';
-          final senderId = data['senderId'] ?? '';
-          final senderName = data['senderName'] ?? '';
-          payload = 'message:$chatId:$senderId:$senderName';
+        details = messageDetails();
+        // Create a payload for message notifications
+        final chatId = data['chatId'] ?? '';
+        final senderId = data['senderId'] ?? '';
+        final senderName = data['senderName'] ?? '';
+        payload = 'message:$chatId:$senderId:$senderName';
         } else if (type == 'pill_taken') {
           details = takenPillDetails();
           payload = 'pill_taken:${data['pillId'] ?? ''}';
         } else if (type == 'pill_missed') {
           details = missedPillDetails();
           payload = 'pill_missed:${data['pillId'] ?? ''}';
-        } else {
-          // Default notification details
-          details = NotificationDetails(
-            android: AndroidNotificationDetails(
-              'high_importance_channel',
-              'High Importance Notifications',
-              channelDescription:
-                  'This channel is used for important notifications.',
-              importance: Importance.high,
-              priority: Priority.high,
+      } else {
+        // Default notification details
+        details = NotificationDetails(
+          android: AndroidNotificationDetails(
+            'high_importance_channel',
+            'High Importance Notifications',
+            channelDescription:
+                'This channel is used for important notifications.',
+            importance: Importance.high,
+            priority: Priority.high,
               icon: 'notification_icon',
             ),
             iOS: const DarwinNotificationDetails(),
