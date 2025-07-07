@@ -170,6 +170,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get defaultDosage => 'Default Dosage';
+
+  @override
   String get frequency => 'التكرار';
 
   @override
@@ -183,6 +186,127 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deleteMedicine => 'حذف الدواء';
+
+  @override
+  String get scanPrescription => 'مسح الوصفة الطبية';
+
+  @override
+  String get takePhoto => 'التقاط صورة';
+
+  @override
+  String get chooseFromGallery => 'اختيار من المعرض';
+
+  @override
+  String get prescriptionResults => 'نتائج الوصفة الطبية';
+
+  @override
+  String foundMedicationsInPrescription(Object count) {
+    return 'Found $count medications in your prescription. Tap on a medicine to add it to your calendar.';
+  }
+
+  @override
+  String confidence(Object confidence) {
+    return 'الثقة: $confidence%';
+  }
+
+  @override
+  String get close => 'إغلاق';
+
+  @override
+  String get noMedicationsForThisDay => 'لا توجد أدوية لهذا اليوم';
+
+  @override
+  String get addPillsManually => 'إضافة الأدوية يدويًا';
+
+  @override
+  String get processingPrescription => 'Processing Prescription...';
+
+  @override
+  String get pleaseWaitScanningPrescription =>
+      'يرجى الانتظار بينما نمسح وصفتك الطبية';
+
+  @override
+  String get guardianReadOnlyMessage =>
+      'Guardian view is read-only. You cannot add medications.';
+
+  @override
+  String get noMedicinesFoundInPrescription =>
+      'لم يتم العثور على أدوية في الوصفة الطبية';
+
+  @override
+  String errorProcessingPrescription(Object error) {
+    return 'خطأ في معالجة الوصفة الطبية: $error';
+  }
+
+  @override
+  String errorPickingImage(Object error) {
+    return 'خطأ في اختيار الصورة: $error';
+  }
+
+  @override
+  String get selectDayToSeePills => 'اختر يومًا لرؤية الأدوية';
+
+  @override
+  String get confirm => 'تأكيد';
+
+  @override
+  String get confirmDeletePill => 'Are you sure you want to delete this pill?';
+
+  @override
+  String get cancel => 'إلغاء';
+
+  @override
+  String get delete => 'حذف';
+
+  @override
+  String get pillDeleted => 'تم حذف الدواء';
+
+  @override
+  String errorDeletingPill(Object error) {
+    return 'خطأ في حذف الدواء: $error';
+  }
+
+  @override
+  String get markedAsTaken => 'محدد كمؤخذ';
+
+  @override
+  String get markAsTaken => 'تحديد كمؤخذ';
+
+  @override
+  String editFromStartDate(Object date) {
+    return 'تعديل من تاريخ البدء ($date)';
+  }
+
+  @override
+  String get guardianReadOnlyMarkPills =>
+      'Guardian view is read-only. Cannot mark pills as taken.';
+
+  @override
+  String cannotMarkPillOutsideTimeWindow(Object pillName, Object scheduledTime,
+      Object earlyTime, Object lateTime) {
+    return 'Cannot mark $pillName as taken outside the allowed time window.\nScheduled time: $scheduledTime\nAllowed window: $earlyTime - $lateTime';
+  }
+
+  @override
+  String get ok => 'موافق';
+
+  @override
+  String pillMarkedAsTaken(Object pillName, Object time) {
+    return '$pillName marked as taken for $time';
+  }
+
+  @override
+  String pillMarkedAsNotTaken(Object pillName, Object time) {
+    return '$pillName marked as not taken for $time';
+  }
+
+  @override
+  String get medicineAddedSuccessfully => 'تم إضافة الدواء بنجاح!';
+
+  @override
+  String errorSavingPill(Object error) {
+    return 'خطأ في حفظ الدواء: $error';
+  }
 
   @override
   String get liveTracking => 'التتبع\nالمباشر';
@@ -248,12 +372,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get save => 'حفظ';
 
   @override
-  String get cancel => 'إلغاء';
-
-  @override
-  String get delete => 'حذف';
-
-  @override
   String get edit => 'تعديل';
 
   @override
@@ -264,9 +382,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get no => 'لا';
-
-  @override
-  String get ok => 'موافق';
 
   @override
   String get error => 'خطأ';
@@ -511,45 +626,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'عرض الوصي للقراءة فقط. لا يمكنك إضافة أدوية.';
 
   @override
-  String errorSavingPill(Object error) {
-    return 'خطأ في حفظ الدواء: $error';
-  }
-
-  @override
-  String errorPickingImage(Object error) {
-    return 'خطأ في اختيار الصورة: $error';
-  }
-
-  @override
-  String get noMedicinesFoundInPrescription =>
-      'لم يتم العثور على أدوية في الوصفة الطبية';
-
-  @override
-  String errorProcessingPrescription(Object error) {
-    return 'خطأ في معالجة الوصفة الطبية: $error';
-  }
-
-  @override
-  String get scanPrescription => 'مسح الوصفة الطبية';
-
-  @override
-  String get takePhoto => 'التقاط صورة';
-
-  @override
-  String get chooseFromGallery => 'اختيار من المعرض';
-
-  @override
-  String get medicineAddedSuccessfully => 'تم إضافة الدواء بنجاح!';
-
-  @override
-  String get pillDeleted => 'تم حذف الدواء';
-
-  @override
-  String errorDeletingPill(Object error) {
-    return 'خطأ في حذف الدواء: $error';
-  }
-
-  @override
   String get guardianViewReadOnlyMarkTaken =>
       'عرض الوصي للقراءة فقط. لا يمكن تحديد الأدوية كمؤخذة.';
 
@@ -563,20 +639,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get prescriptionResults => 'نتائج الوصفة الطبية';
-
-  @override
   String foundMedicinesInPrescription(Object count) {
     return 'تم العثور على $count دواء في وصفتك الطبية. انقر على الدواء لإضافته إلى تقويمك.';
   }
-
-  @override
-  String confidence(Object confidence) {
-    return 'الثقة: $confidence%';
-  }
-
-  @override
-  String get close => 'إغلاق';
 
   @override
   String get invalidPillIdReturned => 'معرف الدواء غير صحيح من Firebase';
@@ -594,33 +659,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noRemindersForTomorrow => 'لا توجد تذكيرات للغد';
-
-  @override
-  String get selectDayToSeePills => 'اختر يومًا لرؤية الأدوية';
-
-  @override
-  String get addPillsManually => 'إضافة الأدوية يدويًا';
-
-  @override
-  String get pleaseWaitScanningPrescription =>
-      'يرجى الانتظار بينما نمسح وصفتك الطبية';
-
-  @override
-  String get noMedicationsForThisDay => 'لا توجد أدوية لهذا اليوم';
-
-  @override
-  String get confirm => 'تأكيد';
-
-  @override
-  String editFromStartDate(Object date) {
-    return 'تعديل من تاريخ البدء ($date)';
-  }
-
-  @override
-  String get markedAsTaken => 'محدد كمؤخذ';
-
-  @override
-  String get markAsTaken => 'تحديد كمؤخذ';
 
   @override
   String get errorUpdatingPillStatus => 'خطأ في تحديث حالة الدواء';

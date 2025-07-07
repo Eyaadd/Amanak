@@ -59,11 +59,81 @@
   "medicines": "Medicines",
   "medicineName": "Medicine Name",
   "dosage": "Dosage",
+  "defaultDosage": "Default Dosage",
   "frequency": "Frequency",
   "time": "Time",
   "addMedicine": "Add Medicine",
   "editMedicine": "Edit Medicine",
   "deleteMedicine": "Delete Medicine",
+  
+  "@calendar": {},
+  "scanPrescription": "Scan Prescription",
+  "takePhoto": "Take Photo",
+  "chooseFromGallery": "Choose from Gallery",
+  "prescriptionResults": "Prescription Results",
+  "foundMedicationsInPrescription": "Found {count} medications in your prescription. Tap on a medicine to add it to your calendar.",
+  "@foundMedicationsInPrescription": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "confidence": "Confidence",
+  "close": "Close",
+  "noMedicationsForThisDay": "No medications for this day",
+  "addPillsManually": "Add Pills Manually",
+  "processingPrescription": "Processing Prescription...",
+  "pleaseWaitScanningPrescription": "Please wait while we scan your prescription",
+  "guardianReadOnlyMessage": "Guardian view is read-only. You cannot add medications.",
+  "noMedicinesFoundInPrescription": "No medicines found in the prescription",
+  "errorProcessingPrescription": "Error processing prescription",
+  "errorPickingImage": "Error picking image",
+  "selectDayToSeePills": "Select a day to see pills",
+  "confirm": "Confirm",
+  "confirmDeletePill": "Are you sure you want to delete this pill?",
+  "cancel": "CANCEL",
+  "delete": "DELETE",
+  "pillDeleted": "Pill deleted",
+  "errorDeletingPill": "Error deleting pill",
+  "markedAsTaken": "Marked as taken",
+  "markAsTaken": "Mark as taken",
+  "editFromStartDate": "Edit from the start date ({date})",
+  "@editFromStartDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "guardianReadOnlyMarkPills": "Guardian view is read-only. Cannot mark pills as taken.",
+  "cannotMarkPillOutsideTimeWindow": "Cannot mark {pillName} as taken outside the allowed time window.\nScheduled time: {scheduledTime}\nAllowed window: {earlyTime} - {lateTime}",
+  "@cannotMarkPillOutsideTimeWindow": {
+    "placeholders": {
+      "pillName": {},
+      "scheduledTime": {},
+      "earlyTime": {},
+      "lateTime": {}
+    }
+  },
+  "ok": "OK",
+  "pillMarkedAsTaken": "{pillName} marked as taken for {time}",
+  "@pillMarkedAsTaken": {
+    "placeholders": {
+      "pillName": {},
+      "time": {}
+    }
+  },
+  "pillMarkedAsNotTaken": "{pillName} marked as not taken for {time}",
+  "@pillMarkedAsNotTaken": {
+    "placeholders": {
+      "pillName": {},
+      "time": {}
+    }
+  },
+  "medicineAddedSuccessfully": "Medicine added successfully!",
+  "errorSavingPill": "Error saving pill: {error}",
+  "@errorSavingPill": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   
   "@tracking": {},
   "liveTracking": "Live\nTracking",
@@ -96,13 +166,10 @@
   
   "@common": {},
   "save": "Save",
-  "cancel": "Cancel",
-  "delete": "Delete",
   "edit": "Edit",
   "add": "Add",
   "yes": "Yes",
   "no": "No",
-  "ok": "OK",
   "error": "Error",
   "success": "Success",
   "loading": "Loading...",

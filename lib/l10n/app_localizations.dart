@@ -404,6 +404,12 @@ abstract class AppLocalizations {
   /// **'Dosage: {dosage}'**
   String dosage(Object dosage);
 
+  /// No description provided for @defaultDosage.
+  ///
+  /// In en, this message translates to:
+  /// **'Default Dosage'**
+  String get defaultDosage;
+
   /// No description provided for @frequency.
   ///
   /// In en, this message translates to:
@@ -433,6 +439,199 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete Medicine'**
   String get deleteMedicine;
+
+  /// No description provided for @scanPrescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Prescription'**
+  String get scanPrescription;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Photo'**
+  String get takePhoto;
+
+  /// No description provided for @chooseFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from Gallery'**
+  String get chooseFromGallery;
+
+  /// No description provided for @prescriptionResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Prescription Results'**
+  String get prescriptionResults;
+
+  /// No description provided for @foundMedicationsInPrescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {count} medications in your prescription. Tap on a medicine to add it to your calendar.'**
+  String foundMedicationsInPrescription(Object count);
+
+  /// No description provided for @confidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence: {confidence}%'**
+  String confidence(Object confidence);
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @noMedicationsForThisDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No medications for this day'**
+  String get noMedicationsForThisDay;
+
+  /// No description provided for @addPillsManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Pills Manually'**
+  String get addPillsManually;
+
+  /// No description provided for @processingPrescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing Prescription...'**
+  String get processingPrescription;
+
+  /// No description provided for @pleaseWaitScanningPrescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait while we scan your prescription'**
+  String get pleaseWaitScanningPrescription;
+
+  /// No description provided for @guardianReadOnlyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardian view is read-only. You cannot add medications.'**
+  String get guardianReadOnlyMessage;
+
+  /// No description provided for @noMedicinesFoundInPrescription.
+  ///
+  /// In en, this message translates to:
+  /// **'No medicines found in the prescription'**
+  String get noMedicinesFoundInPrescription;
+
+  /// No description provided for @errorProcessingPrescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Error processing prescription: {error}'**
+  String errorProcessingPrescription(Object error);
+
+  /// No description provided for @errorPickingImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Error picking image: {error}'**
+  String errorPickingImage(Object error);
+
+  /// No description provided for @selectDayToSeePills.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a day to see pills'**
+  String get selectDayToSeePills;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @confirmDeletePill.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this pill?'**
+  String get confirmDeletePill;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @pillDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Pill deleted'**
+  String get pillDeleted;
+
+  /// No description provided for @errorDeletingPill.
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting pill: {error}'**
+  String errorDeletingPill(Object error);
+
+  /// No description provided for @markedAsTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked as taken'**
+  String get markedAsTaken;
+
+  /// No description provided for @markAsTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as taken'**
+  String get markAsTaken;
+
+  /// No description provided for @editFromStartDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit from the start date ({date})'**
+  String editFromStartDate(Object date);
+
+  /// No description provided for @guardianReadOnlyMarkPills.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardian view is read-only. Cannot mark pills as taken.'**
+  String get guardianReadOnlyMarkPills;
+
+  /// No description provided for @cannotMarkPillOutsideTimeWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot mark {pillName} as taken outside the allowed time window.\nScheduled time: {scheduledTime}\nAllowed window: {earlyTime} - {lateTime}'**
+  String cannotMarkPillOutsideTimeWindow(
+      Object pillName, Object scheduledTime, Object earlyTime, Object lateTime);
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @pillMarkedAsTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'{pillName} marked as taken for {time}'**
+  String pillMarkedAsTaken(Object pillName, Object time);
+
+  /// No description provided for @pillMarkedAsNotTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'{pillName} marked as not taken for {time}'**
+  String pillMarkedAsNotTaken(Object pillName, Object time);
+
+  /// No description provided for @medicineAddedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Medicine added successfully!'**
+  String get medicineAddedSuccessfully;
+
+  /// No description provided for @errorSavingPill.
+  ///
+  /// In en, this message translates to:
+  /// **'Error saving pill: {error}'**
+  String errorSavingPill(Object error);
 
   /// No description provided for @liveTracking.
   ///
@@ -560,18 +759,6 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get save;
 
-  /// No description provided for @cancel.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get cancel;
-
-  /// No description provided for @delete.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete'**
-  String get delete;
-
   /// No description provided for @edit.
   ///
   /// In en, this message translates to:
@@ -595,12 +782,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No'**
   String get no;
-
-  /// No description provided for @ok.
-  ///
-  /// In en, this message translates to:
-  /// **'OK'**
-  String get ok;
 
   /// No description provided for @error.
   ///
@@ -1058,66 +1239,6 @@ abstract class AppLocalizations {
   /// **'Guardian view is read-only. You cannot add medications.'**
   String get guardianViewReadOnly;
 
-  /// No description provided for @errorSavingPill.
-  ///
-  /// In en, this message translates to:
-  /// **'Error saving pill: {error}'**
-  String errorSavingPill(Object error);
-
-  /// No description provided for @errorPickingImage.
-  ///
-  /// In en, this message translates to:
-  /// **'Error picking image: {error}'**
-  String errorPickingImage(Object error);
-
-  /// No description provided for @noMedicinesFoundInPrescription.
-  ///
-  /// In en, this message translates to:
-  /// **'No medicines found in the prescription'**
-  String get noMedicinesFoundInPrescription;
-
-  /// No description provided for @errorProcessingPrescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Error processing prescription: {error}'**
-  String errorProcessingPrescription(Object error);
-
-  /// No description provided for @scanPrescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan Prescription'**
-  String get scanPrescription;
-
-  /// No description provided for @takePhoto.
-  ///
-  /// In en, this message translates to:
-  /// **'Take Photo'**
-  String get takePhoto;
-
-  /// No description provided for @chooseFromGallery.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose from Gallery'**
-  String get chooseFromGallery;
-
-  /// No description provided for @medicineAddedSuccessfully.
-  ///
-  /// In en, this message translates to:
-  /// **'Medicine added successfully!'**
-  String get medicineAddedSuccessfully;
-
-  /// No description provided for @pillDeleted.
-  ///
-  /// In en, this message translates to:
-  /// **'Pill deleted'**
-  String get pillDeleted;
-
-  /// No description provided for @errorDeletingPill.
-  ///
-  /// In en, this message translates to:
-  /// **'Error deleting pill: {error}'**
-  String errorDeletingPill(Object error);
-
   /// No description provided for @guardianViewReadOnlyMarkTaken.
   ///
   /// In en, this message translates to:
@@ -1136,29 +1257,11 @@ abstract class AppLocalizations {
   /// **'Error updating pill: {error}'**
   String errorUpdatingPill(Object error);
 
-  /// No description provided for @prescriptionResults.
-  ///
-  /// In en, this message translates to:
-  /// **'Prescription Results'**
-  String get prescriptionResults;
-
   /// No description provided for @foundMedicinesInPrescription.
   ///
   /// In en, this message translates to:
   /// **'Found {count} medications in your prescription. Tap on a medicine to add it to your calendar.'**
   String foundMedicinesInPrescription(Object count);
-
-  /// No description provided for @confidence.
-  ///
-  /// In en, this message translates to:
-  /// **'Confidence: {confidence}%'**
-  String confidence(Object confidence);
-
-  /// No description provided for @close.
-  ///
-  /// In en, this message translates to:
-  /// **'Close'**
-  String get close;
 
   /// No description provided for @invalidPillIdReturned.
   ///
@@ -1189,54 +1292,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No reminders for tomorrow'**
   String get noRemindersForTomorrow;
-
-  /// No description provided for @selectDayToSeePills.
-  ///
-  /// In en, this message translates to:
-  /// **'Select a day to see pills'**
-  String get selectDayToSeePills;
-
-  /// No description provided for @addPillsManually.
-  ///
-  /// In en, this message translates to:
-  /// **'Add Pills Manually'**
-  String get addPillsManually;
-
-  /// No description provided for @pleaseWaitScanningPrescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Please wait while we scan your prescription'**
-  String get pleaseWaitScanningPrescription;
-
-  /// No description provided for @noMedicationsForThisDay.
-  ///
-  /// In en, this message translates to:
-  /// **'No medications for this day'**
-  String get noMedicationsForThisDay;
-
-  /// No description provided for @confirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm'**
-  String get confirm;
-
-  /// No description provided for @editFromStartDate.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit from the start date ({date})'**
-  String editFromStartDate(Object date);
-
-  /// No description provided for @markedAsTaken.
-  ///
-  /// In en, this message translates to:
-  /// **'Marked as taken'**
-  String get markedAsTaken;
-
-  /// No description provided for @markAsTaken.
-  ///
-  /// In en, this message translates to:
-  /// **'Mark as taken'**
-  String get markAsTaken;
 
   /// No description provided for @errorUpdatingPillStatus.
   ///

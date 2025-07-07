@@ -22,11 +22,14 @@ class NotificationItem {
   });
 
   factory NotificationItem.fromJson(Map<String, dynamic> json, String id) {
+    final timestamp = json['timestamp'];
     return NotificationItem(
       id: id,
       title: json['title'] ?? '',
       message: json['message'] ?? '',
-      timestamp: (json['timestamp'] as Timestamp).toDate(),
+      timestamp: timestamp != null
+          ? (timestamp as Timestamp).toDate()
+          : DateTime.now(),
       isRead: json['isRead'] ?? false,
       type: json['type'],
       data: json['data'],

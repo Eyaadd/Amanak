@@ -38,6 +38,7 @@ import 'package:amanak/provider/pill_provider.dart';
 import 'package:amanak/screens/notifications_screen.dart';
 import 'package:amanak/gaurdian_location.dart';
 import 'package:amanak/screens/simple_splash_screen.dart';
+import 'package:amanak/services/fall_detection_service.dart';
 
 const apiKey = "AIzaSyDLePMB53Q1Nud4ZG8a2XA9UUYuSLCrY6c";
 
@@ -227,14 +228,15 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  BaseTheme lightTheme = LightTheme();
   final bool languageSelected;
   final bool onboardingCompleted;
+  final _lightTheme = LightTheme();
 
   MyApp({
+    Key? key,
     required this.languageSelected,
     required this.onboardingCompleted,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -243,8 +245,8 @@ class MyApp extends StatelessWidget {
     return ResponsiveSizer(
       builder: (context, orientation, screenType) {
         return MaterialApp(
-          navigatorKey: navigatorKey, // Add global navigator key
-          theme: lightTheme.themeData,
+          navigatorKey: FallDetectionService.navigatorKey,
+          theme: _lightTheme.themeData,
           debugShowCheckedModeBanner: false,
           localizationsDelegates: const [
             AppLocalizations.delegate,

@@ -59,6 +59,8 @@ class _CalendarTabState extends State<CalendarTab> {
   String _displayName = "";
   final ImagePicker _picker = ImagePicker();
   bool _isProcessingImage = false;
+  // Add a set to track selected medicines
+  final Set<String> _selectedMedicines = {};
 
   @override
   void initState() {
@@ -142,7 +144,7 @@ class _CalendarTabState extends State<CalendarTab> {
           for (int j = 1; j < pill.duration; j++) {
             final nextDate = startDate.add(Duration(days: j));
             final nextDateKey =
-            DateTime(nextDate.year, nextDate.month, nextDate.day);
+                DateTime(nextDate.year, nextDate.month, nextDate.day);
 
             if (groupedPills[nextDateKey] == null) {
               groupedPills[nextDateKey] = [];
@@ -211,7 +213,7 @@ class _CalendarTabState extends State<CalendarTab> {
   // Helper method to format time
   String _formatTime(TimeOfDay time) {
     final hour =
-    time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
+        time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
     final minute = time.minute.toString().padLeft(2, '0');
     final period = time.hour >= 12 ? 'PM' : 'AM';
     return '$hour:$minute $period';
@@ -241,7 +243,7 @@ class _CalendarTabState extends State<CalendarTab> {
               try {
                 // Use the provider to add the pill
                 final pillProvider =
-                Provider.of<PillProvider>(context, listen: false);
+                    Provider.of<PillProvider>(context, listen: false);
                 final pillId = await pillProvider.addPill(pillModel);
 
                 if (pillId.isEmpty) {
@@ -375,106 +377,125 @@ class _CalendarTabState extends State<CalendarTab> {
     // Sort medicines by rank
     medicines.sort((a, b) => (a['rank'] as num).compareTo(b['rank'] as num));
 
+    // Clear selected medicines set when showing a new dialog
+    _selectedMedicines.clear();
+
     showDialog(
       context: context,
-      builder: (BuildContext dialogContext) => Dialog(
-        // Store dialog context
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: 85.w,
-            maxHeight: 85.h,
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(4.w),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  localizations.prescriptionResults,
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF015C92),
-                  ),
-                ),
-                SizedBox(height: 2.h),
-                Text(
-                  localizations.foundMedicinesInPrescription(medicines.length),
-                  style: TextStyle(fontSize: 14.sp),
-                ),
-                SizedBox(height: 2.h),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: medicines.length,
-                      itemBuilder: (context, index) {
-                        final medicine = medicines[index];
-                        final medicineName = medicine['medicine'] as String;
-                        final dosage = medicine['dosage'] as String;
-                        final confidence = medicine['confidence'] as double;
-                        final confidencePercent =
-                        (confidence * 100).toStringAsFixed(0);
-
-                        return Card(
-                          margin: EdgeInsets.only(bottom: 2.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ListTile(
-                            contentPadding: EdgeInsets.all(2.w),
-                            title: Text(
-                              medicineName,
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  localizations.dosage(dosage),
-                                  style: TextStyle(fontSize: 14.sp),
-                                ),
-                                Text(
-                                  localizations.confidence(confidencePercent),
-                                  style: TextStyle(fontSize: 12.sp),
-                                ),
-                              ],
-                            ),
-                            trailing: Icon(Icons.add_circle,
-                                color: Color(0xFF015C92)),
-                            onTap: () {
-                              // Show add pill form pre-filled with the medicine info
-                              _showAddPillDialogWithOCRData(
-                                  medicineName, dosage, dialogContext);
-                            },
-                          ),
-                        );
-                      },
+      builder: (BuildContext dialogContext) => StatefulBuilder(
+        // Use StatefulBuilder to update dialog state
+        builder: (context, setState) => Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 85.w,
+              maxHeight: 85.h,
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(4.w),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    localizations.prescriptionResults,
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF015C92),
                     ),
                   ),
-                ),
-                SizedBox(height: 2.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        localizations.close,
-                        style: TextStyle(fontSize: 15.sp),
+                  SizedBox(height: 2.h),
+                  Text(
+                    localizations
+                        .foundMedicinesInPrescription(medicines.length),
+                    style: TextStyle(fontSize: 14.sp),
+                  ),
+                  SizedBox(height: 2.h),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: medicines.length,
+                        itemBuilder: (context, index) {
+                          final medicine = medicines[index];
+                          final medicineName = medicine['medicine'] as String;
+                          final dosage = medicine['dosage'] as String;
+                          final confidence = medicine['confidence'] as double;
+                          final confidencePercent =
+                              (confidence * 100).toStringAsFixed(0);
+
+                          // Check if this medicine is already selected
+                          final bool isSelected =
+                              _selectedMedicines.contains(medicineName);
+
+                          return Card(
+                            margin: EdgeInsets.only(bottom: 2.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ListTile(
+                              contentPadding: EdgeInsets.all(2.w),
+                              title: Text(
+                                medicineName,
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    localizations.dosage(dosage),
+                                    style: TextStyle(fontSize: 14.sp),
+                                  ),
+                                  Text(
+                                    localizations.confidence(confidencePercent),
+                                    style: TextStyle(fontSize: 12.sp),
+                                  ),
+                                ],
+                              ),
+                              trailing: isSelected
+                                  ? Icon(Icons.check_circle,
+                                      color: Colors.green, size: 6.w)
+                                  : Icon(Icons.add_circle,
+                                      color: Color(0xFF015C92), size: 6.w),
+                              onTap: () {
+                                // Show add pill form pre-filled with the medicine info
+                                _showAddPillDialogWithOCRData(
+                                    medicineName, dosage, dialogContext);
+
+                                // Mark this medicine as selected
+                                setState(() {
+                                  _selectedMedicines.add(medicineName);
+                                });
+                              },
+                            ),
+                          );
+                        },
                       ),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  SizedBox(height: 2.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          localizations.close,
+                          style: TextStyle(fontSize: 15.sp),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -531,7 +552,7 @@ class _CalendarTabState extends State<CalendarTab> {
     } else {
       // Pattern for X times per day (مرات/مرتين يوميا)
       RegExp timesPerDayPattern =
-      RegExp(r'(\d+)\s*مرات?\s*(يوميا|في\s*اليوم|يومياً)');
+          RegExp(r'(\d+)\s*مرات?\s*(يوميا|في\s*اليوم|يومياً)');
       match = timesPerDayPattern.firstMatch(dosage);
       if (match != null) {
         timesPerDay = int.parse(match.group(1)!);
@@ -558,7 +579,7 @@ class _CalendarTabState extends State<CalendarTab> {
 
     // Pattern for specific days (يوم السبت، الاثنين، etc.)
     RegExp daysPattern =
-    RegExp(r'يوم (السبت|الأحد|الاثنين|الثلاثاء|الأربعاء|الخميس|الجمعة)');
+        RegExp(r'يوم (السبت|الأحد|الاثنين|الثلاثاء|الأربعاء|الخميس|الجمعة)');
     for (Match match in daysPattern.allMatches(dosage)) {
       daysOfWeek.add(match.group(1)!);
     }
@@ -655,7 +676,7 @@ class _CalendarTabState extends State<CalendarTab> {
                   for (int i = 1; i < updatedPillModel.duration; i++) {
                     final nextDate = startDate.add(Duration(days: i));
                     final nextDateKey =
-                    DateTime(nextDate.year, nextDate.month, nextDate.day);
+                        DateTime(nextDate.year, nextDate.month, nextDate.day);
 
                     if (_pills[nextDateKey] != null) {
                       _pills[nextDateKey]!.add(updatedPillModel);
@@ -715,442 +736,442 @@ class _CalendarTabState extends State<CalendarTab> {
         children: [
           _isLoading
               ? Center(
-              child: CircularProgressIndicator(
-                color: Theme.of(context).primaryColor,
-              ))
+                  child: CircularProgressIndicator(
+                  color: Theme.of(context).primaryColor,
+                ))
               : SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.all(5.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Calendar Card - Modern design
-                    Container(
-                      margin: EdgeInsets.symmetric(vertical: 3.w),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white,
-                            Color(0xFFF8FBFF),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 20,
-                            offset: Offset(0, 8),
-                            spreadRadius: 0,
-                          ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(4.w),
-                        child: Column(
-                          children: [
-                            // Calendar Header
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  vertical: 2.h, horizontal: 3.w),
-                              decoration: BoxDecoration(
-                                color:
-                                Color(0xFF015C92).withOpacity(0.05),
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    DateFormat('MMMM yyyy')
-                                        .format(_focusedDay),
-                                    style: TextStyle(
-                                      fontSize: 18.sp,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF015C92),
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius:
-                                      BorderRadius.circular(12),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black
-                                              .withOpacity(0.05),
-                                          blurRadius: 10,
-                                          offset: Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(Icons.chevron_left,
-                                              color: Color(0xFF015C92),
-                                              size: 7.w),
-                                          onPressed: () {
-                                            setState(() {
-                                              _focusedDay = DateTime(
-                                                  _focusedDay.year,
-                                                  _focusedDay.month - 1);
-                                            });
-                                          },
-                                        ),
-                                        IconButton(
-                                          icon: Icon(Icons.chevron_right,
-                                              color: Color(0xFF015C92),
-                                              size: 7.w),
-                                          onPressed: () {
-                                            setState(() {
-                                              _focusedDay = DateTime(
-                                                  _focusedDay.year,
-                                                  _focusedDay.month + 1);
-                                            });
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.all(5.w),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Calendar Card - Modern design
+                          Container(
+                            margin: EdgeInsets.symmetric(vertical: 3.w),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Colors.white,
+                                  Color(0xFFF8FBFF),
                                 ],
                               ),
-                            ),
-                            SizedBox(height: 2.h),
-                            // Calendar Widget
-                            TableCalendar(
-                              firstDay: DateTime.utc(2010, 10, 16),
-                              lastDay: DateTime.utc(2030, 3, 14),
-                              focusedDay: _focusedDay,
-                              calendarFormat: _calendarFormat,
-                              headerVisible: false,
-                              daysOfWeekHeight: 5.h,
-                              rowHeight: 6.h,
-                              eventLoader: (day) {
-                                final date = DateTime(
-                                    day.year, day.month, day.day);
-                                return _pills[date] ?? [];
-                              },
-                              selectedDayPredicate: (day) =>
-                                  isSameDay(_selectedDay, day),
-                              onDaySelected: (selectedDay, focusedDay) {
-                                setState(() {
-                                  _selectedDay = selectedDay;
-                                  _focusedDay = focusedDay;
-                                });
-                              },
-                              onFormatChanged: (format) {
-                                if (_calendarFormat != format) {
-                                  setState(() {
-                                    _calendarFormat = format;
-                                  });
-                                }
-                              },
-                              onPageChanged: (focusedDay) {
-                                setState(() {
-                                  _focusedDay = focusedDay;
-                                });
-                              },
-                              calendarStyle: CalendarStyle(
-                                selectedDecoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Color(0xFF015C92),
-                                      Color(0xFF0077CC)
-                                    ],
-                                  ),
-                                  shape: BoxShape.circle,
-                                ),
-                                todayDecoration: BoxDecoration(
-                                  color:
-                                  Color(0xFF015C92).withOpacity(0.2),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Color(0xFF015C92),
-                                    width: 2,
-                                  ),
-                                ),
-                                weekendTextStyle: TextStyle(
-                                  color: Colors.red[600],
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16.sp,
-                                ),
-                                outsideTextStyle: TextStyle(
-                                  color: Colors.grey[400],
-                                  fontSize: 16.sp,
-                                ),
-                                defaultTextStyle: TextStyle(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.grey[800],
-                                ),
-                                markersMaxCount: 3,
-                                markerDecoration: BoxDecoration(
-                                  color: Colors.redAccent,
-                                  shape: BoxShape.circle,
-                                ),
-                                markerSize: 6,
-                                markerMargin:
-                                EdgeInsets.symmetric(horizontal: 1),
-                              ),
-                              daysOfWeekStyle: DaysOfWeekStyle(
-                                weekdayStyle: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14.sp,
-                                  color: Color(0xFF015C92),
-                                ),
-                                weekendStyle: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14.sp,
-                                  color: Colors.red[600],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 3.h),
-
-                    // Pill Reminder Section - Modern design
-                    Container(
-                      padding: EdgeInsets.all(4.w),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
-                            blurRadius: 15,
-                            offset: Offset(0, 5),
-                            spreadRadius: 0,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _isReadOnly
-                                      ? localizations
-                                      .displayNameMedications(
-                                      _displayName)
-                                      : localizations.pillReminderTitle,
-                                  style: TextStyle(
-                                    fontSize: 18.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF015C92),
-                                    letterSpacing: 0.3,
-                                  ),
-                                ),
-                                SizedBox(height: 0.5.h),
-                                Text(
-                                  hasPillsForTomorrow
-                                      ? localizations
-                                      .dontForgetScheduleTomorrow
-                                      : localizations
-                                      .noRemindersForTomorrow,
-                                  style: TextStyle(
-                                    fontSize: 15.sp,
-                                    color: Colors.grey[600],
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.08),
+                                  blurRadius: 20,
+                                  offset: Offset(0, 8),
+                                  spreadRadius: 0,
                                 ),
                               ],
                             ),
-                          ),
-                          // Add pill button - only show for elders
-                          if (!_isReadOnly)
-                            Container(
-                              height: 12.w,
-                              width: 12.w,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Color(0xFF015C92),
-                                    Color(0xFF0077CC)
-                                  ],
-                                ),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Color(0xFF015C92)
-                                        .withOpacity(0.3),
-                                    blurRadius: 10,
-                                    offset: Offset(0, 4),
+                            child: Padding(
+                              padding: EdgeInsets.all(4.w),
+                              child: Column(
+                                children: [
+                                  // Calendar Header
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 2.h, horizontal: 3.w),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Color(0xFF015C92).withOpacity(0.05),
+                                      borderRadius: BorderRadius.circular(15),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          DateFormat('MMMM yyyy')
+                                              .format(_focusedDay),
+                                          style: TextStyle(
+                                            fontSize: 18.sp,
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF015C92),
+                                            letterSpacing: 0.3,
+                                          ),
+                                        ),
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withOpacity(0.05),
+                                                blurRadius: 10,
+                                                offset: Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              IconButton(
+                                                icon: Icon(Icons.chevron_left,
+                                                    color: Color(0xFF015C92),
+                                                    size: 7.w),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    _focusedDay = DateTime(
+                                                        _focusedDay.year,
+                                                        _focusedDay.month - 1);
+                                                  });
+                                                },
+                                              ),
+                                              IconButton(
+                                                icon: Icon(Icons.chevron_right,
+                                                    color: Color(0xFF015C92),
+                                                    size: 7.w),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    _focusedDay = DateTime(
+                                                        _focusedDay.year,
+                                                        _focusedDay.month + 1);
+                                                  });
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: 2.h),
+                                  // Calendar Widget
+                                  TableCalendar(
+                                    firstDay: DateTime.utc(2010, 10, 16),
+                                    lastDay: DateTime.utc(2030, 3, 14),
+                                    focusedDay: _focusedDay,
+                                    calendarFormat: _calendarFormat,
+                                    headerVisible: false,
+                                    daysOfWeekHeight: 5.h,
+                                    rowHeight: 6.h,
+                                    eventLoader: (day) {
+                                      final date = DateTime(
+                                          day.year, day.month, day.day);
+                                      return _pills[date] ?? [];
+                                    },
+                                    selectedDayPredicate: (day) =>
+                                        isSameDay(_selectedDay, day),
+                                    onDaySelected: (selectedDay, focusedDay) {
+                                      setState(() {
+                                        _selectedDay = selectedDay;
+                                        _focusedDay = focusedDay;
+                                      });
+                                    },
+                                    onFormatChanged: (format) {
+                                      if (_calendarFormat != format) {
+                                        setState(() {
+                                          _calendarFormat = format;
+                                        });
+                                      }
+                                    },
+                                    onPageChanged: (focusedDay) {
+                                      setState(() {
+                                        _focusedDay = focusedDay;
+                                      });
+                                    },
+                                    calendarStyle: CalendarStyle(
+                                      selectedDecoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Color(0xFF015C92),
+                                            Color(0xFF0077CC)
+                                          ],
+                                        ),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      todayDecoration: BoxDecoration(
+                                        color:
+                                            Color(0xFF015C92).withOpacity(0.2),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Color(0xFF015C92),
+                                          width: 2,
+                                        ),
+                                      ),
+                                      weekendTextStyle: TextStyle(
+                                        color: Colors.red[600],
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16.sp,
+                                      ),
+                                      outsideTextStyle: TextStyle(
+                                        color: Colors.grey[400],
+                                        fontSize: 16.sp,
+                                      ),
+                                      defaultTextStyle: TextStyle(
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey[800],
+                                      ),
+                                      markersMaxCount: 3,
+                                      markerDecoration: BoxDecoration(
+                                        color: Colors.redAccent,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      markerSize: 6,
+                                      markerMargin:
+                                          EdgeInsets.symmetric(horizontal: 1),
+                                    ),
+                                    daysOfWeekStyle: DaysOfWeekStyle(
+                                      weekdayStyle: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14.sp,
+                                        color: Color(0xFF015C92),
+                                      ),
+                                      weekendStyle: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14.sp,
+                                        color: Colors.red[600],
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
-                              child: IconButton(
-                                icon: Icon(Icons.add,
-                                    color: Colors.white, size: 6.w),
-                                onPressed: _showAddPillDialog,
+                            ),
+                          ),
+                          SizedBox(height: 3.h),
+
+                          // Pill Reminder Section - Modern design
+                          Container(
+                            padding: EdgeInsets.all(4.w),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.06),
+                                  blurRadius: 15,
+                                  offset: Offset(0, 5),
+                                  spreadRadius: 0,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _isReadOnly
+                                            ? localizations
+                                                .displayNameMedications(
+                                                    _displayName)
+                                            : localizations.pillReminderTitle,
+                                        style: TextStyle(
+                                          fontSize: 18.sp,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFF015C92),
+                                          letterSpacing: 0.3,
+                                        ),
+                                      ),
+                                      SizedBox(height: 0.5.h),
+                                      Text(
+                                        hasPillsForTomorrow
+                                            ? localizations
+                                                .dontForgetScheduleTomorrow
+                                            : localizations
+                                                .noRemindersForTomorrow,
+                                        style: TextStyle(
+                                          fontSize: 15.sp,
+                                          color: Colors.grey[600],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Add pill button - only show for elders
+                                if (!_isReadOnly)
+                                  Container(
+                                    height: 12.w,
+                                    width: 12.w,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Color(0xFF015C92),
+                                          Color(0xFF0077CC)
+                                        ],
+                                      ),
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Color(0xFF015C92)
+                                              .withOpacity(0.3),
+                                          blurRadius: 10,
+                                          offset: Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: IconButton(
+                                      icon: Icon(Icons.add,
+                                          color: Colors.white, size: 6.w),
+                                      onPressed: _showAddPillDialog,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+
+                          SizedBox(height: 3.h),
+
+                          // Pills List for selected day
+                          Container(
+                            height: 42.h, // Slightly increased height
+                            child: _selectedDay != null
+                                ? _buildPillsList()
+                                : Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.calendar_today_outlined,
+                                          size: 15.w,
+                                          color: Colors.grey[400],
+                                        ),
+                                        SizedBox(height: 2.h),
+                                        Text(
+                                          localizations.selectDayToSeePills,
+                                          style: TextStyle(
+                                            fontSize: 16.sp,
+                                            color: Colors.grey[600],
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                          ),
+
+                          // Bottom Buttons - Modern design
+                          if (!_isReadOnly)
+                            Padding(
+                              padding: EdgeInsets.only(top: 4.h, bottom: 3.h),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      height: 7.h,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Color(0xFF015C92),
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: OutlinedButton(
+                                        onPressed: _showAddPillDialog,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.add_circle_outline,
+                                              color: Color(0xFF015C92),
+                                              size: 5.w,
+                                            ),
+                                            SizedBox(width: 2.w),
+                                            Flexible(
+                                              child: Text(
+                                                localizations.addPillsManually,
+                                                style: TextStyle(
+                                                  fontSize: 14.sp,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Color(0xFF015C92),
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 1,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: Color(0xFF015C92),
+                                          side: BorderSide.none,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 4.w),
+                                  Expanded(
+                                    child: Container(
+                                      height: 7.h,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Color(0xFF015C92),
+                                            Color(0xFF0077CC)
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Color(0xFF015C92)
+                                                .withOpacity(0.3),
+                                            blurRadius: 10,
+                                            offset: Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: ElevatedButton(
+                                        onPressed: _showImageSourceDialog,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.document_scanner,
+                                              color: Colors.white,
+                                              size: 5.w,
+                                            ),
+                                            SizedBox(width: 2.w),
+                                            Flexible(
+                                              child: Text(
+                                                localizations.scanPrescription,
+                                                style: TextStyle(
+                                                  fontSize: 14.sp,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.white,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 1,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.transparent,
+                                          foregroundColor: Colors.white,
+                                          shadowColor: Colors.transparent,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                         ],
                       ),
                     ),
-
-                    SizedBox(height: 3.h),
-
-                    // Pills List for selected day
-                    Container(
-                      height: 42.h, // Slightly increased height
-                      child: _selectedDay != null
-                          ? _buildPillsList()
-                          : Center(
-                        child: Column(
-                          mainAxisAlignment:
-                          MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.calendar_today_outlined,
-                              size: 15.w,
-                              color: Colors.grey[400],
-                            ),
-                            SizedBox(height: 2.h),
-                            Text(
-                              localizations.selectDayToSeePills,
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Bottom Buttons - Modern design
-                    if (!_isReadOnly)
-                      Padding(
-                        padding: EdgeInsets.only(top: 4.h, bottom: 3.h),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                height: 7.h,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Color(0xFF015C92),
-                                    width: 2,
-                                  ),
-                                ),
-                                child: OutlinedButton(
-                                  onPressed: _showAddPillDialog,
-                                  child: Row(
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.add_circle_outline,
-                                        color: Color(0xFF015C92),
-                                        size: 5.w,
-                                      ),
-                                      SizedBox(width: 2.w),
-                                      Flexible(
-                                        child: Text(
-                                          localizations.addPillsManually,
-                                          style: TextStyle(
-                                            fontSize: 14.sp,
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF015C92),
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                          maxLines: 1,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: Color(0xFF015C92),
-                                    side: BorderSide.none,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                      BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 4.w),
-                            Expanded(
-                              child: Container(
-                                height: 7.h,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Color(0xFF015C92),
-                                      Color(0xFF0077CC)
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Color(0xFF015C92)
-                                          .withOpacity(0.3),
-                                      blurRadius: 10,
-                                      offset: Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: ElevatedButton(
-                                  onPressed: _showImageSourceDialog,
-                                  child: Row(
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.document_scanner,
-                                        color: Colors.white,
-                                        size: 5.w,
-                                      ),
-                                      SizedBox(width: 2.w),
-                                      Flexible(
-                                        child: Text(
-                                          localizations.scanPrescription,
-                                          style: TextStyle(
-                                            fontSize: 14.sp,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                          maxLines: 1,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.transparent,
-                                    foregroundColor: Colors.white,
-                                    shadowColor: Colors.transparent,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                      BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ),
 
           // Overlay loading indicator when processing image
           if (_isProcessingImage)
@@ -1255,7 +1276,7 @@ class _CalendarTabState extends State<CalendarTab> {
             child: Icon(Icons.delete, color: Colors.white, size: 6.w),
           ),
           direction:
-          _isReadOnly ? DismissDirection.none : DismissDirection.endToStart,
+              _isReadOnly ? DismissDirection.none : DismissDirection.endToStart,
           confirmDismiss: (direction) async {
             if (_isReadOnly) return false;
 
@@ -1326,16 +1347,16 @@ class _CalendarTabState extends State<CalendarTab> {
                 colors: isTaken
                     ? [Colors.green[50]!, Colors.green[100]!]
                     : pill.missed
-                    ? [Colors.red[50]!, Colors.red[100]!]
-                    : [Colors.white, Color(0xFFF8FBFF)],
+                        ? [Colors.red[50]!, Colors.red[100]!]
+                        : [Colors.white, Color(0xFFF8FBFF)],
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isTaken
                     ? Colors.green[300]!
                     : pill.missed
-                    ? Colors.red[300]!
-                    : Color(0xFF015C92).withOpacity(0.2),
+                        ? Colors.red[300]!
+                        : Color(0xFF015C92).withOpacity(0.2),
                 width: 1.5,
               ),
               boxShadow: [
@@ -1362,17 +1383,17 @@ class _CalendarTabState extends State<CalendarTab> {
                             colors: isTaken
                                 ? [Colors.green[400]!, Colors.green[600]!]
                                 : pill.missed
-                                ? [Colors.red[400]!, Colors.red[600]!]
-                                : [Color(0xFF015C92), Color(0xFF0077CC)],
+                                    ? [Colors.red[400]!, Colors.red[600]!]
+                                    : [Color(0xFF015C92), Color(0xFF0077CC)],
                           ),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
                               color: (isTaken
-                                  ? Colors.green[400]
-                                  : pill.missed
-                                  ? Colors.red[400]
-                                  : Color(0xFF015C92))!
+                                      ? Colors.green[400]
+                                      : pill.missed
+                                          ? Colors.red[400]
+                                          : Color(0xFF015C92))!
                                   .withOpacity(0.3),
                               blurRadius: 8,
                               offset: Offset(0, 3),
@@ -1398,8 +1419,8 @@ class _CalendarTabState extends State<CalendarTab> {
                                 color: isTaken
                                     ? Colors.green[800]
                                     : pill.missed
-                                    ? Colors.red[800]
-                                    : Color(0xFF015C92),
+                                        ? Colors.red[800]
+                                        : Color(0xFF015C92),
                                 fontWeight: FontWeight.w700,
                                 fontSize: 17.sp,
                                 letterSpacing: 0.2,
@@ -1413,8 +1434,8 @@ class _CalendarTabState extends State<CalendarTab> {
                                 color: isTaken
                                     ? Colors.green[600]
                                     : pill.missed
-                                    ? Colors.red[600]
-                                    : Colors.grey[700],
+                                        ? Colors.red[600]
+                                        : Colors.grey[700],
                                 fontSize: 14.sp,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -1429,8 +1450,8 @@ class _CalendarTabState extends State<CalendarTab> {
                                   color: isTaken
                                       ? Colors.green[600]
                                       : pill.missed
-                                      ? Colors.red[600]
-                                      : Color(0xFF015C92),
+                                          ? Colors.red[600]
+                                          : Color(0xFF015C92),
                                 ),
                                 SizedBox(width: 2.w),
                                 Flexible(
@@ -1440,8 +1461,8 @@ class _CalendarTabState extends State<CalendarTab> {
                                       color: isTaken
                                           ? Colors.green[600]
                                           : pill.missed
-                                          ? Colors.red[600]
-                                          : Color(0xFF015C92),
+                                              ? Colors.red[600]
+                                              : Color(0xFF015C92),
                                       fontSize: 15.sp,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -1455,8 +1476,8 @@ class _CalendarTabState extends State<CalendarTab> {
                                     color: isTaken
                                         ? Colors.green[600]
                                         : pill.missed
-                                        ? Colors.red[600]
-                                        : Color(0xFF015C92),
+                                            ? Colors.red[600]
+                                            : Color(0xFF015C92),
                                     size: 5.w,
                                   ),
                                 ],
@@ -1576,7 +1597,7 @@ class _CalendarTabState extends State<CalendarTab> {
                 if (!_isReadOnly)
                   Container(
                     padding:
-                    EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                        EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.7),
                       borderRadius: BorderRadius.only(
@@ -1677,8 +1698,8 @@ class _CalendarTabState extends State<CalendarTab> {
             SnackBar(
               content: Text(
                 'Cannot mark ${pill.name} as taken outside the allowed time window.\n'
-                    'Scheduled time: $pillTimeStr\n'
-                    'Allowed window: $earlyTimeStr - $lateTimeStr',
+                'Scheduled time: $pillTimeStr\n'
+                'Allowed window: $earlyTimeStr - $lateTimeStr',
                 style: TextStyle(fontSize: 14.sp),
               ),
               backgroundColor: Colors.orange,
@@ -1708,9 +1729,9 @@ class _CalendarTabState extends State<CalendarTab> {
                 pills[i] = pills[i].copyWith(
                   takenDates: isTaken
                       ? {
-                    ...pills[i].takenDates,
-                    timeKey: DateTime.now().toUtc()
-                  }
+                          ...pills[i].takenDates,
+                          timeKey: DateTime.now().toUtc()
+                        }
                       : {...pills[i].takenDates}
                     ..remove(timeKey),
                   missed: isTaken ? false : pills[i].missed,
@@ -1736,7 +1757,7 @@ class _CalendarTabState extends State<CalendarTab> {
 
       // Find the original pill in the provider's list
       final originalPill =
-      pillProvider.pills.firstWhere((p) => p.id == pill.id);
+          pillProvider.pills.firstWhere((p) => p.id == pill.id);
 
       // Create a copy with the updated taken status
       final updatedPill = originalPill.copyWith();
@@ -1775,9 +1796,9 @@ class _CalendarTabState extends State<CalendarTab> {
   // Send a direct FCM notification to the guardian about pill status
   Future<void> _sendDirectPillNotification(
       {required String guardianId,
-        required String pillName,
-        required String elderName,
-        required bool isTaken}) async {
+      required String pillName,
+      required String elderName,
+      required bool isTaken}) async {
     try {
       // Get guardian's FCM token directly
       final guardianDoc = await FirebaseFirestore.instance
@@ -2056,7 +2077,7 @@ class _CalendarTabState extends State<CalendarTab> {
       // Find guardian by email
       print('🔍 Looking up guardian by email: $sharedUserEmail');
       final guardianData =
-      await FirebaseManager.getUserByEmail(sharedUserEmail);
+          await FirebaseManager.getUserByEmail(sharedUserEmail);
       if (guardianData == null) {
         print('Guardian not found for email: $sharedUserEmail');
         return;
@@ -2251,7 +2272,7 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                 decoration: InputDecoration(
                   labelText: localizations.medicationName,
                   prefixIcon:
-                  Icon(Icons.medication, size: 5.w, color: primaryColor),
+                      Icon(Icons.medication, size: 5.w, color: primaryColor),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(3.w),
                   ),
@@ -2280,7 +2301,7 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                 decoration: InputDecoration(
                   labelText: localizations.dosageExample,
                   prefixIcon:
-                  Icon(Icons.biotech, size: 5.w, color: primaryColor),
+                      Icon(Icons.biotech, size: 5.w, color: primaryColor),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(3.w),
                   ),
@@ -2348,7 +2369,7 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                           },
                           underline: Container(),
                           icon:
-                          Icon(Icons.arrow_drop_down, color: primaryColor),
+                              Icon(Icons.arrow_drop_down, color: primaryColor),
                         ),
                       ],
                     ),
@@ -2470,7 +2491,7 @@ class _ModernAddPillFormState extends State<ModernAddPillForm> {
                           },
                           underline: Container(),
                           icon:
-                          Icon(Icons.arrow_drop_down, color: primaryColor),
+                              Icon(Icons.arrow_drop_down, color: primaryColor),
                         ),
                       ],
                     ),

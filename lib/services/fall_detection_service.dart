@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:isolate';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:workmanager/workmanager.dart';
@@ -25,8 +26,12 @@ void callbackDispatcher() {
 }
 
 class FallDetectionService {
+  // Add navigator key for accessing context
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
   static const String API_URL =
-      'https://fall-detection-production.up.railway.app/tune_thresholds/';
+      'https://fall-detection-production.up.railway.app/predict/';
   static const String FALL_DETECTION_TASK = 'fall_detection_task';
   static const int SAMPLING_RATE = 50; // 50Hz
   static const int WINDOW_SIZE = 100; // 100 samples per window
@@ -193,6 +198,10 @@ class FallDetectionService {
         'sensor_data': data,
       });
 
+      print('📤 Sending request to API...');
+      print('📍 API URL: $API_URL');
+      print('📦 Request body length: ${body.length} characters');
+
       // Create a client
       final client = http.Client();
       try {
@@ -212,29 +221,70 @@ class FallDetectionService {
           },
         );
 
+        print('📥 API Response received:');
+        print('   Status code: ${response.statusCode}');
+        print('   Response headers: ${response.headers}');
+        print('   Response body: ${response.body}');
+
         if (response.statusCode >= 200 && response.statusCode < 300) {
           if (response.body.isNotEmpty) {
             final result = jsonDecode(response.body);
+
+            print('🔍 Parsed API Response:');
+            print('   Raw result: $result');
+            print('   Type: ${result.runtimeType}');
+            if (result is Map) {
+              print('   Keys: ${result.keys.toList()}');
+              print(
+                  '   predicted_class: ${result['predicted_class']} (${result['predicted_class']?.runtimeType})');
+              print(
+                  '   confidence: ${result['confidence']} (${result['confidence']?.runtimeType})');
+            }
+
+            // Check if the required fields exist in the response
+            if (result == null) {
+              print('❌ API returned null response');
+              return {'error': 'API returned null response'};
+            }
+
+            final predictedClass =
+                result['predicted_class']?.toString() ?? 'unknown';
+            final confidence = result['confidence'] != null
+                ? (result['confidence'] as num).toDouble()
+                : 0.0;
+
+            print('✅ Successfully processed response:');
+            print('   Predicted class: $predictedClass');
+            print('   Confidence: $confidence');
+
             return {
               'success': true,
-              'predicted_class': result['predicted_class'],
-              'confidence': result['confidence'],
-              'timestamp': DateTime.now().millisecondsSinceEpoch,
+              'predicted_class': predictedClass,
+              'confidence': confidence,
+              'time': DateTime.now().millisecondsSinceEpoch,
             };
           } else {
+            print('❌ Empty response body received');
             return {'error': 'Empty response body'};
           }
         } else {
+          print('❌ API Error: Status ${response.statusCode}');
+          print('   Response body: ${response.body}');
           return {
             'error': 'API Error: Status ${response.statusCode}',
             'body': response.body,
           };
         }
+      } catch (e) {
+        print('❌ Error during API request: $e');
+        print('❌ Stack trace: ${StackTrace.current}');
+        return {'error': e.toString()};
       } finally {
         client.close();
       }
     } catch (e) {
       print('❌ Error processing data in isolate: $e');
+      print('❌ Stack trace: ${StackTrace.current}');
       return {'error': e.toString()};
     }
   }
@@ -244,13 +294,20 @@ class FallDetectionService {
       Map<String, dynamic> result) async {
     try {
       if (result.containsKey('success') && result['success'] == true) {
-        final predictedClass = result['predicted_class'] as String;
-        final confidence = (result['confidence'] as num).toDouble();
-        final timestamp = result['timestamp'] as int;
+        // Safely handle potentially null values
+        final predictedClass =
+            result['predicted_class']?.toString() ?? 'unknown';
+        final confidence = result['confidence'] != null
+            ? (result['confidence'] as num).toDouble()
+            : 0.0;
+        final timestamp = result['time'] != null
+            ? (result['time'] as num).toInt()
+            : DateTime.now().millisecondsSinceEpoch;
 
         print('🎯 Prediction Result:');
         print('   - Activity: $predictedClass');
         print('   - Confidence: ${(confidence * 100).toStringAsFixed(1)}%');
+        print('   - Timestamp: $timestamp');
 
         // Save prediction result
         final prefs = await SharedPreferences.getInstance();
@@ -260,13 +317,14 @@ class FallDetectionService {
 
         if (predictedClass.toLowerCase() == 'falling') {
           print('⚠️ FALL DETECTED!');
-          await _sendFallDetectionNotification();
+          await sendFallDetectionNotification();
         }
       } else if (result.containsKey('error')) {
         print('❌ Error from processing isolate: ${result['error']}');
       }
     } catch (e) {
       print('❌ Error handling prediction result: $e');
+      print('❌ Stack trace: ${StackTrace.current}');
     }
   }
 
@@ -436,7 +494,7 @@ class FallDetectionService {
         'wx': gyroX,
         'wy': gyroY,
         'wz': gyroZ,
-        'timestamp': currentTime.toDouble(),
+        'time': currentTime.toDouble(),
       };
 
       _sensorBuffer.add(reading);
@@ -480,7 +538,8 @@ class FallDetectionService {
 
   // The original _processSensorData method is replaced by _sendDataToIsolate and _isolateEntryPoint
 
-  static Future<void> _sendFallDetectionNotification() async {
+  // Make the notification method public
+  static Future<void> sendFallDetectionNotification() async {
     try {
       print('📱 Sending fall detection notification...');
 

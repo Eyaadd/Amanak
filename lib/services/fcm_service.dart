@@ -269,27 +269,32 @@ class FCMService {
           throw Exception('User not authenticated');
         }
 
-        // Force token refresh to ensure we have a valid token
+        // Force token refresh and wait for it to complete
         print('Refreshing Firebase Auth token in FCM service...');
         try {
-          await currentUser.getIdToken(true);
+          await currentUser.reload();
+          final idToken = await currentUser.getIdToken(true);
+          if (idToken == null || idToken.isEmpty) {
+            throw Exception('Failed to get valid ID token');
+          }
           print('Token refreshed successfully in FCM service');
+
+          // Configure Firebase Functions with the region
+          final functions =
+              FirebaseFunctions.instanceFor(region: 'us-central1');
+
+          // Wait a moment to ensure token propagation
+          await Future.delayed(Duration(milliseconds: 1000));
+
+          print('Calling Cloud Function with fresh authentication...');
+          final callable = functions.httpsCallable('sendNotification');
+          final result = await callable.call(message);
+          print('FCM notification sent via Cloud Functions: ${result.data}');
+          success = true;
         } catch (authError) {
           print('Error refreshing auth token in FCM service: $authError');
           throw Exception('Authentication token refresh failed: $authError');
         }
-
-        // Wait a moment to ensure token propagation
-        await Future.delayed(Duration(milliseconds: 500));
-
-        // Get a fresh instance of Firebase Functions
-        final functions = FirebaseFunctions.instance;
-        final callable = functions.httpsCallable('sendNotification');
-
-        print('Calling Cloud Function with fresh authentication...');
-        final result = await callable.call(message);
-        print('FCM notification sent via Cloud Functions: ${result.data}');
-        success = true;
       } catch (functionError) {
         errorMessage = functionError.toString();
         print('Cloud Function error: $functionError');
@@ -310,7 +315,6 @@ class FCMService {
 
       // If either approach succeeded, store the notification in Firestore
       if (success) {
-        // Store notification in Firestore for the recipient
         await _storeNotificationForUser(userId, title, body, data);
         return true;
       }
