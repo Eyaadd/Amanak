@@ -8,8 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
+		22390B4B48648A0D79D4CBDB /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5AE801A8CAC2A995C0CEED29 /* Pods_Runner.framework */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
+		745A4C8C816CEC15136E2FD3 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F31D7AC5DDFC0E8ADB9225C5 /* Pods_RunnerTests.framework */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
@@ -40,14 +42,420 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0B89160DC7081EB6DA41D37F /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
+		0D045FE2B8A917C02C88F583 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		2FC4BF6F03D4BB6DB8B61631 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
+		5AE801A8CAC2A995C0CEED29 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5D0AAE9533439F1738EE48AB /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
+		8E8C0CA72E144D8400BAC245 /* abseil.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = abseil.modulemap; sourceTree = "<group>"; };
+		8E8C0CA82E144D8400BAC245 /* abseil-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "abseil-dummy.m"; sourceTree = "<group>"; };
+		8E8C0CA92E144D8400BAC245 /* abseil-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "abseil-Info.plist"; sourceTree = "<group>"; };
+		8E8C0CAA2E144D8400BAC245 /* abseil-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "abseil-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0CAB2E144D8400BAC245 /* abseil-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "abseil-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0CAC2E144D8400BAC245 /* abseil.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = abseil.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0CAD2E144D8400BAC245 /* abseil.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = abseil.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0CAE2E144D8400BAC245 /* ResourceBundle-xcprivacy-abseil-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-xcprivacy-abseil-Info.plist"; sourceTree = "<group>"; };
+		8E8C0CB02E144D8400BAC245 /* BoringSSL-GRPC.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = "BoringSSL-GRPC.modulemap"; sourceTree = "<group>"; };
+		8E8C0CB12E144D8400BAC245 /* BoringSSL-GRPC-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "BoringSSL-GRPC-dummy.m"; sourceTree = "<group>"; };
+		8E8C0CB22E144D8400BAC245 /* BoringSSL-GRPC-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "BoringSSL-GRPC-Info.plist"; sourceTree = "<group>"; };
+		8E8C0CB32E144D8400BAC245 /* BoringSSL-GRPC-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BoringSSL-GRPC-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0CB42E144D8400BAC245 /* BoringSSL-GRPC-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BoringSSL-GRPC-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0CB52E144D8400BAC245 /* BoringSSL-GRPC.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "BoringSSL-GRPC.debug.xcconfig"; sourceTree = "<group>"; };
+		8E8C0CB62E144D8400BAC245 /* BoringSSL-GRPC.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "BoringSSL-GRPC.release.xcconfig"; sourceTree = "<group>"; };
+		8E8C0CB72E144D8400BAC245 /* ResourceBundle-openssl_grpc-BoringSSL-GRPC-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-openssl_grpc-BoringSSL-GRPC-Info.plist"; sourceTree = "<group>"; };
+		8E8C0CB92E144D8400BAC245 /* cloud_firestore.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = cloud_firestore.modulemap; sourceTree = "<group>"; };
+		8E8C0CBA2E144D8400BAC245 /* cloud_firestore-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "cloud_firestore-dummy.m"; sourceTree = "<group>"; };
+		8E8C0CBB2E144D8400BAC245 /* cloud_firestore-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "cloud_firestore-Info.plist"; sourceTree = "<group>"; };
+		8E8C0CBC2E144D8400BAC245 /* cloud_firestore-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "cloud_firestore-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0CBD2E144D8400BAC245 /* cloud_firestore-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "cloud_firestore-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0CBE2E144D8400BAC245 /* cloud_firestore.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = cloud_firestore.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0CBF2E144D8400BAC245 /* cloud_firestore.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = cloud_firestore.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0CC12E144D8400BAC245 /* cloud_functions.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = cloud_functions.modulemap; sourceTree = "<group>"; };
+		8E8C0CC22E144D8400BAC245 /* cloud_functions-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "cloud_functions-dummy.m"; sourceTree = "<group>"; };
+		8E8C0CC32E144D8400BAC245 /* cloud_functions-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "cloud_functions-Info.plist"; sourceTree = "<group>"; };
+		8E8C0CC42E144D8400BAC245 /* cloud_functions-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "cloud_functions-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0CC52E144D8400BAC245 /* cloud_functions-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "cloud_functions-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0CC62E144D8400BAC245 /* cloud_functions.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = cloud_functions.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0CC72E144D8400BAC245 /* cloud_functions.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = cloud_functions.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0CC92E144D8400BAC245 /* Firebase.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Firebase.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0CCA2E144D8400BAC245 /* Firebase.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Firebase.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0CCC2E144D8400BAC245 /* firebase_auth.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = firebase_auth.modulemap; sourceTree = "<group>"; };
+		8E8C0CCD2E144D8400BAC245 /* firebase_auth-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "firebase_auth-dummy.m"; sourceTree = "<group>"; };
+		8E8C0CCE2E144D8400BAC245 /* firebase_auth-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "firebase_auth-Info.plist"; sourceTree = "<group>"; };
+		8E8C0CCF2E144D8400BAC245 /* firebase_auth-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "firebase_auth-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0CD02E144D8400BAC245 /* firebase_auth-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "firebase_auth-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0CD12E144D8400BAC245 /* firebase_auth.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = firebase_auth.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0CD22E144D8400BAC245 /* firebase_auth.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = firebase_auth.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0CD42E144D8400BAC245 /* firebase_core.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = firebase_core.modulemap; sourceTree = "<group>"; };
+		8E8C0CD52E144D8400BAC245 /* firebase_core-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "firebase_core-dummy.m"; sourceTree = "<group>"; };
+		8E8C0CD62E144D8400BAC245 /* firebase_core-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "firebase_core-Info.plist"; sourceTree = "<group>"; };
+		8E8C0CD72E144D8400BAC245 /* firebase_core-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "firebase_core-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0CD82E144D8400BAC245 /* firebase_core-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "firebase_core-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0CD92E144D8400BAC245 /* firebase_core.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = firebase_core.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0CDA2E144D8400BAC245 /* firebase_core.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = firebase_core.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0CDC2E144D8400BAC245 /* firebase_messaging.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = firebase_messaging.modulemap; sourceTree = "<group>"; };
+		8E8C0CDD2E144D8400BAC245 /* firebase_messaging-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "firebase_messaging-dummy.m"; sourceTree = "<group>"; };
+		8E8C0CDE2E144D8400BAC245 /* firebase_messaging-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "firebase_messaging-Info.plist"; sourceTree = "<group>"; };
+		8E8C0CDF2E144D8400BAC245 /* firebase_messaging-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "firebase_messaging-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0CE02E144D8400BAC245 /* firebase_messaging-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "firebase_messaging-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0CE12E144D8400BAC245 /* firebase_messaging.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = firebase_messaging.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0CE22E144D8400BAC245 /* firebase_messaging.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = firebase_messaging.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0CE32E144D8400BAC245 /* ResourceBundle-firebase_messaging_Privacy-firebase_messaging-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-firebase_messaging_Privacy-firebase_messaging-Info.plist"; sourceTree = "<group>"; };
+		8E8C0CE52E144D8400BAC245 /* FirebaseAppCheckInterop.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = FirebaseAppCheckInterop.modulemap; sourceTree = "<group>"; };
+		8E8C0CE62E144D8400BAC245 /* FirebaseAppCheckInterop-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "FirebaseAppCheckInterop-dummy.m"; sourceTree = "<group>"; };
+		8E8C0CE72E144D8400BAC245 /* FirebaseAppCheckInterop-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "FirebaseAppCheckInterop-Info.plist"; sourceTree = "<group>"; };
+		8E8C0CE82E144D8400BAC245 /* FirebaseAppCheckInterop-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseAppCheckInterop-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0CE92E144D8400BAC245 /* FirebaseAppCheckInterop-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseAppCheckInterop-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0CEA2E144D8400BAC245 /* FirebaseAppCheckInterop.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseAppCheckInterop.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0CEB2E144D8400BAC245 /* FirebaseAppCheckInterop.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseAppCheckInterop.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0CED2E144D8400BAC245 /* FirebaseAuth.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = FirebaseAuth.modulemap; sourceTree = "<group>"; };
+		8E8C0CEE2E144D8400BAC245 /* FirebaseAuth-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "FirebaseAuth-dummy.m"; sourceTree = "<group>"; };
+		8E8C0CEF2E144D8400BAC245 /* FirebaseAuth-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "FirebaseAuth-Info.plist"; sourceTree = "<group>"; };
+		8E8C0CF02E144D8400BAC245 /* FirebaseAuth-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseAuth-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0CF12E144D8400BAC245 /* FirebaseAuth.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseAuth.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0CF22E144D8400BAC245 /* FirebaseAuth.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseAuth.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0CF32E144D8400BAC245 /* ResourceBundle-FirebaseAuth_Privacy-FirebaseAuth-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-FirebaseAuth_Privacy-FirebaseAuth-Info.plist"; sourceTree = "<group>"; };
+		8E8C0CF52E144D8400BAC245 /* FirebaseAuthInterop.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = FirebaseAuthInterop.modulemap; sourceTree = "<group>"; };
+		8E8C0CF62E144D8400BAC245 /* FirebaseAuthInterop-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "FirebaseAuthInterop-dummy.m"; sourceTree = "<group>"; };
+		8E8C0CF72E144D8400BAC245 /* FirebaseAuthInterop-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "FirebaseAuthInterop-Info.plist"; sourceTree = "<group>"; };
+		8E8C0CF82E144D8400BAC245 /* FirebaseAuthInterop-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseAuthInterop-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0CF92E144D8400BAC245 /* FirebaseAuthInterop-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseAuthInterop-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0CFA2E144D8400BAC245 /* FirebaseAuthInterop.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseAuthInterop.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0CFB2E144D8400BAC245 /* FirebaseAuthInterop.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseAuthInterop.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0CFD2E144D8400BAC245 /* FirebaseCore.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = FirebaseCore.modulemap; sourceTree = "<group>"; };
+		8E8C0CFE2E144D8400BAC245 /* FirebaseCore-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "FirebaseCore-dummy.m"; sourceTree = "<group>"; };
+		8E8C0CFF2E144D8400BAC245 /* FirebaseCore-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "FirebaseCore-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D002E144D8400BAC245 /* FirebaseCore-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseCore-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D012E144D8400BAC245 /* FirebaseCore.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseCore.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D022E144D8400BAC245 /* FirebaseCore.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseCore.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D032E144D8400BAC245 /* ResourceBundle-FirebaseCore_Privacy-FirebaseCore-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-FirebaseCore_Privacy-FirebaseCore-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D052E144D8400BAC245 /* FirebaseCoreExtension.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = FirebaseCoreExtension.modulemap; sourceTree = "<group>"; };
+		8E8C0D062E144D8400BAC245 /* FirebaseCoreExtension-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "FirebaseCoreExtension-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D072E144D8400BAC245 /* FirebaseCoreExtension-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "FirebaseCoreExtension-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D082E144D8400BAC245 /* FirebaseCoreExtension-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseCoreExtension-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0D092E144D8400BAC245 /* FirebaseCoreExtension-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseCoreExtension-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D0A2E144D8400BAC245 /* FirebaseCoreExtension.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseCoreExtension.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D0B2E144D8400BAC245 /* FirebaseCoreExtension.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseCoreExtension.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D0C2E144D8400BAC245 /* ResourceBundle-FirebaseCoreExtension_Privacy-FirebaseCoreExtension-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-FirebaseCoreExtension_Privacy-FirebaseCoreExtension-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D0E2E144D8400BAC245 /* FirebaseCoreInternal.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = FirebaseCoreInternal.modulemap; sourceTree = "<group>"; };
+		8E8C0D0F2E144D8400BAC245 /* FirebaseCoreInternal-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "FirebaseCoreInternal-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D102E144D8400BAC245 /* FirebaseCoreInternal-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "FirebaseCoreInternal-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D112E144D8400BAC245 /* FirebaseCoreInternal-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseCoreInternal-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0D122E144D8400BAC245 /* FirebaseCoreInternal-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseCoreInternal-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D132E144D8400BAC245 /* FirebaseCoreInternal.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseCoreInternal.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D142E144D8400BAC245 /* FirebaseCoreInternal.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseCoreInternal.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D152E144D8400BAC245 /* ResourceBundle-FirebaseCoreInternal_Privacy-FirebaseCoreInternal-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-FirebaseCoreInternal_Privacy-FirebaseCoreInternal-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D172E144D8400BAC245 /* FirebaseFirestore.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = FirebaseFirestore.modulemap; sourceTree = "<group>"; };
+		8E8C0D182E144D8400BAC245 /* FirebaseFirestore-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "FirebaseFirestore-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D192E144D8400BAC245 /* FirebaseFirestore-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "FirebaseFirestore-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D1A2E144D8400BAC245 /* FirebaseFirestore-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseFirestore-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D1B2E144D8400BAC245 /* FirebaseFirestore.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseFirestore.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D1C2E144D8400BAC245 /* FirebaseFirestore.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseFirestore.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D1D2E144D8400BAC245 /* ResourceBundle-FirebaseFirestore_Privacy-FirebaseFirestore-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-FirebaseFirestore_Privacy-FirebaseFirestore-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D1F2E144D8400BAC245 /* FirebaseFirestoreInternal.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = FirebaseFirestoreInternal.modulemap; sourceTree = "<group>"; };
+		8E8C0D202E144D8400BAC245 /* FirebaseFirestoreInternal-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "FirebaseFirestoreInternal-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D212E144D8400BAC245 /* FirebaseFirestoreInternal-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "FirebaseFirestoreInternal-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D222E144D8400BAC245 /* FirebaseFirestoreInternal-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseFirestoreInternal-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D232E144D8400BAC245 /* FirebaseFirestoreInternal.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseFirestoreInternal.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D242E144D8400BAC245 /* FirebaseFirestoreInternal.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseFirestoreInternal.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D252E144D8400BAC245 /* ResourceBundle-FirebaseFirestoreInternal_Privacy-FirebaseFirestoreInternal-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-FirebaseFirestoreInternal_Privacy-FirebaseFirestoreInternal-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D272E144D8400BAC245 /* FirebaseFunctions.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = FirebaseFunctions.modulemap; sourceTree = "<group>"; };
+		8E8C0D282E144D8400BAC245 /* FirebaseFunctions-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "FirebaseFunctions-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D292E144D8400BAC245 /* FirebaseFunctions-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "FirebaseFunctions-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D2A2E144D8400BAC245 /* FirebaseFunctions-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseFunctions-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D2B2E144D8400BAC245 /* FirebaseFunctions.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseFunctions.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D2C2E144D8400BAC245 /* FirebaseFunctions.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseFunctions.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D2E2E144D8400BAC245 /* FirebaseInstallations.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = FirebaseInstallations.modulemap; sourceTree = "<group>"; };
+		8E8C0D2F2E144D8400BAC245 /* FirebaseInstallations-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "FirebaseInstallations-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D302E144D8400BAC245 /* FirebaseInstallations-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "FirebaseInstallations-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D312E144D8400BAC245 /* FirebaseInstallations-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseInstallations-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D322E144D8400BAC245 /* FirebaseInstallations.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseInstallations.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D332E144D8400BAC245 /* FirebaseInstallations.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseInstallations.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D342E144D8400BAC245 /* ResourceBundle-FirebaseInstallations_Privacy-FirebaseInstallations-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-FirebaseInstallations_Privacy-FirebaseInstallations-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D362E144D8400BAC245 /* FirebaseMessaging.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = FirebaseMessaging.modulemap; sourceTree = "<group>"; };
+		8E8C0D372E144D8400BAC245 /* FirebaseMessaging-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "FirebaseMessaging-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D382E144D8400BAC245 /* FirebaseMessaging-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "FirebaseMessaging-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D392E144D8400BAC245 /* FirebaseMessaging-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseMessaging-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D3A2E144D8400BAC245 /* FirebaseMessaging.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseMessaging.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D3B2E144D8400BAC245 /* FirebaseMessaging.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseMessaging.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D3C2E144D8400BAC245 /* ResourceBundle-FirebaseMessaging_Privacy-FirebaseMessaging-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-FirebaseMessaging_Privacy-FirebaseMessaging-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D3E2E144D8400BAC245 /* FirebaseMessagingInterop.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = FirebaseMessagingInterop.modulemap; sourceTree = "<group>"; };
+		8E8C0D3F2E144D8400BAC245 /* FirebaseMessagingInterop-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "FirebaseMessagingInterop-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D402E144D8400BAC245 /* FirebaseMessagingInterop-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "FirebaseMessagingInterop-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D412E144D8400BAC245 /* FirebaseMessagingInterop-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseMessagingInterop-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0D422E144D8400BAC245 /* FirebaseMessagingInterop-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseMessagingInterop-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D432E144D8400BAC245 /* FirebaseMessagingInterop.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseMessagingInterop.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D442E144D8400BAC245 /* FirebaseMessagingInterop.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseMessagingInterop.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D462E144D8400BAC245 /* FirebaseSharedSwift.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = FirebaseSharedSwift.modulemap; sourceTree = "<group>"; };
+		8E8C0D472E144D8400BAC245 /* FirebaseSharedSwift-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "FirebaseSharedSwift-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D482E144D8400BAC245 /* FirebaseSharedSwift-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "FirebaseSharedSwift-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D492E144D8400BAC245 /* FirebaseSharedSwift-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FirebaseSharedSwift-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D4A2E144D8400BAC245 /* FirebaseSharedSwift.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseSharedSwift.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D4B2E144D8400BAC245 /* FirebaseSharedSwift.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FirebaseSharedSwift.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D4D2E144D8400BAC245 /* Flutter.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Flutter.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D4E2E144D8400BAC245 /* Flutter.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Flutter.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D502E144D8400BAC245 /* flutter_keyboard_visibility.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = flutter_keyboard_visibility.modulemap; sourceTree = "<group>"; };
+		8E8C0D512E144D8400BAC245 /* flutter_keyboard_visibility-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "flutter_keyboard_visibility-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D522E144D8400BAC245 /* flutter_keyboard_visibility-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "flutter_keyboard_visibility-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D532E144D8400BAC245 /* flutter_keyboard_visibility-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "flutter_keyboard_visibility-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0D542E144D8400BAC245 /* flutter_keyboard_visibility-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "flutter_keyboard_visibility-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D552E144D8400BAC245 /* flutter_keyboard_visibility.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = flutter_keyboard_visibility.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D562E144D8400BAC245 /* flutter_keyboard_visibility.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = flutter_keyboard_visibility.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D582E144D8400BAC245 /* flutter_local_notifications.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = flutter_local_notifications.modulemap; sourceTree = "<group>"; };
+		8E8C0D592E144D8400BAC245 /* flutter_local_notifications-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "flutter_local_notifications-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D5A2E144D8400BAC245 /* flutter_local_notifications-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "flutter_local_notifications-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D5B2E144D8400BAC245 /* flutter_local_notifications-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "flutter_local_notifications-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0D5C2E144D8400BAC245 /* flutter_local_notifications-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "flutter_local_notifications-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D5D2E144D8400BAC245 /* flutter_local_notifications.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = flutter_local_notifications.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D5E2E144D8400BAC245 /* flutter_local_notifications.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = flutter_local_notifications.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D5F2E144D8400BAC245 /* ResourceBundle-flutter_local_notifications_privacy-flutter_local_notifications-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-flutter_local_notifications_privacy-flutter_local_notifications-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D612E144D8400BAC245 /* flutter_timezone.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = flutter_timezone.modulemap; sourceTree = "<group>"; };
+		8E8C0D622E144D8400BAC245 /* flutter_timezone-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "flutter_timezone-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D632E144D8400BAC245 /* flutter_timezone-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "flutter_timezone-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D642E144D8400BAC245 /* flutter_timezone-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "flutter_timezone-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0D652E144D8400BAC245 /* flutter_timezone-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "flutter_timezone-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D662E144D8400BAC245 /* flutter_timezone.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = flutter_timezone.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D672E144D8400BAC245 /* flutter_timezone.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = flutter_timezone.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D682E144D8400BAC245 /* ResourceBundle-flutter_timezone_privacy-flutter_timezone-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-flutter_timezone_privacy-flutter_timezone-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D6A2E144D8400BAC245 /* geolocator_apple.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = geolocator_apple.modulemap; sourceTree = "<group>"; };
+		8E8C0D6B2E144D8400BAC245 /* geolocator_apple-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "geolocator_apple-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D6C2E144D8400BAC245 /* geolocator_apple-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "geolocator_apple-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D6D2E144D8400BAC245 /* geolocator_apple-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "geolocator_apple-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0D6E2E144D8400BAC245 /* geolocator_apple.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = geolocator_apple.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D6F2E144D8400BAC245 /* geolocator_apple.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = geolocator_apple.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D702E144D8400BAC245 /* ResourceBundle-geolocator_apple_privacy-geolocator_apple-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-geolocator_apple_privacy-geolocator_apple-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D722E144D8400BAC245 /* google_maps_flutter_ios.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = google_maps_flutter_ios.modulemap; sourceTree = "<group>"; };
+		8E8C0D732E144D8400BAC245 /* google_maps_flutter_ios-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "google_maps_flutter_ios-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D742E144D8400BAC245 /* google_maps_flutter_ios-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "google_maps_flutter_ios-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D752E144D8400BAC245 /* google_maps_flutter_ios-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "google_maps_flutter_ios-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0D762E144D8400BAC245 /* google_maps_flutter_ios.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = google_maps_flutter_ios.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D772E144D8400BAC245 /* google_maps_flutter_ios.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = google_maps_flutter_ios.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D782E144D8400BAC245 /* ResourceBundle-google_maps_flutter_ios_privacy-google_maps_flutter_ios-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-google_maps_flutter_ios_privacy-google_maps_flutter_ios-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D7A2E144D8400BAC245 /* Google-Maps-iOS-Utils.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = "Google-Maps-iOS-Utils.modulemap"; sourceTree = "<group>"; };
+		8E8C0D7B2E144D8400BAC245 /* Google-Maps-iOS-Utils-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "Google-Maps-iOS-Utils-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D7C2E144D8400BAC245 /* Google-Maps-iOS-Utils-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Google-Maps-iOS-Utils-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D7D2E144D8400BAC245 /* Google-Maps-iOS-Utils-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Google-Maps-iOS-Utils-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0D7E2E144D8400BAC245 /* Google-Maps-iOS-Utils-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Google-Maps-iOS-Utils-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D7F2E144D8400BAC245 /* Google-Maps-iOS-Utils.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Google-Maps-iOS-Utils.debug.xcconfig"; sourceTree = "<group>"; };
+		8E8C0D802E144D8400BAC245 /* Google-Maps-iOS-Utils.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Google-Maps-iOS-Utils.release.xcconfig"; sourceTree = "<group>"; };
+		8E8C0D822E144D8400BAC245 /* GoogleDataTransport.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = GoogleDataTransport.modulemap; sourceTree = "<group>"; };
+		8E8C0D832E144D8400BAC245 /* GoogleDataTransport-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "GoogleDataTransport-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D842E144D8400BAC245 /* GoogleDataTransport-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleDataTransport-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D852E144D8400BAC245 /* GoogleDataTransport-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "GoogleDataTransport-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D862E144D8400BAC245 /* GoogleDataTransport.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = GoogleDataTransport.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D872E144D8400BAC245 /* GoogleDataTransport.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = GoogleDataTransport.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D882E144D8400BAC245 /* ResourceBundle-GoogleDataTransport_Privacy-GoogleDataTransport-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-GoogleDataTransport_Privacy-GoogleDataTransport-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D8A2E144D8400BAC245 /* GoogleMaps-xcframeworks.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "GoogleMaps-xcframeworks.sh"; sourceTree = "<group>"; };
+		8E8C0D8B2E144D8400BAC245 /* GoogleMaps-xcframeworks-input-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "GoogleMaps-xcframeworks-input-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0D8C2E144D8400BAC245 /* GoogleMaps-xcframeworks-output-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "GoogleMaps-xcframeworks-output-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0D8D2E144D8400BAC245 /* GoogleMaps.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = GoogleMaps.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D8E2E144D8400BAC245 /* GoogleMaps.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = GoogleMaps.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D8F2E144D8400BAC245 /* ResourceBundle-GoogleMapsResources-GoogleMaps-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-GoogleMapsResources-GoogleMaps-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D912E144D8400BAC245 /* GoogleUtilities.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = GoogleUtilities.modulemap; sourceTree = "<group>"; };
+		8E8C0D922E144D8400BAC245 /* GoogleUtilities-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "GoogleUtilities-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D932E144D8400BAC245 /* GoogleUtilities-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleUtilities-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D942E144D8400BAC245 /* GoogleUtilities-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "GoogleUtilities-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D952E144D8400BAC245 /* GoogleUtilities.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = GoogleUtilities.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0D962E144D8400BAC245 /* GoogleUtilities.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = GoogleUtilities.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0D972E144D8400BAC245 /* ResourceBundle-GoogleUtilities_Privacy-GoogleUtilities-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-GoogleUtilities_Privacy-GoogleUtilities-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D992E144D8400BAC245 /* gRPC-C++.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = "gRPC-C++.modulemap"; sourceTree = "<group>"; };
+		8E8C0D9A2E144D8400BAC245 /* gRPC-C++-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "gRPC-C++-dummy.m"; sourceTree = "<group>"; };
+		8E8C0D9B2E144D8400BAC245 /* gRPC-C++-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "gRPC-C++-Info.plist"; sourceTree = "<group>"; };
+		8E8C0D9C2E144D8400BAC245 /* gRPC-C++-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "gRPC-C++-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0D9D2E144D8400BAC245 /* gRPC-C++-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "gRPC-C++-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0D9E2E144D8400BAC245 /* gRPC-C++.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "gRPC-C++.debug.xcconfig"; sourceTree = "<group>"; };
+		8E8C0D9F2E144D8400BAC245 /* gRPC-C++.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "gRPC-C++.release.xcconfig"; sourceTree = "<group>"; };
+		8E8C0DA02E144D8400BAC245 /* ResourceBundle-gRPCCertificates-Cpp-gRPC-C++-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-gRPCCertificates-Cpp-gRPC-C++-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DA12E144D8400BAC245 /* ResourceBundle-grpcpp-gRPC-C++-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-grpcpp-gRPC-C++-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DA32E144D8400BAC245 /* gRPC-Core.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = "gRPC-Core.modulemap"; sourceTree = "<group>"; };
+		8E8C0DA42E144D8400BAC245 /* gRPC-Core-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "gRPC-Core-dummy.m"; sourceTree = "<group>"; };
+		8E8C0DA52E144D8400BAC245 /* gRPC-Core-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "gRPC-Core-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DA62E144D8400BAC245 /* gRPC-Core-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "gRPC-Core-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0DA72E144D8400BAC245 /* gRPC-Core.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "gRPC-Core.debug.xcconfig"; sourceTree = "<group>"; };
+		8E8C0DA82E144D8400BAC245 /* gRPC-Core.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "gRPC-Core.release.xcconfig"; sourceTree = "<group>"; };
+		8E8C0DA92E144D8400BAC245 /* ResourceBundle-grpc-gRPC-Core-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-grpc-gRPC-Core-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DAB2E144D8400BAC245 /* GTMSessionFetcher.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = GTMSessionFetcher.modulemap; sourceTree = "<group>"; };
+		8E8C0DAC2E144D8400BAC245 /* GTMSessionFetcher-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "GTMSessionFetcher-dummy.m"; sourceTree = "<group>"; };
+		8E8C0DAD2E144D8400BAC245 /* GTMSessionFetcher-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GTMSessionFetcher-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DAE2E144D8400BAC245 /* GTMSessionFetcher-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "GTMSessionFetcher-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0DAF2E144D8400BAC245 /* GTMSessionFetcher.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = GTMSessionFetcher.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0DB02E144D8400BAC245 /* GTMSessionFetcher.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = GTMSessionFetcher.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0DB12E144D8400BAC245 /* ResourceBundle-GTMSessionFetcher_Core_Privacy-GTMSessionFetcher-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-GTMSessionFetcher_Core_Privacy-GTMSessionFetcher-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DB32E144D8400BAC245 /* image_picker_ios.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = image_picker_ios.modulemap; sourceTree = "<group>"; };
+		8E8C0DB42E144D8400BAC245 /* image_picker_ios-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "image_picker_ios-dummy.m"; sourceTree = "<group>"; };
+		8E8C0DB52E144D8400BAC245 /* image_picker_ios-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "image_picker_ios-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DB62E144D8400BAC245 /* image_picker_ios-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "image_picker_ios-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0DB72E144D8400BAC245 /* image_picker_ios.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = image_picker_ios.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0DB82E144D8400BAC245 /* image_picker_ios.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = image_picker_ios.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0DB92E144D8400BAC245 /* ResourceBundle-image_picker_ios_privacy-image_picker_ios-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-image_picker_ios_privacy-image_picker_ios-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DBB2E144D8400BAC245 /* leveldb-library.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = "leveldb-library.modulemap"; sourceTree = "<group>"; };
+		8E8C0DBC2E144D8400BAC245 /* leveldb-library-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "leveldb-library-dummy.m"; sourceTree = "<group>"; };
+		8E8C0DBD2E144D8400BAC245 /* leveldb-library-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "leveldb-library-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DBE2E144D8400BAC245 /* leveldb-library-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "leveldb-library-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0DBF2E144D8400BAC245 /* leveldb-library-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "leveldb-library-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0DC02E144D8400BAC245 /* leveldb-library.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "leveldb-library.debug.xcconfig"; sourceTree = "<group>"; };
+		8E8C0DC12E144D8400BAC245 /* leveldb-library.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "leveldb-library.release.xcconfig"; sourceTree = "<group>"; };
+		8E8C0DC22E144D8400BAC245 /* ResourceBundle-leveldb_Privacy-leveldb-library-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-leveldb_Privacy-leveldb-library-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DC42E144D8400BAC245 /* location.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = location.modulemap; sourceTree = "<group>"; };
+		8E8C0DC52E144D8400BAC245 /* location-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "location-dummy.m"; sourceTree = "<group>"; };
+		8E8C0DC62E144D8400BAC245 /* location-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "location-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DC72E144D8400BAC245 /* location-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "location-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0DC82E144D8400BAC245 /* location-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "location-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0DC92E144D8400BAC245 /* location.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = location.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0DCA2E144D8400BAC245 /* location.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = location.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0DCC2E144D8400BAC245 /* nanopb.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = nanopb.modulemap; sourceTree = "<group>"; };
+		8E8C0DCD2E144D8400BAC245 /* nanopb-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "nanopb-dummy.m"; sourceTree = "<group>"; };
+		8E8C0DCE2E144D8400BAC245 /* nanopb-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "nanopb-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DCF2E144D8400BAC245 /* nanopb-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "nanopb-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0DD02E144D8400BAC245 /* nanopb-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "nanopb-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0DD12E144D8400BAC245 /* nanopb.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = nanopb.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0DD22E144D8400BAC245 /* nanopb.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = nanopb.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0DD32E144D8400BAC245 /* ResourceBundle-nanopb_Privacy-nanopb-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-nanopb_Privacy-nanopb-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DD52E144D8400BAC245 /* path_provider_foundation.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = path_provider_foundation.modulemap; sourceTree = "<group>"; };
+		8E8C0DD62E144D8400BAC245 /* path_provider_foundation-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "path_provider_foundation-dummy.m"; sourceTree = "<group>"; };
+		8E8C0DD72E144D8400BAC245 /* path_provider_foundation-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "path_provider_foundation-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DD82E144D8400BAC245 /* path_provider_foundation-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "path_provider_foundation-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0DD92E144D8400BAC245 /* path_provider_foundation-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "path_provider_foundation-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0DDA2E144D8400BAC245 /* path_provider_foundation.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = path_provider_foundation.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0DDB2E144D8400BAC245 /* path_provider_foundation.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = path_provider_foundation.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0DDC2E144D8400BAC245 /* ResourceBundle-path_provider_foundation_privacy-path_provider_foundation-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-path_provider_foundation_privacy-path_provider_foundation-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DDE2E144D8400BAC245 /* Pods-Runner.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = "Pods-Runner.modulemap"; sourceTree = "<group>"; };
+		8E8C0DDF2E144D8400BAC245 /* Pods-Runner-acknowledgements.markdown */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "Pods-Runner-acknowledgements.markdown"; sourceTree = "<group>"; };
+		8E8C0DE02E144D8400BAC245 /* Pods-Runner-acknowledgements.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Pods-Runner-acknowledgements.plist"; sourceTree = "<group>"; };
+		8E8C0DE12E144D8400BAC245 /* Pods-Runner-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "Pods-Runner-dummy.m"; sourceTree = "<group>"; };
+		8E8C0DE22E144D8400BAC245 /* Pods-Runner-frameworks.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "Pods-Runner-frameworks.sh"; sourceTree = "<group>"; };
+		8E8C0DE32E144D8400BAC245 /* Pods-Runner-frameworks-Debug-input-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-frameworks-Debug-input-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0DE42E144D8400BAC245 /* Pods-Runner-frameworks-Debug-output-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-frameworks-Debug-output-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0DE52E144D8400BAC245 /* Pods-Runner-frameworks-Profile-input-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-frameworks-Profile-input-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0DE62E144D8400BAC245 /* Pods-Runner-frameworks-Profile-output-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-frameworks-Profile-output-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0DE72E144D8400BAC245 /* Pods-Runner-frameworks-Release-input-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-frameworks-Release-input-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0DE82E144D8400BAC245 /* Pods-Runner-frameworks-Release-output-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-frameworks-Release-output-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0DE92E144D8400BAC245 /* Pods-Runner-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Pods-Runner-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DEA2E144D8400BAC245 /* Pods-Runner-resources.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "Pods-Runner-resources.sh"; sourceTree = "<group>"; };
+		8E8C0DEB2E144D8400BAC245 /* Pods-Runner-resources-Debug-input-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-resources-Debug-input-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0DEC2E144D8400BAC245 /* Pods-Runner-resources-Debug-output-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-resources-Debug-output-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0DED2E144D8400BAC245 /* Pods-Runner-resources-Profile-input-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-resources-Profile-input-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0DEE2E144D8400BAC245 /* Pods-Runner-resources-Profile-output-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-resources-Profile-output-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0DEF2E144D8400BAC245 /* Pods-Runner-resources-Release-input-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-resources-Release-input-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0DF02E144D8400BAC245 /* Pods-Runner-resources-Release-output-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-resources-Release-output-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0DF12E144D8400BAC245 /* Pods-Runner-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Pods-Runner-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0DF22E144D8400BAC245 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
+		8E8C0DF32E144D8400BAC245 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
+		8E8C0DF42E144D8400BAC245 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
+		8E8C0DF62E144D8400BAC245 /* Pods-RunnerTests.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = "Pods-RunnerTests.modulemap"; sourceTree = "<group>"; };
+		8E8C0DF72E144D8400BAC245 /* Pods-RunnerTests-acknowledgements.markdown */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "Pods-RunnerTests-acknowledgements.markdown"; sourceTree = "<group>"; };
+		8E8C0DF82E144D8400BAC245 /* Pods-RunnerTests-acknowledgements.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Pods-RunnerTests-acknowledgements.plist"; sourceTree = "<group>"; };
+		8E8C0DF92E144D8400BAC245 /* Pods-RunnerTests-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "Pods-RunnerTests-dummy.m"; sourceTree = "<group>"; };
+		8E8C0DFA2E144D8400BAC245 /* Pods-RunnerTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Pods-RunnerTests-Info.plist"; sourceTree = "<group>"; };
+		8E8C0DFB2E144D8400BAC245 /* Pods-RunnerTests-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Pods-RunnerTests-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0DFC2E144D8400BAC245 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
+		8E8C0DFD2E144D8400BAC245 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
+		8E8C0DFE2E144D8400BAC245 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
+		8E8C0E002E144D8400BAC245 /* pointer_interceptor_ios.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = pointer_interceptor_ios.modulemap; sourceTree = "<group>"; };
+		8E8C0E012E144D8400BAC245 /* pointer_interceptor_ios-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "pointer_interceptor_ios-dummy.m"; sourceTree = "<group>"; };
+		8E8C0E022E144D8400BAC245 /* pointer_interceptor_ios-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "pointer_interceptor_ios-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E032E144D8400BAC245 /* pointer_interceptor_ios-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "pointer_interceptor_ios-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0E042E144D8400BAC245 /* pointer_interceptor_ios-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "pointer_interceptor_ios-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0E052E144D8400BAC245 /* pointer_interceptor_ios.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = pointer_interceptor_ios.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0E062E144D8400BAC245 /* pointer_interceptor_ios.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = pointer_interceptor_ios.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0E072E144D8400BAC245 /* ResourceBundle-pointer_interceptor_ios_privacy-pointer_interceptor_ios-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-pointer_interceptor_ios_privacy-pointer_interceptor_ios-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E092E144D8400BAC245 /* PromisesObjC.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = PromisesObjC.modulemap; sourceTree = "<group>"; };
+		8E8C0E0A2E144D8400BAC245 /* PromisesObjC-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "PromisesObjC-dummy.m"; sourceTree = "<group>"; };
+		8E8C0E0B2E144D8400BAC245 /* PromisesObjC-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "PromisesObjC-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E0C2E144D8400BAC245 /* PromisesObjC-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "PromisesObjC-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0E0D2E144D8400BAC245 /* PromisesObjC.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = PromisesObjC.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0E0E2E144D8400BAC245 /* PromisesObjC.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = PromisesObjC.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0E0F2E144D8400BAC245 /* ResourceBundle-FBLPromises_Privacy-PromisesObjC-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-FBLPromises_Privacy-PromisesObjC-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E112E144D8400BAC245 /* RecaptchaInterop.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = RecaptchaInterop.modulemap; sourceTree = "<group>"; };
+		8E8C0E122E144D8400BAC245 /* RecaptchaInterop-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "RecaptchaInterop-dummy.m"; sourceTree = "<group>"; };
+		8E8C0E132E144D8400BAC245 /* RecaptchaInterop-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "RecaptchaInterop-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E142E144D8400BAC245 /* RecaptchaInterop-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RecaptchaInterop-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0E152E144D8400BAC245 /* RecaptchaInterop-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RecaptchaInterop-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0E162E144D8400BAC245 /* RecaptchaInterop.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = RecaptchaInterop.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0E172E144D8400BAC245 /* RecaptchaInterop.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = RecaptchaInterop.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0E192E144D8400BAC245 /* sensors_plus.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = sensors_plus.modulemap; sourceTree = "<group>"; };
+		8E8C0E1A2E144D8400BAC245 /* sensors_plus-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "sensors_plus-dummy.m"; sourceTree = "<group>"; };
+		8E8C0E1B2E144D8400BAC245 /* sensors_plus-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "sensors_plus-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E1C2E144D8400BAC245 /* sensors_plus-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "sensors_plus-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0E1D2E144D8400BAC245 /* sensors_plus-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "sensors_plus-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0E1E2E144D8400BAC245 /* sensors_plus.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = sensors_plus.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0E1F2E144D8400BAC245 /* sensors_plus.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = sensors_plus.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0E212E144D8400BAC245 /* ResourceBundle-shared_preferences_foundation_privacy-shared_preferences_foundation-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-shared_preferences_foundation_privacy-shared_preferences_foundation-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E222E144D8400BAC245 /* shared_preferences_foundation.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = shared_preferences_foundation.modulemap; sourceTree = "<group>"; };
+		8E8C0E232E144D8400BAC245 /* shared_preferences_foundation-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "shared_preferences_foundation-dummy.m"; sourceTree = "<group>"; };
+		8E8C0E242E144D8400BAC245 /* shared_preferences_foundation-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "shared_preferences_foundation-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E252E144D8400BAC245 /* shared_preferences_foundation-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "shared_preferences_foundation-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0E262E144D8400BAC245 /* shared_preferences_foundation-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "shared_preferences_foundation-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0E272E144D8400BAC245 /* shared_preferences_foundation.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = shared_preferences_foundation.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0E282E144D8400BAC245 /* shared_preferences_foundation.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = shared_preferences_foundation.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0E2A2E144D8400BAC245 /* speech_to_text.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = speech_to_text.modulemap; sourceTree = "<group>"; };
+		8E8C0E2B2E144D8400BAC245 /* speech_to_text-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "speech_to_text-dummy.m"; sourceTree = "<group>"; };
+		8E8C0E2C2E144D8400BAC245 /* speech_to_text-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "speech_to_text-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E2D2E144D8400BAC245 /* speech_to_text-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "speech_to_text-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0E2E2E144D8400BAC245 /* speech_to_text-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "speech_to_text-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0E2F2E144D8400BAC245 /* speech_to_text.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = speech_to_text.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0E302E144D8400BAC245 /* speech_to_text.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = speech_to_text.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0E322E144D8400BAC245 /* ResourceBundle-sqflite_darwin_privacy-sqflite_darwin-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-sqflite_darwin_privacy-sqflite_darwin-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E332E144D8400BAC245 /* sqflite_darwin.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = sqflite_darwin.modulemap; sourceTree = "<group>"; };
+		8E8C0E342E144D8400BAC245 /* sqflite_darwin-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "sqflite_darwin-dummy.m"; sourceTree = "<group>"; };
+		8E8C0E352E144D8400BAC245 /* sqflite_darwin-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "sqflite_darwin-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E362E144D8400BAC245 /* sqflite_darwin-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "sqflite_darwin-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0E372E144D8400BAC245 /* sqflite_darwin-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "sqflite_darwin-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0E382E144D8400BAC245 /* sqflite_darwin.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = sqflite_darwin.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0E392E144D8400BAC245 /* sqflite_darwin.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = sqflite_darwin.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0E3B2E144D8400BAC245 /* Try.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = Try.modulemap; sourceTree = "<group>"; };
+		8E8C0E3C2E144D8400BAC245 /* Try-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "Try-dummy.m"; sourceTree = "<group>"; };
+		8E8C0E3D2E144D8400BAC245 /* Try-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Try-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E3E2E144D8400BAC245 /* Try-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Try-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0E3F2E144D8400BAC245 /* Try-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Try-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0E402E144D8400BAC245 /* Try.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Try.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0E412E144D8400BAC245 /* Try.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Try.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0E432E144D8400BAC245 /* ResourceBundle-url_launcher_ios_privacy-url_launcher_ios-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ResourceBundle-url_launcher_ios_privacy-url_launcher_ios-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E442E144D8400BAC245 /* url_launcher_ios.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = url_launcher_ios.modulemap; sourceTree = "<group>"; };
+		8E8C0E452E144D8400BAC245 /* url_launcher_ios-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "url_launcher_ios-dummy.m"; sourceTree = "<group>"; };
+		8E8C0E462E144D8400BAC245 /* url_launcher_ios-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "url_launcher_ios-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E472E144D8400BAC245 /* url_launcher_ios-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "url_launcher_ios-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0E482E144D8400BAC245 /* url_launcher_ios-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "url_launcher_ios-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0E492E144D8400BAC245 /* url_launcher_ios.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = url_launcher_ios.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0E4A2E144D8400BAC245 /* url_launcher_ios.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = url_launcher_ios.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0E4C2E144D8400BAC245 /* workmanager.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = workmanager.modulemap; sourceTree = "<group>"; };
+		8E8C0E4D2E144D8400BAC245 /* workmanager-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "workmanager-dummy.m"; sourceTree = "<group>"; };
+		8E8C0E4E2E144D8400BAC245 /* workmanager-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "workmanager-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E4F2E144D8400BAC245 /* workmanager-prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "workmanager-prefix.pch"; sourceTree = "<group>"; };
+		8E8C0E502E144D8400BAC245 /* workmanager-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "workmanager-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0E512E144D8400BAC245 /* workmanager.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = workmanager.debug.xcconfig; sourceTree = "<group>"; };
+		8E8C0E522E144D8400BAC245 /* workmanager.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = workmanager.release.xcconfig; sourceTree = "<group>"; };
+		8E8C0E552E144D9E00BAC245 /* Pods-Runner.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = "Pods-Runner.modulemap"; sourceTree = "<group>"; };
+		8E8C0E562E144D9E00BAC245 /* Pods-Runner-acknowledgements.markdown */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "Pods-Runner-acknowledgements.markdown"; sourceTree = "<group>"; };
+		8E8C0E572E144D9E00BAC245 /* Pods-Runner-acknowledgements.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Pods-Runner-acknowledgements.plist"; sourceTree = "<group>"; };
+		8E8C0E582E144D9E00BAC245 /* Pods-Runner-dummy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "Pods-Runner-dummy.m"; sourceTree = "<group>"; };
+		8E8C0E592E144D9E00BAC245 /* Pods-Runner-frameworks.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "Pods-Runner-frameworks.sh"; sourceTree = "<group>"; };
+		8E8C0E5A2E144D9E00BAC245 /* Pods-Runner-frameworks-Debug-input-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-frameworks-Debug-input-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0E5B2E144D9E00BAC245 /* Pods-Runner-frameworks-Debug-output-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-frameworks-Debug-output-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0E5C2E144D9E00BAC245 /* Pods-Runner-frameworks-Profile-input-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-frameworks-Profile-input-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0E5D2E144D9E00BAC245 /* Pods-Runner-frameworks-Profile-output-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-frameworks-Profile-output-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0E5E2E144D9E00BAC245 /* Pods-Runner-frameworks-Release-input-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-frameworks-Release-input-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0E5F2E144D9E00BAC245 /* Pods-Runner-frameworks-Release-output-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-frameworks-Release-output-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0E602E144D9E00BAC245 /* Pods-Runner-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Pods-Runner-Info.plist"; sourceTree = "<group>"; };
+		8E8C0E612E144D9E00BAC245 /* Pods-Runner-resources.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "Pods-Runner-resources.sh"; sourceTree = "<group>"; };
+		8E8C0E622E144D9E00BAC245 /* Pods-Runner-resources-Debug-input-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-resources-Debug-input-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0E632E144D9E00BAC245 /* Pods-Runner-resources-Debug-output-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-resources-Debug-output-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0E642E144D9E00BAC245 /* Pods-Runner-resources-Profile-input-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-resources-Profile-input-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0E652E144D9E00BAC245 /* Pods-Runner-resources-Profile-output-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-resources-Profile-output-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0E662E144D9E00BAC245 /* Pods-Runner-resources-Release-input-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-resources-Release-input-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0E672E144D9E00BAC245 /* Pods-Runner-resources-Release-output-files.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = "Pods-Runner-resources-Release-output-files.xcfilelist"; sourceTree = "<group>"; };
+		8E8C0E682E144D9E00BAC245 /* Pods-Runner-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Pods-Runner-umbrella.h"; sourceTree = "<group>"; };
+		8E8C0E692E144D9E00BAC245 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
+		8E8C0E6A2E144D9E00BAC245 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
+		8E8C0E6B2E144D9E00BAC245 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
 		97C146EE1CF9000F007C117D /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -55,6 +463,9 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA9B27F38367E0315CCD217F /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
+		CD38E137E6035FE50A306796 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
+		F31D7AC5DDFC0E8ADB9225C5 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +473,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22390B4B48648A0D79D4CBDB /* Pods_Runner.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BAB9B857C4E241767D880DF8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				745A4C8C816CEC15136E2FD3 /* Pods_RunnerTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -74,6 +494,829 @@
 				331C807B294A618700263BE5 /* RunnerTests.swift */,
 			);
 			path = RunnerTests;
+			sourceTree = "<group>";
+		};
+		8E8C0CAF2E144D8400BAC245 /* abseil */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0CA72E144D8400BAC245 /* abseil.modulemap */,
+				8E8C0CA82E144D8400BAC245 /* abseil-dummy.m */,
+				8E8C0CA92E144D8400BAC245 /* abseil-Info.plist */,
+				8E8C0CAA2E144D8400BAC245 /* abseil-prefix.pch */,
+				8E8C0CAB2E144D8400BAC245 /* abseil-umbrella.h */,
+				8E8C0CAC2E144D8400BAC245 /* abseil.debug.xcconfig */,
+				8E8C0CAD2E144D8400BAC245 /* abseil.release.xcconfig */,
+				8E8C0CAE2E144D8400BAC245 /* ResourceBundle-xcprivacy-abseil-Info.plist */,
+			);
+			path = abseil;
+			sourceTree = "<group>";
+		};
+		8E8C0CB82E144D8400BAC245 /* BoringSSL-GRPC */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0CB02E144D8400BAC245 /* BoringSSL-GRPC.modulemap */,
+				8E8C0CB12E144D8400BAC245 /* BoringSSL-GRPC-dummy.m */,
+				8E8C0CB22E144D8400BAC245 /* BoringSSL-GRPC-Info.plist */,
+				8E8C0CB32E144D8400BAC245 /* BoringSSL-GRPC-prefix.pch */,
+				8E8C0CB42E144D8400BAC245 /* BoringSSL-GRPC-umbrella.h */,
+				8E8C0CB52E144D8400BAC245 /* BoringSSL-GRPC.debug.xcconfig */,
+				8E8C0CB62E144D8400BAC245 /* BoringSSL-GRPC.release.xcconfig */,
+				8E8C0CB72E144D8400BAC245 /* ResourceBundle-openssl_grpc-BoringSSL-GRPC-Info.plist */,
+			);
+			path = "BoringSSL-GRPC";
+			sourceTree = "<group>";
+		};
+		8E8C0CC02E144D8400BAC245 /* cloud_firestore */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0CB92E144D8400BAC245 /* cloud_firestore.modulemap */,
+				8E8C0CBA2E144D8400BAC245 /* cloud_firestore-dummy.m */,
+				8E8C0CBB2E144D8400BAC245 /* cloud_firestore-Info.plist */,
+				8E8C0CBC2E144D8400BAC245 /* cloud_firestore-prefix.pch */,
+				8E8C0CBD2E144D8400BAC245 /* cloud_firestore-umbrella.h */,
+				8E8C0CBE2E144D8400BAC245 /* cloud_firestore.debug.xcconfig */,
+				8E8C0CBF2E144D8400BAC245 /* cloud_firestore.release.xcconfig */,
+			);
+			path = cloud_firestore;
+			sourceTree = "<group>";
+		};
+		8E8C0CC82E144D8400BAC245 /* cloud_functions */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0CC12E144D8400BAC245 /* cloud_functions.modulemap */,
+				8E8C0CC22E144D8400BAC245 /* cloud_functions-dummy.m */,
+				8E8C0CC32E144D8400BAC245 /* cloud_functions-Info.plist */,
+				8E8C0CC42E144D8400BAC245 /* cloud_functions-prefix.pch */,
+				8E8C0CC52E144D8400BAC245 /* cloud_functions-umbrella.h */,
+				8E8C0CC62E144D8400BAC245 /* cloud_functions.debug.xcconfig */,
+				8E8C0CC72E144D8400BAC245 /* cloud_functions.release.xcconfig */,
+			);
+			path = cloud_functions;
+			sourceTree = "<group>";
+		};
+		8E8C0CCB2E144D8400BAC245 /* Firebase */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0CC92E144D8400BAC245 /* Firebase.debug.xcconfig */,
+				8E8C0CCA2E144D8400BAC245 /* Firebase.release.xcconfig */,
+			);
+			path = Firebase;
+			sourceTree = "<group>";
+		};
+		8E8C0CD32E144D8400BAC245 /* firebase_auth */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0CCC2E144D8400BAC245 /* firebase_auth.modulemap */,
+				8E8C0CCD2E144D8400BAC245 /* firebase_auth-dummy.m */,
+				8E8C0CCE2E144D8400BAC245 /* firebase_auth-Info.plist */,
+				8E8C0CCF2E144D8400BAC245 /* firebase_auth-prefix.pch */,
+				8E8C0CD02E144D8400BAC245 /* firebase_auth-umbrella.h */,
+				8E8C0CD12E144D8400BAC245 /* firebase_auth.debug.xcconfig */,
+				8E8C0CD22E144D8400BAC245 /* firebase_auth.release.xcconfig */,
+			);
+			path = firebase_auth;
+			sourceTree = "<group>";
+		};
+		8E8C0CDB2E144D8400BAC245 /* firebase_core */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0CD42E144D8400BAC245 /* firebase_core.modulemap */,
+				8E8C0CD52E144D8400BAC245 /* firebase_core-dummy.m */,
+				8E8C0CD62E144D8400BAC245 /* firebase_core-Info.plist */,
+				8E8C0CD72E144D8400BAC245 /* firebase_core-prefix.pch */,
+				8E8C0CD82E144D8400BAC245 /* firebase_core-umbrella.h */,
+				8E8C0CD92E144D8400BAC245 /* firebase_core.debug.xcconfig */,
+				8E8C0CDA2E144D8400BAC245 /* firebase_core.release.xcconfig */,
+			);
+			path = firebase_core;
+			sourceTree = "<group>";
+		};
+		8E8C0CE42E144D8400BAC245 /* firebase_messaging */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0CDC2E144D8400BAC245 /* firebase_messaging.modulemap */,
+				8E8C0CDD2E144D8400BAC245 /* firebase_messaging-dummy.m */,
+				8E8C0CDE2E144D8400BAC245 /* firebase_messaging-Info.plist */,
+				8E8C0CDF2E144D8400BAC245 /* firebase_messaging-prefix.pch */,
+				8E8C0CE02E144D8400BAC245 /* firebase_messaging-umbrella.h */,
+				8E8C0CE12E144D8400BAC245 /* firebase_messaging.debug.xcconfig */,
+				8E8C0CE22E144D8400BAC245 /* firebase_messaging.release.xcconfig */,
+				8E8C0CE32E144D8400BAC245 /* ResourceBundle-firebase_messaging_Privacy-firebase_messaging-Info.plist */,
+			);
+			path = firebase_messaging;
+			sourceTree = "<group>";
+		};
+		8E8C0CEC2E144D8400BAC245 /* FirebaseAppCheckInterop */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0CE52E144D8400BAC245 /* FirebaseAppCheckInterop.modulemap */,
+				8E8C0CE62E144D8400BAC245 /* FirebaseAppCheckInterop-dummy.m */,
+				8E8C0CE72E144D8400BAC245 /* FirebaseAppCheckInterop-Info.plist */,
+				8E8C0CE82E144D8400BAC245 /* FirebaseAppCheckInterop-prefix.pch */,
+				8E8C0CE92E144D8400BAC245 /* FirebaseAppCheckInterop-umbrella.h */,
+				8E8C0CEA2E144D8400BAC245 /* FirebaseAppCheckInterop.debug.xcconfig */,
+				8E8C0CEB2E144D8400BAC245 /* FirebaseAppCheckInterop.release.xcconfig */,
+			);
+			path = FirebaseAppCheckInterop;
+			sourceTree = "<group>";
+		};
+		8E8C0CF42E144D8400BAC245 /* FirebaseAuth */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0CED2E144D8400BAC245 /* FirebaseAuth.modulemap */,
+				8E8C0CEE2E144D8400BAC245 /* FirebaseAuth-dummy.m */,
+				8E8C0CEF2E144D8400BAC245 /* FirebaseAuth-Info.plist */,
+				8E8C0CF02E144D8400BAC245 /* FirebaseAuth-umbrella.h */,
+				8E8C0CF12E144D8400BAC245 /* FirebaseAuth.debug.xcconfig */,
+				8E8C0CF22E144D8400BAC245 /* FirebaseAuth.release.xcconfig */,
+				8E8C0CF32E144D8400BAC245 /* ResourceBundle-FirebaseAuth_Privacy-FirebaseAuth-Info.plist */,
+			);
+			path = FirebaseAuth;
+			sourceTree = "<group>";
+		};
+		8E8C0CFC2E144D8400BAC245 /* FirebaseAuthInterop */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0CF52E144D8400BAC245 /* FirebaseAuthInterop.modulemap */,
+				8E8C0CF62E144D8400BAC245 /* FirebaseAuthInterop-dummy.m */,
+				8E8C0CF72E144D8400BAC245 /* FirebaseAuthInterop-Info.plist */,
+				8E8C0CF82E144D8400BAC245 /* FirebaseAuthInterop-prefix.pch */,
+				8E8C0CF92E144D8400BAC245 /* FirebaseAuthInterop-umbrella.h */,
+				8E8C0CFA2E144D8400BAC245 /* FirebaseAuthInterop.debug.xcconfig */,
+				8E8C0CFB2E144D8400BAC245 /* FirebaseAuthInterop.release.xcconfig */,
+			);
+			path = FirebaseAuthInterop;
+			sourceTree = "<group>";
+		};
+		8E8C0D042E144D8400BAC245 /* FirebaseCore */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0CFD2E144D8400BAC245 /* FirebaseCore.modulemap */,
+				8E8C0CFE2E144D8400BAC245 /* FirebaseCore-dummy.m */,
+				8E8C0CFF2E144D8400BAC245 /* FirebaseCore-Info.plist */,
+				8E8C0D002E144D8400BAC245 /* FirebaseCore-umbrella.h */,
+				8E8C0D012E144D8400BAC245 /* FirebaseCore.debug.xcconfig */,
+				8E8C0D022E144D8400BAC245 /* FirebaseCore.release.xcconfig */,
+				8E8C0D032E144D8400BAC245 /* ResourceBundle-FirebaseCore_Privacy-FirebaseCore-Info.plist */,
+			);
+			path = FirebaseCore;
+			sourceTree = "<group>";
+		};
+		8E8C0D0D2E144D8400BAC245 /* FirebaseCoreExtension */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D052E144D8400BAC245 /* FirebaseCoreExtension.modulemap */,
+				8E8C0D062E144D8400BAC245 /* FirebaseCoreExtension-dummy.m */,
+				8E8C0D072E144D8400BAC245 /* FirebaseCoreExtension-Info.plist */,
+				8E8C0D082E144D8400BAC245 /* FirebaseCoreExtension-prefix.pch */,
+				8E8C0D092E144D8400BAC245 /* FirebaseCoreExtension-umbrella.h */,
+				8E8C0D0A2E144D8400BAC245 /* FirebaseCoreExtension.debug.xcconfig */,
+				8E8C0D0B2E144D8400BAC245 /* FirebaseCoreExtension.release.xcconfig */,
+				8E8C0D0C2E144D8400BAC245 /* ResourceBundle-FirebaseCoreExtension_Privacy-FirebaseCoreExtension-Info.plist */,
+			);
+			path = FirebaseCoreExtension;
+			sourceTree = "<group>";
+		};
+		8E8C0D162E144D8400BAC245 /* FirebaseCoreInternal */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D0E2E144D8400BAC245 /* FirebaseCoreInternal.modulemap */,
+				8E8C0D0F2E144D8400BAC245 /* FirebaseCoreInternal-dummy.m */,
+				8E8C0D102E144D8400BAC245 /* FirebaseCoreInternal-Info.plist */,
+				8E8C0D112E144D8400BAC245 /* FirebaseCoreInternal-prefix.pch */,
+				8E8C0D122E144D8400BAC245 /* FirebaseCoreInternal-umbrella.h */,
+				8E8C0D132E144D8400BAC245 /* FirebaseCoreInternal.debug.xcconfig */,
+				8E8C0D142E144D8400BAC245 /* FirebaseCoreInternal.release.xcconfig */,
+				8E8C0D152E144D8400BAC245 /* ResourceBundle-FirebaseCoreInternal_Privacy-FirebaseCoreInternal-Info.plist */,
+			);
+			path = FirebaseCoreInternal;
+			sourceTree = "<group>";
+		};
+		8E8C0D1E2E144D8400BAC245 /* FirebaseFirestore */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D172E144D8400BAC245 /* FirebaseFirestore.modulemap */,
+				8E8C0D182E144D8400BAC245 /* FirebaseFirestore-dummy.m */,
+				8E8C0D192E144D8400BAC245 /* FirebaseFirestore-Info.plist */,
+				8E8C0D1A2E144D8400BAC245 /* FirebaseFirestore-umbrella.h */,
+				8E8C0D1B2E144D8400BAC245 /* FirebaseFirestore.debug.xcconfig */,
+				8E8C0D1C2E144D8400BAC245 /* FirebaseFirestore.release.xcconfig */,
+				8E8C0D1D2E144D8400BAC245 /* ResourceBundle-FirebaseFirestore_Privacy-FirebaseFirestore-Info.plist */,
+			);
+			path = FirebaseFirestore;
+			sourceTree = "<group>";
+		};
+		8E8C0D262E144D8400BAC245 /* FirebaseFirestoreInternal */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D1F2E144D8400BAC245 /* FirebaseFirestoreInternal.modulemap */,
+				8E8C0D202E144D8400BAC245 /* FirebaseFirestoreInternal-dummy.m */,
+				8E8C0D212E144D8400BAC245 /* FirebaseFirestoreInternal-Info.plist */,
+				8E8C0D222E144D8400BAC245 /* FirebaseFirestoreInternal-umbrella.h */,
+				8E8C0D232E144D8400BAC245 /* FirebaseFirestoreInternal.debug.xcconfig */,
+				8E8C0D242E144D8400BAC245 /* FirebaseFirestoreInternal.release.xcconfig */,
+				8E8C0D252E144D8400BAC245 /* ResourceBundle-FirebaseFirestoreInternal_Privacy-FirebaseFirestoreInternal-Info.plist */,
+			);
+			path = FirebaseFirestoreInternal;
+			sourceTree = "<group>";
+		};
+		8E8C0D2D2E144D8400BAC245 /* FirebaseFunctions */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D272E144D8400BAC245 /* FirebaseFunctions.modulemap */,
+				8E8C0D282E144D8400BAC245 /* FirebaseFunctions-dummy.m */,
+				8E8C0D292E144D8400BAC245 /* FirebaseFunctions-Info.plist */,
+				8E8C0D2A2E144D8400BAC245 /* FirebaseFunctions-umbrella.h */,
+				8E8C0D2B2E144D8400BAC245 /* FirebaseFunctions.debug.xcconfig */,
+				8E8C0D2C2E144D8400BAC245 /* FirebaseFunctions.release.xcconfig */,
+			);
+			path = FirebaseFunctions;
+			sourceTree = "<group>";
+		};
+		8E8C0D352E144D8400BAC245 /* FirebaseInstallations */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D2E2E144D8400BAC245 /* FirebaseInstallations.modulemap */,
+				8E8C0D2F2E144D8400BAC245 /* FirebaseInstallations-dummy.m */,
+				8E8C0D302E144D8400BAC245 /* FirebaseInstallations-Info.plist */,
+				8E8C0D312E144D8400BAC245 /* FirebaseInstallations-umbrella.h */,
+				8E8C0D322E144D8400BAC245 /* FirebaseInstallations.debug.xcconfig */,
+				8E8C0D332E144D8400BAC245 /* FirebaseInstallations.release.xcconfig */,
+				8E8C0D342E144D8400BAC245 /* ResourceBundle-FirebaseInstallations_Privacy-FirebaseInstallations-Info.plist */,
+			);
+			path = FirebaseInstallations;
+			sourceTree = "<group>";
+		};
+		8E8C0D3D2E144D8400BAC245 /* FirebaseMessaging */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D362E144D8400BAC245 /* FirebaseMessaging.modulemap */,
+				8E8C0D372E144D8400BAC245 /* FirebaseMessaging-dummy.m */,
+				8E8C0D382E144D8400BAC245 /* FirebaseMessaging-Info.plist */,
+				8E8C0D392E144D8400BAC245 /* FirebaseMessaging-umbrella.h */,
+				8E8C0D3A2E144D8400BAC245 /* FirebaseMessaging.debug.xcconfig */,
+				8E8C0D3B2E144D8400BAC245 /* FirebaseMessaging.release.xcconfig */,
+				8E8C0D3C2E144D8400BAC245 /* ResourceBundle-FirebaseMessaging_Privacy-FirebaseMessaging-Info.plist */,
+			);
+			path = FirebaseMessaging;
+			sourceTree = "<group>";
+		};
+		8E8C0D452E144D8400BAC245 /* FirebaseMessagingInterop */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D3E2E144D8400BAC245 /* FirebaseMessagingInterop.modulemap */,
+				8E8C0D3F2E144D8400BAC245 /* FirebaseMessagingInterop-dummy.m */,
+				8E8C0D402E144D8400BAC245 /* FirebaseMessagingInterop-Info.plist */,
+				8E8C0D412E144D8400BAC245 /* FirebaseMessagingInterop-prefix.pch */,
+				8E8C0D422E144D8400BAC245 /* FirebaseMessagingInterop-umbrella.h */,
+				8E8C0D432E144D8400BAC245 /* FirebaseMessagingInterop.debug.xcconfig */,
+				8E8C0D442E144D8400BAC245 /* FirebaseMessagingInterop.release.xcconfig */,
+			);
+			path = FirebaseMessagingInterop;
+			sourceTree = "<group>";
+		};
+		8E8C0D4C2E144D8400BAC245 /* FirebaseSharedSwift */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D462E144D8400BAC245 /* FirebaseSharedSwift.modulemap */,
+				8E8C0D472E144D8400BAC245 /* FirebaseSharedSwift-dummy.m */,
+				8E8C0D482E144D8400BAC245 /* FirebaseSharedSwift-Info.plist */,
+				8E8C0D492E144D8400BAC245 /* FirebaseSharedSwift-umbrella.h */,
+				8E8C0D4A2E144D8400BAC245 /* FirebaseSharedSwift.debug.xcconfig */,
+				8E8C0D4B2E144D8400BAC245 /* FirebaseSharedSwift.release.xcconfig */,
+			);
+			path = FirebaseSharedSwift;
+			sourceTree = "<group>";
+		};
+		8E8C0D4F2E144D8400BAC245 /* Flutter */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D4D2E144D8400BAC245 /* Flutter.debug.xcconfig */,
+				8E8C0D4E2E144D8400BAC245 /* Flutter.release.xcconfig */,
+			);
+			path = Flutter;
+			sourceTree = "<group>";
+		};
+		8E8C0D572E144D8400BAC245 /* flutter_keyboard_visibility */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D502E144D8400BAC245 /* flutter_keyboard_visibility.modulemap */,
+				8E8C0D512E144D8400BAC245 /* flutter_keyboard_visibility-dummy.m */,
+				8E8C0D522E144D8400BAC245 /* flutter_keyboard_visibility-Info.plist */,
+				8E8C0D532E144D8400BAC245 /* flutter_keyboard_visibility-prefix.pch */,
+				8E8C0D542E144D8400BAC245 /* flutter_keyboard_visibility-umbrella.h */,
+				8E8C0D552E144D8400BAC245 /* flutter_keyboard_visibility.debug.xcconfig */,
+				8E8C0D562E144D8400BAC245 /* flutter_keyboard_visibility.release.xcconfig */,
+			);
+			path = flutter_keyboard_visibility;
+			sourceTree = "<group>";
+		};
+		8E8C0D602E144D8400BAC245 /* flutter_local_notifications */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D582E144D8400BAC245 /* flutter_local_notifications.modulemap */,
+				8E8C0D592E144D8400BAC245 /* flutter_local_notifications-dummy.m */,
+				8E8C0D5A2E144D8400BAC245 /* flutter_local_notifications-Info.plist */,
+				8E8C0D5B2E144D8400BAC245 /* flutter_local_notifications-prefix.pch */,
+				8E8C0D5C2E144D8400BAC245 /* flutter_local_notifications-umbrella.h */,
+				8E8C0D5D2E144D8400BAC245 /* flutter_local_notifications.debug.xcconfig */,
+				8E8C0D5E2E144D8400BAC245 /* flutter_local_notifications.release.xcconfig */,
+				8E8C0D5F2E144D8400BAC245 /* ResourceBundle-flutter_local_notifications_privacy-flutter_local_notifications-Info.plist */,
+			);
+			path = flutter_local_notifications;
+			sourceTree = "<group>";
+		};
+		8E8C0D692E144D8400BAC245 /* flutter_timezone */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D612E144D8400BAC245 /* flutter_timezone.modulemap */,
+				8E8C0D622E144D8400BAC245 /* flutter_timezone-dummy.m */,
+				8E8C0D632E144D8400BAC245 /* flutter_timezone-Info.plist */,
+				8E8C0D642E144D8400BAC245 /* flutter_timezone-prefix.pch */,
+				8E8C0D652E144D8400BAC245 /* flutter_timezone-umbrella.h */,
+				8E8C0D662E144D8400BAC245 /* flutter_timezone.debug.xcconfig */,
+				8E8C0D672E144D8400BAC245 /* flutter_timezone.release.xcconfig */,
+				8E8C0D682E144D8400BAC245 /* ResourceBundle-flutter_timezone_privacy-flutter_timezone-Info.plist */,
+			);
+			path = flutter_timezone;
+			sourceTree = "<group>";
+		};
+		8E8C0D712E144D8400BAC245 /* geolocator_apple */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D6A2E144D8400BAC245 /* geolocator_apple.modulemap */,
+				8E8C0D6B2E144D8400BAC245 /* geolocator_apple-dummy.m */,
+				8E8C0D6C2E144D8400BAC245 /* geolocator_apple-Info.plist */,
+				8E8C0D6D2E144D8400BAC245 /* geolocator_apple-prefix.pch */,
+				8E8C0D6E2E144D8400BAC245 /* geolocator_apple.debug.xcconfig */,
+				8E8C0D6F2E144D8400BAC245 /* geolocator_apple.release.xcconfig */,
+				8E8C0D702E144D8400BAC245 /* ResourceBundle-geolocator_apple_privacy-geolocator_apple-Info.plist */,
+			);
+			path = geolocator_apple;
+			sourceTree = "<group>";
+		};
+		8E8C0D792E144D8400BAC245 /* google_maps_flutter_ios */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D722E144D8400BAC245 /* google_maps_flutter_ios.modulemap */,
+				8E8C0D732E144D8400BAC245 /* google_maps_flutter_ios-dummy.m */,
+				8E8C0D742E144D8400BAC245 /* google_maps_flutter_ios-Info.plist */,
+				8E8C0D752E144D8400BAC245 /* google_maps_flutter_ios-prefix.pch */,
+				8E8C0D762E144D8400BAC245 /* google_maps_flutter_ios.debug.xcconfig */,
+				8E8C0D772E144D8400BAC245 /* google_maps_flutter_ios.release.xcconfig */,
+				8E8C0D782E144D8400BAC245 /* ResourceBundle-google_maps_flutter_ios_privacy-google_maps_flutter_ios-Info.plist */,
+			);
+			path = google_maps_flutter_ios;
+			sourceTree = "<group>";
+		};
+		8E8C0D812E144D8400BAC245 /* Google-Maps-iOS-Utils */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D7A2E144D8400BAC245 /* Google-Maps-iOS-Utils.modulemap */,
+				8E8C0D7B2E144D8400BAC245 /* Google-Maps-iOS-Utils-dummy.m */,
+				8E8C0D7C2E144D8400BAC245 /* Google-Maps-iOS-Utils-Info.plist */,
+				8E8C0D7D2E144D8400BAC245 /* Google-Maps-iOS-Utils-prefix.pch */,
+				8E8C0D7E2E144D8400BAC245 /* Google-Maps-iOS-Utils-umbrella.h */,
+				8E8C0D7F2E144D8400BAC245 /* Google-Maps-iOS-Utils.debug.xcconfig */,
+				8E8C0D802E144D8400BAC245 /* Google-Maps-iOS-Utils.release.xcconfig */,
+			);
+			path = "Google-Maps-iOS-Utils";
+			sourceTree = "<group>";
+		};
+		8E8C0D892E144D8400BAC245 /* GoogleDataTransport */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D822E144D8400BAC245 /* GoogleDataTransport.modulemap */,
+				8E8C0D832E144D8400BAC245 /* GoogleDataTransport-dummy.m */,
+				8E8C0D842E144D8400BAC245 /* GoogleDataTransport-Info.plist */,
+				8E8C0D852E144D8400BAC245 /* GoogleDataTransport-umbrella.h */,
+				8E8C0D862E144D8400BAC245 /* GoogleDataTransport.debug.xcconfig */,
+				8E8C0D872E144D8400BAC245 /* GoogleDataTransport.release.xcconfig */,
+				8E8C0D882E144D8400BAC245 /* ResourceBundle-GoogleDataTransport_Privacy-GoogleDataTransport-Info.plist */,
+			);
+			path = GoogleDataTransport;
+			sourceTree = "<group>";
+		};
+		8E8C0D902E144D8400BAC245 /* GoogleMaps */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D8A2E144D8400BAC245 /* GoogleMaps-xcframeworks.sh */,
+				8E8C0D8B2E144D8400BAC245 /* GoogleMaps-xcframeworks-input-files.xcfilelist */,
+				8E8C0D8C2E144D8400BAC245 /* GoogleMaps-xcframeworks-output-files.xcfilelist */,
+				8E8C0D8D2E144D8400BAC245 /* GoogleMaps.debug.xcconfig */,
+				8E8C0D8E2E144D8400BAC245 /* GoogleMaps.release.xcconfig */,
+				8E8C0D8F2E144D8400BAC245 /* ResourceBundle-GoogleMapsResources-GoogleMaps-Info.plist */,
+			);
+			path = GoogleMaps;
+			sourceTree = "<group>";
+		};
+		8E8C0D982E144D8400BAC245 /* GoogleUtilities */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D912E144D8400BAC245 /* GoogleUtilities.modulemap */,
+				8E8C0D922E144D8400BAC245 /* GoogleUtilities-dummy.m */,
+				8E8C0D932E144D8400BAC245 /* GoogleUtilities-Info.plist */,
+				8E8C0D942E144D8400BAC245 /* GoogleUtilities-umbrella.h */,
+				8E8C0D952E144D8400BAC245 /* GoogleUtilities.debug.xcconfig */,
+				8E8C0D962E144D8400BAC245 /* GoogleUtilities.release.xcconfig */,
+				8E8C0D972E144D8400BAC245 /* ResourceBundle-GoogleUtilities_Privacy-GoogleUtilities-Info.plist */,
+			);
+			path = GoogleUtilities;
+			sourceTree = "<group>";
+		};
+		8E8C0DA22E144D8400BAC245 /* gRPC-C++ */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0D992E144D8400BAC245 /* gRPC-C++.modulemap */,
+				8E8C0D9A2E144D8400BAC245 /* gRPC-C++-dummy.m */,
+				8E8C0D9B2E144D8400BAC245 /* gRPC-C++-Info.plist */,
+				8E8C0D9C2E144D8400BAC245 /* gRPC-C++-prefix.pch */,
+				8E8C0D9D2E144D8400BAC245 /* gRPC-C++-umbrella.h */,
+				8E8C0D9E2E144D8400BAC245 /* gRPC-C++.debug.xcconfig */,
+				8E8C0D9F2E144D8400BAC245 /* gRPC-C++.release.xcconfig */,
+				8E8C0DA02E144D8400BAC245 /* ResourceBundle-gRPCCertificates-Cpp-gRPC-C++-Info.plist */,
+				8E8C0DA12E144D8400BAC245 /* ResourceBundle-grpcpp-gRPC-C++-Info.plist */,
+			);
+			path = "gRPC-C++";
+			sourceTree = "<group>";
+		};
+		8E8C0DAA2E144D8400BAC245 /* gRPC-Core */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0DA32E144D8400BAC245 /* gRPC-Core.modulemap */,
+				8E8C0DA42E144D8400BAC245 /* gRPC-Core-dummy.m */,
+				8E8C0DA52E144D8400BAC245 /* gRPC-Core-Info.plist */,
+				8E8C0DA62E144D8400BAC245 /* gRPC-Core-prefix.pch */,
+				8E8C0DA72E144D8400BAC245 /* gRPC-Core.debug.xcconfig */,
+				8E8C0DA82E144D8400BAC245 /* gRPC-Core.release.xcconfig */,
+				8E8C0DA92E144D8400BAC245 /* ResourceBundle-grpc-gRPC-Core-Info.plist */,
+			);
+			path = "gRPC-Core";
+			sourceTree = "<group>";
+		};
+		8E8C0DB22E144D8400BAC245 /* GTMSessionFetcher */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0DAB2E144D8400BAC245 /* GTMSessionFetcher.modulemap */,
+				8E8C0DAC2E144D8400BAC245 /* GTMSessionFetcher-dummy.m */,
+				8E8C0DAD2E144D8400BAC245 /* GTMSessionFetcher-Info.plist */,
+				8E8C0DAE2E144D8400BAC245 /* GTMSessionFetcher-umbrella.h */,
+				8E8C0DAF2E144D8400BAC245 /* GTMSessionFetcher.debug.xcconfig */,
+				8E8C0DB02E144D8400BAC245 /* GTMSessionFetcher.release.xcconfig */,
+				8E8C0DB12E144D8400BAC245 /* ResourceBundle-GTMSessionFetcher_Core_Privacy-GTMSessionFetcher-Info.plist */,
+			);
+			path = GTMSessionFetcher;
+			sourceTree = "<group>";
+		};
+		8E8C0DBA2E144D8400BAC245 /* image_picker_ios */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0DB32E144D8400BAC245 /* image_picker_ios.modulemap */,
+				8E8C0DB42E144D8400BAC245 /* image_picker_ios-dummy.m */,
+				8E8C0DB52E144D8400BAC245 /* image_picker_ios-Info.plist */,
+				8E8C0DB62E144D8400BAC245 /* image_picker_ios-prefix.pch */,
+				8E8C0DB72E144D8400BAC245 /* image_picker_ios.debug.xcconfig */,
+				8E8C0DB82E144D8400BAC245 /* image_picker_ios.release.xcconfig */,
+				8E8C0DB92E144D8400BAC245 /* ResourceBundle-image_picker_ios_privacy-image_picker_ios-Info.plist */,
+			);
+			path = image_picker_ios;
+			sourceTree = "<group>";
+		};
+		8E8C0DC32E144D8400BAC245 /* leveldb-library */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0DBB2E144D8400BAC245 /* leveldb-library.modulemap */,
+				8E8C0DBC2E144D8400BAC245 /* leveldb-library-dummy.m */,
+				8E8C0DBD2E144D8400BAC245 /* leveldb-library-Info.plist */,
+				8E8C0DBE2E144D8400BAC245 /* leveldb-library-prefix.pch */,
+				8E8C0DBF2E144D8400BAC245 /* leveldb-library-umbrella.h */,
+				8E8C0DC02E144D8400BAC245 /* leveldb-library.debug.xcconfig */,
+				8E8C0DC12E144D8400BAC245 /* leveldb-library.release.xcconfig */,
+				8E8C0DC22E144D8400BAC245 /* ResourceBundle-leveldb_Privacy-leveldb-library-Info.plist */,
+			);
+			path = "leveldb-library";
+			sourceTree = "<group>";
+		};
+		8E8C0DCB2E144D8400BAC245 /* location */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0DC42E144D8400BAC245 /* location.modulemap */,
+				8E8C0DC52E144D8400BAC245 /* location-dummy.m */,
+				8E8C0DC62E144D8400BAC245 /* location-Info.plist */,
+				8E8C0DC72E144D8400BAC245 /* location-prefix.pch */,
+				8E8C0DC82E144D8400BAC245 /* location-umbrella.h */,
+				8E8C0DC92E144D8400BAC245 /* location.debug.xcconfig */,
+				8E8C0DCA2E144D8400BAC245 /* location.release.xcconfig */,
+			);
+			path = location;
+			sourceTree = "<group>";
+		};
+		8E8C0DD42E144D8400BAC245 /* nanopb */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0DCC2E144D8400BAC245 /* nanopb.modulemap */,
+				8E8C0DCD2E144D8400BAC245 /* nanopb-dummy.m */,
+				8E8C0DCE2E144D8400BAC245 /* nanopb-Info.plist */,
+				8E8C0DCF2E144D8400BAC245 /* nanopb-prefix.pch */,
+				8E8C0DD02E144D8400BAC245 /* nanopb-umbrella.h */,
+				8E8C0DD12E144D8400BAC245 /* nanopb.debug.xcconfig */,
+				8E8C0DD22E144D8400BAC245 /* nanopb.release.xcconfig */,
+				8E8C0DD32E144D8400BAC245 /* ResourceBundle-nanopb_Privacy-nanopb-Info.plist */,
+			);
+			path = nanopb;
+			sourceTree = "<group>";
+		};
+		8E8C0DDD2E144D8400BAC245 /* path_provider_foundation */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0DD52E144D8400BAC245 /* path_provider_foundation.modulemap */,
+				8E8C0DD62E144D8400BAC245 /* path_provider_foundation-dummy.m */,
+				8E8C0DD72E144D8400BAC245 /* path_provider_foundation-Info.plist */,
+				8E8C0DD82E144D8400BAC245 /* path_provider_foundation-prefix.pch */,
+				8E8C0DD92E144D8400BAC245 /* path_provider_foundation-umbrella.h */,
+				8E8C0DDA2E144D8400BAC245 /* path_provider_foundation.debug.xcconfig */,
+				8E8C0DDB2E144D8400BAC245 /* path_provider_foundation.release.xcconfig */,
+				8E8C0DDC2E144D8400BAC245 /* ResourceBundle-path_provider_foundation_privacy-path_provider_foundation-Info.plist */,
+			);
+			path = path_provider_foundation;
+			sourceTree = "<group>";
+		};
+		8E8C0DF52E144D8400BAC245 /* Pods-Runner */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0DDE2E144D8400BAC245 /* Pods-Runner.modulemap */,
+				8E8C0DDF2E144D8400BAC245 /* Pods-Runner-acknowledgements.markdown */,
+				8E8C0DE02E144D8400BAC245 /* Pods-Runner-acknowledgements.plist */,
+				8E8C0DE12E144D8400BAC245 /* Pods-Runner-dummy.m */,
+				8E8C0DE22E144D8400BAC245 /* Pods-Runner-frameworks.sh */,
+				8E8C0DE32E144D8400BAC245 /* Pods-Runner-frameworks-Debug-input-files.xcfilelist */,
+				8E8C0DE42E144D8400BAC245 /* Pods-Runner-frameworks-Debug-output-files.xcfilelist */,
+				8E8C0DE52E144D8400BAC245 /* Pods-Runner-frameworks-Profile-input-files.xcfilelist */,
+				8E8C0DE62E144D8400BAC245 /* Pods-Runner-frameworks-Profile-output-files.xcfilelist */,
+				8E8C0DE72E144D8400BAC245 /* Pods-Runner-frameworks-Release-input-files.xcfilelist */,
+				8E8C0DE82E144D8400BAC245 /* Pods-Runner-frameworks-Release-output-files.xcfilelist */,
+				8E8C0DE92E144D8400BAC245 /* Pods-Runner-Info.plist */,
+				8E8C0DEA2E144D8400BAC245 /* Pods-Runner-resources.sh */,
+				8E8C0DEB2E144D8400BAC245 /* Pods-Runner-resources-Debug-input-files.xcfilelist */,
+				8E8C0DEC2E144D8400BAC245 /* Pods-Runner-resources-Debug-output-files.xcfilelist */,
+				8E8C0DED2E144D8400BAC245 /* Pods-Runner-resources-Profile-input-files.xcfilelist */,
+				8E8C0DEE2E144D8400BAC245 /* Pods-Runner-resources-Profile-output-files.xcfilelist */,
+				8E8C0DEF2E144D8400BAC245 /* Pods-Runner-resources-Release-input-files.xcfilelist */,
+				8E8C0DF02E144D8400BAC245 /* Pods-Runner-resources-Release-output-files.xcfilelist */,
+				8E8C0DF12E144D8400BAC245 /* Pods-Runner-umbrella.h */,
+				8E8C0DF22E144D8400BAC245 /* Pods-Runner.debug.xcconfig */,
+				8E8C0DF32E144D8400BAC245 /* Pods-Runner.profile.xcconfig */,
+				8E8C0DF42E144D8400BAC245 /* Pods-Runner.release.xcconfig */,
+			);
+			path = "Pods-Runner";
+			sourceTree = "<group>";
+		};
+		8E8C0DFF2E144D8400BAC245 /* Pods-RunnerTests */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0DF62E144D8400BAC245 /* Pods-RunnerTests.modulemap */,
+				8E8C0DF72E144D8400BAC245 /* Pods-RunnerTests-acknowledgements.markdown */,
+				8E8C0DF82E144D8400BAC245 /* Pods-RunnerTests-acknowledgements.plist */,
+				8E8C0DF92E144D8400BAC245 /* Pods-RunnerTests-dummy.m */,
+				8E8C0DFA2E144D8400BAC245 /* Pods-RunnerTests-Info.plist */,
+				8E8C0DFB2E144D8400BAC245 /* Pods-RunnerTests-umbrella.h */,
+				8E8C0DFC2E144D8400BAC245 /* Pods-RunnerTests.debug.xcconfig */,
+				8E8C0DFD2E144D8400BAC245 /* Pods-RunnerTests.profile.xcconfig */,
+				8E8C0DFE2E144D8400BAC245 /* Pods-RunnerTests.release.xcconfig */,
+			);
+			path = "Pods-RunnerTests";
+			sourceTree = "<group>";
+		};
+		8E8C0E082E144D8400BAC245 /* pointer_interceptor_ios */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0E002E144D8400BAC245 /* pointer_interceptor_ios.modulemap */,
+				8E8C0E012E144D8400BAC245 /* pointer_interceptor_ios-dummy.m */,
+				8E8C0E022E144D8400BAC245 /* pointer_interceptor_ios-Info.plist */,
+				8E8C0E032E144D8400BAC245 /* pointer_interceptor_ios-prefix.pch */,
+				8E8C0E042E144D8400BAC245 /* pointer_interceptor_ios-umbrella.h */,
+				8E8C0E052E144D8400BAC245 /* pointer_interceptor_ios.debug.xcconfig */,
+				8E8C0E062E144D8400BAC245 /* pointer_interceptor_ios.release.xcconfig */,
+				8E8C0E072E144D8400BAC245 /* ResourceBundle-pointer_interceptor_ios_privacy-pointer_interceptor_ios-Info.plist */,
+			);
+			path = pointer_interceptor_ios;
+			sourceTree = "<group>";
+		};
+		8E8C0E102E144D8400BAC245 /* PromisesObjC */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0E092E144D8400BAC245 /* PromisesObjC.modulemap */,
+				8E8C0E0A2E144D8400BAC245 /* PromisesObjC-dummy.m */,
+				8E8C0E0B2E144D8400BAC245 /* PromisesObjC-Info.plist */,
+				8E8C0E0C2E144D8400BAC245 /* PromisesObjC-umbrella.h */,
+				8E8C0E0D2E144D8400BAC245 /* PromisesObjC.debug.xcconfig */,
+				8E8C0E0E2E144D8400BAC245 /* PromisesObjC.release.xcconfig */,
+				8E8C0E0F2E144D8400BAC245 /* ResourceBundle-FBLPromises_Privacy-PromisesObjC-Info.plist */,
+			);
+			path = PromisesObjC;
+			sourceTree = "<group>";
+		};
+		8E8C0E182E144D8400BAC245 /* RecaptchaInterop */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0E112E144D8400BAC245 /* RecaptchaInterop.modulemap */,
+				8E8C0E122E144D8400BAC245 /* RecaptchaInterop-dummy.m */,
+				8E8C0E132E144D8400BAC245 /* RecaptchaInterop-Info.plist */,
+				8E8C0E142E144D8400BAC245 /* RecaptchaInterop-prefix.pch */,
+				8E8C0E152E144D8400BAC245 /* RecaptchaInterop-umbrella.h */,
+				8E8C0E162E144D8400BAC245 /* RecaptchaInterop.debug.xcconfig */,
+				8E8C0E172E144D8400BAC245 /* RecaptchaInterop.release.xcconfig */,
+			);
+			path = RecaptchaInterop;
+			sourceTree = "<group>";
+		};
+		8E8C0E202E144D8400BAC245 /* sensors_plus */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0E192E144D8400BAC245 /* sensors_plus.modulemap */,
+				8E8C0E1A2E144D8400BAC245 /* sensors_plus-dummy.m */,
+				8E8C0E1B2E144D8400BAC245 /* sensors_plus-Info.plist */,
+				8E8C0E1C2E144D8400BAC245 /* sensors_plus-prefix.pch */,
+				8E8C0E1D2E144D8400BAC245 /* sensors_plus-umbrella.h */,
+				8E8C0E1E2E144D8400BAC245 /* sensors_plus.debug.xcconfig */,
+				8E8C0E1F2E144D8400BAC245 /* sensors_plus.release.xcconfig */,
+			);
+			path = sensors_plus;
+			sourceTree = "<group>";
+		};
+		8E8C0E292E144D8400BAC245 /* shared_preferences_foundation */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0E212E144D8400BAC245 /* ResourceBundle-shared_preferences_foundation_privacy-shared_preferences_foundation-Info.plist */,
+				8E8C0E222E144D8400BAC245 /* shared_preferences_foundation.modulemap */,
+				8E8C0E232E144D8400BAC245 /* shared_preferences_foundation-dummy.m */,
+				8E8C0E242E144D8400BAC245 /* shared_preferences_foundation-Info.plist */,
+				8E8C0E252E144D8400BAC245 /* shared_preferences_foundation-prefix.pch */,
+				8E8C0E262E144D8400BAC245 /* shared_preferences_foundation-umbrella.h */,
+				8E8C0E272E144D8400BAC245 /* shared_preferences_foundation.debug.xcconfig */,
+				8E8C0E282E144D8400BAC245 /* shared_preferences_foundation.release.xcconfig */,
+			);
+			path = shared_preferences_foundation;
+			sourceTree = "<group>";
+		};
+		8E8C0E312E144D8400BAC245 /* speech_to_text */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0E2A2E144D8400BAC245 /* speech_to_text.modulemap */,
+				8E8C0E2B2E144D8400BAC245 /* speech_to_text-dummy.m */,
+				8E8C0E2C2E144D8400BAC245 /* speech_to_text-Info.plist */,
+				8E8C0E2D2E144D8400BAC245 /* speech_to_text-prefix.pch */,
+				8E8C0E2E2E144D8400BAC245 /* speech_to_text-umbrella.h */,
+				8E8C0E2F2E144D8400BAC245 /* speech_to_text.debug.xcconfig */,
+				8E8C0E302E144D8400BAC245 /* speech_to_text.release.xcconfig */,
+			);
+			path = speech_to_text;
+			sourceTree = "<group>";
+		};
+		8E8C0E3A2E144D8400BAC245 /* sqflite_darwin */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0E322E144D8400BAC245 /* ResourceBundle-sqflite_darwin_privacy-sqflite_darwin-Info.plist */,
+				8E8C0E332E144D8400BAC245 /* sqflite_darwin.modulemap */,
+				8E8C0E342E144D8400BAC245 /* sqflite_darwin-dummy.m */,
+				8E8C0E352E144D8400BAC245 /* sqflite_darwin-Info.plist */,
+				8E8C0E362E144D8400BAC245 /* sqflite_darwin-prefix.pch */,
+				8E8C0E372E144D8400BAC245 /* sqflite_darwin-umbrella.h */,
+				8E8C0E382E144D8400BAC245 /* sqflite_darwin.debug.xcconfig */,
+				8E8C0E392E144D8400BAC245 /* sqflite_darwin.release.xcconfig */,
+			);
+			path = sqflite_darwin;
+			sourceTree = "<group>";
+		};
+		8E8C0E422E144D8400BAC245 /* Try */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0E3B2E144D8400BAC245 /* Try.modulemap */,
+				8E8C0E3C2E144D8400BAC245 /* Try-dummy.m */,
+				8E8C0E3D2E144D8400BAC245 /* Try-Info.plist */,
+				8E8C0E3E2E144D8400BAC245 /* Try-prefix.pch */,
+				8E8C0E3F2E144D8400BAC245 /* Try-umbrella.h */,
+				8E8C0E402E144D8400BAC245 /* Try.debug.xcconfig */,
+				8E8C0E412E144D8400BAC245 /* Try.release.xcconfig */,
+			);
+			path = Try;
+			sourceTree = "<group>";
+		};
+		8E8C0E4B2E144D8400BAC245 /* url_launcher_ios */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0E432E144D8400BAC245 /* ResourceBundle-url_launcher_ios_privacy-url_launcher_ios-Info.plist */,
+				8E8C0E442E144D8400BAC245 /* url_launcher_ios.modulemap */,
+				8E8C0E452E144D8400BAC245 /* url_launcher_ios-dummy.m */,
+				8E8C0E462E144D8400BAC245 /* url_launcher_ios-Info.plist */,
+				8E8C0E472E144D8400BAC245 /* url_launcher_ios-prefix.pch */,
+				8E8C0E482E144D8400BAC245 /* url_launcher_ios-umbrella.h */,
+				8E8C0E492E144D8400BAC245 /* url_launcher_ios.debug.xcconfig */,
+				8E8C0E4A2E144D8400BAC245 /* url_launcher_ios.release.xcconfig */,
+			);
+			path = url_launcher_ios;
+			sourceTree = "<group>";
+		};
+		8E8C0E532E144D8400BAC245 /* workmanager */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0E4C2E144D8400BAC245 /* workmanager.modulemap */,
+				8E8C0E4D2E144D8400BAC245 /* workmanager-dummy.m */,
+				8E8C0E4E2E144D8400BAC245 /* workmanager-Info.plist */,
+				8E8C0E4F2E144D8400BAC245 /* workmanager-prefix.pch */,
+				8E8C0E502E144D8400BAC245 /* workmanager-umbrella.h */,
+				8E8C0E512E144D8400BAC245 /* workmanager.debug.xcconfig */,
+				8E8C0E522E144D8400BAC245 /* workmanager.release.xcconfig */,
+			);
+			path = workmanager;
+			sourceTree = "<group>";
+		};
+		8E8C0E542E144D8400BAC245 /* Target Support Files */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0CAF2E144D8400BAC245 /* abseil */,
+				8E8C0CB82E144D8400BAC245 /* BoringSSL-GRPC */,
+				8E8C0CC02E144D8400BAC245 /* cloud_firestore */,
+				8E8C0CC82E144D8400BAC245 /* cloud_functions */,
+				8E8C0CCB2E144D8400BAC245 /* Firebase */,
+				8E8C0CD32E144D8400BAC245 /* firebase_auth */,
+				8E8C0CDB2E144D8400BAC245 /* firebase_core */,
+				8E8C0CE42E144D8400BAC245 /* firebase_messaging */,
+				8E8C0CEC2E144D8400BAC245 /* FirebaseAppCheckInterop */,
+				8E8C0CF42E144D8400BAC245 /* FirebaseAuth */,
+				8E8C0CFC2E144D8400BAC245 /* FirebaseAuthInterop */,
+				8E8C0D042E144D8400BAC245 /* FirebaseCore */,
+				8E8C0D0D2E144D8400BAC245 /* FirebaseCoreExtension */,
+				8E8C0D162E144D8400BAC245 /* FirebaseCoreInternal */,
+				8E8C0D1E2E144D8400BAC245 /* FirebaseFirestore */,
+				8E8C0D262E144D8400BAC245 /* FirebaseFirestoreInternal */,
+				8E8C0D2D2E144D8400BAC245 /* FirebaseFunctions */,
+				8E8C0D352E144D8400BAC245 /* FirebaseInstallations */,
+				8E8C0D3D2E144D8400BAC245 /* FirebaseMessaging */,
+				8E8C0D452E144D8400BAC245 /* FirebaseMessagingInterop */,
+				8E8C0D4C2E144D8400BAC245 /* FirebaseSharedSwift */,
+				8E8C0D4F2E144D8400BAC245 /* Flutter */,
+				8E8C0D572E144D8400BAC245 /* flutter_keyboard_visibility */,
+				8E8C0D602E144D8400BAC245 /* flutter_local_notifications */,
+				8E8C0D692E144D8400BAC245 /* flutter_timezone */,
+				8E8C0D712E144D8400BAC245 /* geolocator_apple */,
+				8E8C0D792E144D8400BAC245 /* google_maps_flutter_ios */,
+				8E8C0D812E144D8400BAC245 /* Google-Maps-iOS-Utils */,
+				8E8C0D892E144D8400BAC245 /* GoogleDataTransport */,
+				8E8C0D902E144D8400BAC245 /* GoogleMaps */,
+				8E8C0D982E144D8400BAC245 /* GoogleUtilities */,
+				8E8C0DA22E144D8400BAC245 /* gRPC-C++ */,
+				8E8C0DAA2E144D8400BAC245 /* gRPC-Core */,
+				8E8C0DB22E144D8400BAC245 /* GTMSessionFetcher */,
+				8E8C0DBA2E144D8400BAC245 /* image_picker_ios */,
+				8E8C0DC32E144D8400BAC245 /* leveldb-library */,
+				8E8C0DCB2E144D8400BAC245 /* location */,
+				8E8C0DD42E144D8400BAC245 /* nanopb */,
+				8E8C0DDD2E144D8400BAC245 /* path_provider_foundation */,
+				8E8C0DF52E144D8400BAC245 /* Pods-Runner */,
+				8E8C0DFF2E144D8400BAC245 /* Pods-RunnerTests */,
+				8E8C0E082E144D8400BAC245 /* pointer_interceptor_ios */,
+				8E8C0E102E144D8400BAC245 /* PromisesObjC */,
+				8E8C0E182E144D8400BAC245 /* RecaptchaInterop */,
+				8E8C0E202E144D8400BAC245 /* sensors_plus */,
+				8E8C0E292E144D8400BAC245 /* shared_preferences_foundation */,
+				8E8C0E312E144D8400BAC245 /* speech_to_text */,
+				8E8C0E3A2E144D8400BAC245 /* sqflite_darwin */,
+				8E8C0E422E144D8400BAC245 /* Try */,
+				8E8C0E4B2E144D8400BAC245 /* url_launcher_ios */,
+				8E8C0E532E144D8400BAC245 /* workmanager */,
+			);
+			path = "Target Support Files";
+			sourceTree = "<group>";
+		};
+		8E8C0E6C2E144D9E00BAC245 /* Pods-Runner */ = {
+			isa = PBXGroup;
+			children = (
+				8E8C0E552E144D9E00BAC245 /* Pods-Runner.modulemap */,
+				8E8C0E562E144D9E00BAC245 /* Pods-Runner-acknowledgements.markdown */,
+				8E8C0E572E144D9E00BAC245 /* Pods-Runner-acknowledgements.plist */,
+				8E8C0E582E144D9E00BAC245 /* Pods-Runner-dummy.m */,
+				8E8C0E592E144D9E00BAC245 /* Pods-Runner-frameworks.sh */,
+				8E8C0E5A2E144D9E00BAC245 /* Pods-Runner-frameworks-Debug-input-files.xcfilelist */,
+				8E8C0E5B2E144D9E00BAC245 /* Pods-Runner-frameworks-Debug-output-files.xcfilelist */,
+				8E8C0E5C2E144D9E00BAC245 /* Pods-Runner-frameworks-Profile-input-files.xcfilelist */,
+				8E8C0E5D2E144D9E00BAC245 /* Pods-Runner-frameworks-Profile-output-files.xcfilelist */,
+				8E8C0E5E2E144D9E00BAC245 /* Pods-Runner-frameworks-Release-input-files.xcfilelist */,
+				8E8C0E5F2E144D9E00BAC245 /* Pods-Runner-frameworks-Release-output-files.xcfilelist */,
+				8E8C0E602E144D9E00BAC245 /* Pods-Runner-Info.plist */,
+				8E8C0E612E144D9E00BAC245 /* Pods-Runner-resources.sh */,
+				8E8C0E622E144D9E00BAC245 /* Pods-Runner-resources-Debug-input-files.xcfilelist */,
+				8E8C0E632E144D9E00BAC245 /* Pods-Runner-resources-Debug-output-files.xcfilelist */,
+				8E8C0E642E144D9E00BAC245 /* Pods-Runner-resources-Profile-input-files.xcfilelist */,
+				8E8C0E652E144D9E00BAC245 /* Pods-Runner-resources-Profile-output-files.xcfilelist */,
+				8E8C0E662E144D9E00BAC245 /* Pods-Runner-resources-Release-input-files.xcfilelist */,
+				8E8C0E672E144D9E00BAC245 /* Pods-Runner-resources-Release-output-files.xcfilelist */,
+				8E8C0E682E144D9E00BAC245 /* Pods-Runner-umbrella.h */,
+				8E8C0E692E144D9E00BAC245 /* Pods-Runner.debug.xcconfig */,
+				8E8C0E6A2E144D9E00BAC245 /* Pods-Runner.profile.xcconfig */,
+				8E8C0E6B2E144D9E00BAC245 /* Pods-Runner.release.xcconfig */,
+			);
+			path = "Pods-Runner";
 			sourceTree = "<group>";
 		};
 		9740EEB11CF90186004384FC /* Flutter */ = {
@@ -94,6 +1337,10 @@
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
+				97E05BDE20B263364B07EB38 /* Pods */,
+				B914EA47FCA61F8466501F09 /* Frameworks */,
+				8E8C0E542E144D8400BAC245 /* Target Support Files */,
+				8E8C0E6C2E144D9E00BAC245 /* Pods-Runner */,
 			);
 			sourceTree = "<group>";
 		};
@@ -121,6 +1368,28 @@
 			path = Runner;
 			sourceTree = "<group>";
 		};
+		97E05BDE20B263364B07EB38 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				CD38E137E6035FE50A306796 /* Pods-Runner.debug.xcconfig */,
+				2FC4BF6F03D4BB6DB8B61631 /* Pods-Runner.release.xcconfig */,
+				0B89160DC7081EB6DA41D37F /* Pods-Runner.profile.xcconfig */,
+				0D045FE2B8A917C02C88F583 /* Pods-RunnerTests.debug.xcconfig */,
+				AA9B27F38367E0315CCD217F /* Pods-RunnerTests.release.xcconfig */,
+				5D0AAE9533439F1738EE48AB /* Pods-RunnerTests.profile.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		B914EA47FCA61F8466501F09 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				5AE801A8CAC2A995C0CEED29 /* Pods_Runner.framework */,
+				F31D7AC5DDFC0E8ADB9225C5 /* Pods_RunnerTests.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -128,8 +1397,10 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 331C8087294A63A400263BE5 /* Build configuration list for PBXNativeTarget "RunnerTests" */;
 			buildPhases = (
+				83213455FCFCF93AD2A264A7 /* [CP] Check Pods Manifest.lock */,
 				331C807D294A63A400263BE5 /* Sources */,
 				331C807F294A63A400263BE5 /* Resources */,
+				BAB9B857C4E241767D880DF8 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -145,12 +1416,15 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
 			buildPhases = (
+				C9A63C9A69E1DCE674EFA2CC /* [CP] Check Pods Manifest.lock */,
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
+				C2E7AAB4A5963F78B9039E30 /* [CP] Embed Pods Frameworks */,
+				2FB7F5FC6B183D31AD8E221A /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -222,6 +1496,23 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		2FB7F5FC6B183D31AD8E221A /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		3B06AD1E1E4923F5004D2608 /* Thin Binary */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -238,6 +1529,28 @@
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" embed_and_thin";
 		};
+		83213455FCFCF93AD2A264A7 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-RunnerTests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 		9740EEB61CF901F6004384FC /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -252,6 +1565,45 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build";
+		};
+		C2E7AAB4A5963F78B9039E30 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		C9A63C9A69E1DCE674EFA2CC /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Runner-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -305,6 +1657,7 @@
 /* Begin XCBuildConfiguration section */
 		249021D3217E4FDB00AE95B9 /* Profile */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0B89160DC7081EB6DA41D37F /* Pods-Runner.profile.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -327,6 +1680,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -362,13 +1716,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = HYYP2JK4K9;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.amanak;
+				PRODUCT_BUNDLE_IDENTIFIER = com.eyad.amanak;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -378,6 +1733,7 @@
 		};
 		331C8088294A63A400263BE5 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0D045FE2B8A917C02C88F583 /* Pods-RunnerTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -395,6 +1751,7 @@
 		};
 		331C8089294A63A400263BE5 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AA9B27F38367E0315CCD217F /* Pods-RunnerTests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -410,6 +1767,7 @@
 		};
 		331C808A294A63A400263BE5 /* Profile */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5D0AAE9533439F1738EE48AB /* Pods-RunnerTests.profile.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -425,9 +1783,10 @@
 		};
 		97C147031CF9000F007C117D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CD38E137E6035FE50A306796 /* Pods-Runner.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = AppIcon;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -447,6 +1806,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -482,9 +1842,10 @@
 		};
 		97C147041CF9000F007C117D /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8E8C0DF42E144D8400BAC245 /* Pods-Runner.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = AppIcon;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -504,6 +1865,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -541,13 +1903,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = HYYP2JK4K9;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.amanak;
+				PRODUCT_BUNDLE_IDENTIFIER = com.eyad.amanak;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -563,13 +1926,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = HYYP2JK4K9;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.amanak;
+				PRODUCT_BUNDLE_IDENTIFIER = com.eyad.amanak;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;

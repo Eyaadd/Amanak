@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:amanak/services/database_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:amanak/l10n/app_localizations.dart';
+import 'package:lottie/lottie.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class ChatBot extends StatefulWidget {
   static const routeName = "chatbot";
@@ -18,6 +21,55 @@ class _ChatBotState extends State<ChatBot> {
   final gemini = Gemini.instance;
   bool _isLoading = false;
 
+  // Speech to text
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _lastWords = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _speech = stt.SpeechToText();
+  }
+
+  void _listen() async {
+    if (!_isListening) {
+      try {
+        bool available = await _speech.initialize();
+        print('Speech recognition available: $available');
+
+        if (available) {
+          setState(() => _isListening = true);
+          // Use app's current language for speech recognition
+          String localeId = Localizations.localeOf(context).languageCode == 'ar'
+              ? 'ar_EG' // Arabic (Egypt)
+              : 'en_US'; // English (US)
+
+          print('Using locale: $localeId');
+
+          _speech.listen(
+            localeId: localeId,
+            onResult: (val) {
+              print('Speech result: ${val.recognizedWords}');
+              setState(() {
+                _controller.text = val.recognizedWords;
+                _lastWords = val.recognizedWords;
+              });
+            },
+          );
+        } else {
+          print('Speech recognition not available');
+        }
+      } catch (e) {
+        print('Error initializing speech recognition: $e');
+        setState(() => _isListening = false);
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
@@ -30,81 +82,101 @@ class _ChatBotState extends State<ChatBot> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        titleSpacing: screenWidth * 0.09,
-        title: Row(
-          children: [
-            SvgPicture.asset("assets/svg/gemini.svg",
-                height: screenHeight * 0.06),
-            SizedBox(width: screenWidth * 0.02),
-            Text(
-              "Gemini AI",
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge!
-                  .copyWith(color: Colors.black),
-            )
-          ],
+        centerTitle: true,
+        title: Text(
+          AppLocalizations.of(context)!.chatbot,
+          style: GoogleFonts.albertSans(
+            fontSize: screenWidth * 0.06,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).primaryColor,
+          ),
         ),
       ),
       body: Column(
         children: [
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(
-                vertical: screenHeight * 0.02,
-                horizontal: screenWidth * 0.03,
+          if (_messages.isEmpty)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      height: screenHeight * 0.22,
+                      child: Lottie.asset('assets/animations/chatbot.json',
+                          fit: BoxFit.contain),
+                    ),
+                    SizedBox(height: screenHeight * 0.03),
+                    Text(
+                      AppLocalizations.of(context)!.chatbotGreeting,
+                      style: GoogleFonts.albertSans(
+                        fontSize: screenWidth * 0.06,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                final isUser = message.role == 'user';
-                final part = message.parts?.first;
-                final content =
-                    part is TextPart ? part.text : part?.toString() ?? '';
+            ),
+          if (_messages.isNotEmpty)
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.symmetric(
+                  vertical: screenHeight * 0.02,
+                  horizontal: screenWidth * 0.03,
+                ),
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final message = _messages[index];
+                  final isUser = message.role == 'user';
+                  final part = message.parts?.first;
+                  final content =
+                      part is TextPart ? part.text : part?.toString() ?? '';
 
-                return Padding(
-                  padding: EdgeInsets.only(
-                    bottom: screenHeight * 0.015,
-                    left: isUser ? screenWidth * 0.15 : 0,
-                    right: isUser ? 0 : screenWidth * 0.15,
-                  ),
-                  child: Align(
-                    alignment:
-                        isUser ? Alignment.centerRight : Alignment.centerLeft,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          vertical: screenHeight * 0.015,
-                          horizontal: screenWidth * 0.04,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isUser
-                              ? Theme.of(context).primaryColor
-                              : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Padding(
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      bottom: screenHeight * 0.015,
+                      left: isUser ? screenWidth * 0.15 : 0,
+                      right: isUser ? 0 : screenWidth * 0.15,
+                    ),
+                    child: Align(
+                      alignment:
+                          isUser ? Alignment.centerRight : Alignment.centerLeft,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
+                        child: Container(
                           padding: EdgeInsets.symmetric(
-                            vertical: screenHeight * 0.001,
-                            horizontal: screenWidth * 0.01,
+                            vertical: screenHeight * 0.015,
+                            horizontal: screenWidth * 0.04,
                           ),
-                          child: Text(
-                            content,
-                            style: GoogleFonts.albertSans(
-                              fontSize: baseFontSize,
-                              color: isUser ? Colors.white : Colors.black87,
-                              height: 1.3,
+                          decoration: BoxDecoration(
+                            color: isUser
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: screenHeight * 0.001,
+                              horizontal: screenWidth * 0.01,
+                            ),
+                            child: Text(
+                              content,
+                              style: GoogleFonts.albertSans(
+                                fontSize: baseFontSize,
+                                color: isUser ? Colors.white : Colors.black87,
+                                height: 1.3,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
 
           if (_isLoading)
             Padding(
@@ -166,6 +238,22 @@ class _ChatBotState extends State<ChatBot> {
                       final text = _controller.text.trim();
                       if (text.isNotEmpty) sendMessage(text);
                     },
+                  ),
+                ),
+                SizedBox(width: screenWidth * 0.01),
+                Container(
+                  height: screenHeight * 0.06,
+                  width: screenHeight * 0.06,
+                  decoration: BoxDecoration(
+                    color: _isListening
+                        ? Colors.redAccent
+                        : Theme.of(context).primaryColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: Icon(_isListening ? Icons.mic : Icons.mic_none,
+                        size: baseFontSize * 1.2, color: Colors.white),
+                    onPressed: _listen,
                   ),
                 ),
               ],

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:lottie/lottie.dart';
+import 'package:amanak/l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnBoardingScreen extends StatelessWidget {
   static const String routeName = "OnBoardingScreen";
@@ -33,159 +35,74 @@ class OnBoardingScreen extends StatelessWidget {
         imagePadding: EdgeInsets.zero,
         imageFlex: 2,
         bodyAlignment: Alignment.bottomCenter);
+    final localizations = AppLocalizations.of(context)!;
     return IntroductionScreen(
       dotsFlex: 2,
       dotsDecorator: const DotsDecorator(
         color: Color(0xFF707070),
-        activeColor: Color(0xFF00664F),
+        activeColor: Color(0xFF015C92),
       ),
       globalBackgroundColor: const Color(0xFFF4EEEE),
       showDoneButton: true,
-      onDone: () {
+      onDone: () async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('onboarding_completed', true);
         Navigator.pushReplacementNamed(context, LoginScreen.routeName);
       },
       done: Text(
-        "Finish",
+        localizations.onboarding_finish,
         style: GoogleFonts.poppins(
           fontSize: 16.0,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF00664F),
+          color: Color(0xFF015C92),
         ),
       ),
       showNextButton: true,
       next: Text(
-        "Next",
+        localizations.onboarding_next,
         style: GoogleFonts.poppins(
           fontSize: 16.0,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF00664F),
+          color: Color(0xFF015C92),
         ),
       ),
       showBackButton: true,
       back: Text(
-        "Back",
+        localizations.onboarding_back,
         style: GoogleFonts.poppins(
           fontSize: 16.0,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF00664F),
+          color: Color(0xFF015C92),
         ),
       ),
       pages: [
         PageViewModel(
-          title: "Welcome To Amanak App",
-          body: "Caring for your well-being, every step of the way.",
+          title: localizations.onboarding_welcome_title,
+          body: localizations.onboarding_welcome_body,
           image: _buildImage(''),
           decoration: pageDecoration,
         ),
         PageViewModel(
-          title: "Stay Safe",
-          bodyWidget: RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              style: Theme.of(context)
-                  .textTheme
-                  .titleSmall!
-                  .copyWith(color: Colors.black, fontSize: 16),
-              children: [
-                TextSpan(text: "Advanced "),
-                TextSpan(
-                    text: "Fall Detection",
-                    style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                        color: Colors.black, fontWeight: FontWeight.bold,fontSize: 16)),
-                TextSpan(
-                    text:
-                        " technology alerts your loved ones when help is needed.",
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall!
-                        .copyWith(color: Colors.black, fontSize: 16,)),
-              ],
-            ),
-          ),
+          title: localizations.onboarding_safety_title,
+          body: localizations.onboarding_safety_body,
           image: _buildImage('2'),
           decoration: pageDecoration,
         ),
         PageViewModel(
-          title: "Stay Connected",
-          bodyWidget: RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              style: Theme.of(context)
-                  .textTheme
-                  .titleSmall!
-                  .copyWith(color: Colors.black, fontSize: 16),
-              children: [
-                TextSpan(text: "Real-time "),
-                TextSpan(
-                    text: "Live Tracking ",
-                    style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                        color: Colors.black, fontWeight: FontWeight.bold,fontSize: 16)),
-                TextSpan(
-                    text:
-                    "to ensure you're always within reach.",
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall!
-                        .copyWith(color: Colors.black, fontSize: 16,)),
-              ],
-            ),
-          ),
+          title: localizations.onboarding_connected_title,
+          body: localizations.onboarding_connected_body,
           image: _buildImage('3'),
           decoration: pageDecoration,
         ),
         PageViewModel(
-          title: "Stay Organized",
-          bodyWidget: RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              style: Theme.of(context)
-                  .textTheme
-                  .titleSmall!
-                  .copyWith(color: Colors.black, fontSize: 16),
-              children: [
-                TextSpan(text: "A smart "),
-                TextSpan(
-                    text: "Calendar ",
-                    style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                        color: Colors.black, fontWeight: FontWeight.bold,fontSize: 16)),
-                TextSpan(
-                    text:
-                    "to remind you of medications and appointments.",
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall!
-                        .copyWith(color: Colors.black, fontSize: 16,)),
-              ],
-            ),
-          ),
+          title: localizations.onboarding_organized_title,
+          body: localizations.onboarding_organized_body,
           image: _buildImage('4'),
           decoration: pageDecoration,
         ),
         PageViewModel(
-          title: "Stay Hassle-Free",
-          bodyWidget: RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              style: Theme.of(context)
-                  .textTheme
-                  .titleSmall!
-                  .copyWith(color: Colors.black, fontSize: 16),
-              children: [
-                TextSpan(text: "Scan "),
-                TextSpan(
-                    text: "medical prescriptions ",
-                    style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                        color: Colors.black, fontWeight: FontWeight.bold,fontSize: 16)),
-                TextSpan(
-                    text:
-                    "and let the app manage your medication reminders automatically.",
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall!
-                        .copyWith(color: Colors.black, fontSize: 16,)),
-              ],
-            ),
-          ),
+          title: localizations.onboarding_hassle_free_title,
+          body: localizations.onboarding_hassle_free_body,
           image: _buildImage('5'),
           decoration: pageDecoration,
         ),

@@ -31,12 +31,13 @@ android {
     ndkVersion flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
 
     sourceSets {
@@ -52,6 +53,7 @@ android {
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -59,6 +61,28 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig signingConfigs.debug
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/*.kotlin_module'
+        exclude 'META-INF/gradle/incremental.annotation.processors'
+    }
+
+    configurations.all {
+        resolutionStrategy {
+            force 'org.bouncycastle:bcprov-jdk15on:1.70'
+            force 'org.bouncycastle:bcprov-jdk18on:1.77'
         }
     }
 }
@@ -66,12 +90,18 @@ android {
 flutter {
     source '../..'
 }
-apply plugin: 'com.google.gms.google-services'  // Add this line at the bottom
 
 dependencies {
-    implementation 'com.google.firebase:firebase-analytics:21.0.0'  // Firebase Analytics
-    implementation 'com.google.firebase:firebase-auth:21.1.0'  // Firebase Authentication
-    // Add other Firebase services you want to use
+    implementation 'com.google.firebase:firebase-analytics:21.5.1'
+    implementation 'com.google.firebase:firebase-auth:22.3.1'
+    implementation 'androidx.multidex:multidex:2.0.1'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
+    constraints {
+        implementation('org.bouncycastle:bcprov-jdk18on:1.77') {
+            because 'earlier versions have compatibility issues with Java 17'
+        }
+    }
 }
 
 dependencies {}

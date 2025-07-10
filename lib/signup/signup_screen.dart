@@ -6,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
+import '../l10n/app_localizations.dart';
 
 import '../home_screen.dart';
 
@@ -27,14 +29,14 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var provider = Provider.of<MyProvider>(context,listen: false);
+    var provider = Provider.of<MyProvider>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         actionsIconTheme: IconThemeData(color: Color(0xFF101623)),
         centerTitle: true,
         title: Text(
-          "Sign Up",
+          AppLocalizations.of(context)!.signUp,
           style: Theme.of(context)
               .textTheme
               .titleMedium!
@@ -47,9 +49,12 @@ class _SignupScreenState extends State<SignupScreen> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                SizedBox(height: 20,),
+                SizedBox(
+                  height: 20,
+                ),
                 // Sign Up Name
                 TextField(
+                  cursorColor: Theme.of(context).primaryColor,
                   controller: _nameController,
                   decoration: InputDecoration(
                     focusedBorder: OutlineInputBorder(
@@ -61,7 +66,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     filled: true,
                     fillColor: Color(0xFFF9FAFB),
-                    hintText: "Enter your name",
+                    hintText: AppLocalizations.of(context)!.enterYourName,
                     hintStyle: Theme.of(context)
                         .textTheme
                         .titleSmall!
@@ -73,8 +78,9 @@ class _SignupScreenState extends State<SignupScreen> {
                 SizedBox(
                   height: 16,
                 ),
-                //Sign up name
+                //Sign up email
                 TextField(
+                  cursorColor: Theme.of(context).primaryColor,
                   controller: _signupEmailController,
                   decoration: InputDecoration(
                     focusedBorder: OutlineInputBorder(
@@ -86,7 +92,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     filled: true,
                     fillColor: Color(0xFFF9FAFB),
-                    hintText: "Enter your email",
+                    hintText: AppLocalizations.of(context)!.enterYourEmail,
                     hintStyle: Theme.of(context)
                         .textTheme
                         .titleSmall!
@@ -100,10 +106,11 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 // Sign up password
                 TextField(
+                  cursorColor: Theme.of(context).primaryColor,
                   controller: _signupPasswordController,
                   obscureText: _isPasswordVisible,
                   decoration: InputDecoration(
-                    hintText: "Enter Your Password",
+                    hintText: AppLocalizations.of(context)!.enterYourPassword,
                     hintStyle: Theme.of(context)
                         .textTheme
                         .titleSmall!
@@ -147,17 +154,15 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: Checkbox(
                         value: _isChecked,
                         side: BorderSide(color: Color(0xFFD3D6DA)),
-                        checkColor:Theme.of(context).primaryColor ,
+                        checkColor: Theme.of(context).primaryColor,
                         activeColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6)),
-                        onChanged:
-                          (value) {
+                        onChanged: (value) {
                           setState(() {
                             _isChecked = value!;
                           });
-                      },
-
+                        },
                       ),
                     ),
                     Expanded(
@@ -165,15 +170,23 @@ class _SignupScreenState extends State<SignupScreen> {
                         TextSpan(
                           style: TextStyle(color: Color(0xFF3B4453)),
                           children: [
-                            TextSpan(text: "I agree to the Amanak "),
                             TextSpan(
-                              text: "Terms of Service ",
-                              style: TextStyle(color: Theme.of(context).primaryColor),
+                                text: AppLocalizations.of(context)!
+                                        .agreeToAmanak +
+                                    " "),
+                            TextSpan(
+                              text:
+                                  AppLocalizations.of(context)!.termsOfService +
+                                      " ",
+                              style: TextStyle(
+                                  color: Theme.of(context).primaryColor),
                             ),
-                            TextSpan(text: "and "),
                             TextSpan(
-                              text: "Privacy Policy",
-                              style: TextStyle(color: Theme.of(context).primaryColor),
+                                text: AppLocalizations.of(context)!.and + " "),
+                            TextSpan(
+                              text: AppLocalizations.of(context)!.privacyPolicy,
+                              style: TextStyle(
+                                  color: Theme.of(context).primaryColor),
                             ),
                           ],
                         ),
@@ -184,26 +197,8 @@ class _SignupScreenState extends State<SignupScreen> {
                   ],
                 ),
                 SizedBox(
-                  height: 32,
+                  height: 16,
                 ),
-                // Sign up with google
-                SocialLoginButton(
-                  icon: Icons.g_mobiledata,
-                  text: "Sign Up with Google",
-                ),
-                SizedBox(height: 16),
-                // Sign up with apple
-                SocialLoginButton(
-                  icon: Icons.apple,
-                  text: "Sign Up with Apple",
-                ),
-                SizedBox(height: 16),
-                // Sign Up button
-                SocialLoginButton(
-                  icon: Icons.facebook,
-                  text: "Sign Up with Facebook",
-                ),
-                SizedBox(height: 16,),
                 ElevatedButton(
                   onPressed: () async {
                     final email = _signupEmailController.text.trim();
@@ -218,25 +213,53 @@ class _SignupScreenState extends State<SignupScreen> {
                         passwordValidationResult != null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                            content: Text(
-                                'Please enter a valid email and password')),
+                          content: Text(AppLocalizations.of(context)!
+                              .pleaseEnterValidEmailPassword),
+                        ),
                       );
                       return;
                     }
-
                     try {
-                      final credential = await FirebaseAuth.instance
-                          .createUserWithEmailAndPassword(
-                        email: email,
-                        password: password,
-                      );
-                      UserModel user = UserModel(name: name,
-                          email: email);
-                      FirebaseManager.setUser(user).onError((error, stackTrace) {
-                        SnackBar(content: Text("$error"),);
-                      },);
-                      provider.setUserModel(user.id, user.name, user.email);
-                      Navigator.pushNamed(context, ChooseRoleScreen.routeName);
+                      if (_isChecked) {
+                        final credential = await FirebaseAuth.instance
+                            .createUserWithEmailAndPassword(
+                          email: email,
+                          password: password,
+                        );
+                        var userID = FirebaseAuth.instance.currentUser!.uid;
+
+                        // Get the user's timezone
+                        String timezone =
+                            await FlutterTimezone.getLocalTimezone();
+
+                        UserModel user = UserModel(
+                            name: name,
+                            email: email,
+                            id: userID,
+                            timezone: timezone);
+
+                        await FirebaseManager.setUser(user).onError(
+                          (error, stackTrace) {
+                            SnackBar(
+                              content: Text("$error"),
+                            );
+                          },
+                        );
+                        var provider =
+                            Provider.of<MyProvider>(context, listen: false);
+                        provider.setUserModel(user.id, user.name, user.email);
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          ChooseRoleScreen.routeName,
+                          (route) => false,
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  'Please accept Terms Of Service and Privacy Policy')),
+                        );
+                      }
                     } on FirebaseAuthException catch (e) {
                       if (e.code == 'weak-password') {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -272,42 +295,6 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class SocialLoginButton extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  SocialLoginButton({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      onPressed: () {
-        // Social login logic
-      },
-      icon: Icon(
-        icon,
-        color: Colors.black,
-        size: 24,
-      ),
-      label: Text(
-        text,
-        style: TextStyle(
-          fontSize: 16,
-          color: Colors.black,
-        ),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        minimumSize: Size(327, 56),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(32),
-            side: BorderSide(color: Color(0xFFE5E7EB))),
-        elevation: 0,
       ),
     );
   }
